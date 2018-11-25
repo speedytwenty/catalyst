@@ -29,7 +29,7 @@
     },
     {
         "media_type": "remote",
-        "media_path": "https:\/\/cdn.rawgit.com\/speedytwenty\/catalyst-tests\/7x1x\/page-remote-test.css",
+        "media_path": "https:\/\/cdn.jsdelivr.net\/gh\/speedytwenty\/catalyst-tests@7x1x\/page-remote-test.css",
         "media": null,
         "files_shared": [],
         "id": "page_remote_test",
@@ -71,7 +71,7 @@
     },
     {
         "media_type": "remote",
-        "media_path": "https:\/\/cdn.rawgit.com\/speedytwenty\/catalyst-tests\/7x1x\/layout-remote-test.css",
+        "media_path": "https:\/\/cdn.jsdelivr.net\/gh\/speedytwenty\/catalyst-tests@7x1x\/layout-remote-test.css",
         "media": null,
         "files_shared": [],
         "id": "layout_test_remote",
@@ -113,7 +113,7 @@
     },
     {
         "media_type": "remote",
-        "media_path": "https:\/\/cdn.rawgit.com\/speedytwenty\/catalyst-tests\/7x1x\/block-embed-remote-test.css",
+        "media_path": "https:\/\/cdn.jsdelivr.net\/gh\/speedytwenty\/catalyst-tests@7x1x\/block-embed-remote-test.css",
         "media": null,
         "files_shared": [],
         "id": "block_embed_remote_test",
@@ -155,7 +155,7 @@
     },
     {
         "media_type": "remote",
-        "media_path": "https:\/\/cdn.rawgit.com\/speedytwenty\/catalyst-tests\/7x1x\/block-remote-test.css",
+        "media_path": "https:\/\/cdn.jsdelivr.net\/gh\/speedytwenty\/catalyst-tests@7x1x\/block-remote-test.css",
         "media": null,
         "files_shared": [],
         "id": "block_remote_test",

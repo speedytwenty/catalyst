@@ -108,3 +108,35 @@ function catalyst_layout_catalyst_export_alter(&$export, $original, $group, $exp
 function catalyst_layout_catalyst_ignore_menus_alter(&$ignore_menus) {
   $ignore_menus['devel'] = TRUE;
 }
+
+/**
+ * Implements hook_catalyst_export_metadata().
+ */
+function catalyst_layout_catalyst_export_metadata($entity, $wrapper) {
+  $metadata = array();
+  foreach (array('', '_drupal_css', '_drupal_js', '_page_title_pattern', '_regions', '_show_messages') AS $suffix) {
+    $fn = 'field__layout' . $suffix;
+    if (isset($wrapper->{$fn}) && $val = $wrapper->{$fn}->value()) {
+      if (empty($suffix)) $val = entity_metadata_wrapper('catalyst', $val)->field__machine->machine->value();
+      $metadata['layout'.$suffix] = $val;
+    }
+  }
+  return $metadata;
+}
+
+/**
+ * Implements hook_catalyst_import_entity_alter().
+ */
+function catalyst_layout_catalyst_import_entity_alter(&$wrapper, $metadata, $path) {
+  if (!empty($metadata['layout'])) {
+    catalyst_import_set_reference($wrapper, 'field__layout', 'layout', $metadata['layout']);
+  }
+  $sufs = array('drupal_css', 'drupal_js', 'page_title_pattern', 'regions', 'show_messages');
+  foreach ($sufs AS $suf) {
+    $key = 'layout_'.$suf;
+    if (isset($metadata[$key])) {
+      $fn = 'field__'.$key;
+      $wrapper->{$fn}->set($metadata[$key]);
+    }
+  }
+}

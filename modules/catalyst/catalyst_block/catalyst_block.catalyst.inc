@@ -148,3 +148,50 @@ function catalyst_block_catalyst_export_alter(&$export, $original, $group, $expo
 function catalyst_block_catalyst_prepare_export($export, $group, $exports) {
   return (object) array();
 }
+
+/**
+ * Implements hook_catalyst_export_metadata().
+ */
+function catalyst_block_catalyst_export_metadata($entity, $wrapper) {
+  $metadata = array();
+  if (isset($wrapper->field__blocks_related) && $blocks_related = $wrapper->field__blocks_related->value()) {
+    $br = array();
+    foreach ($blocks_related AS $block) {
+      $br[] = entity_metadata_wrapper('catalyst', $block)->field__machine->machine->value();
+    }
+    $metadata['blocks_related'] = $br;
+  }
+  $fns = array(
+    'entity' => 'field___block_placements_entity',
+    'block' => 'field__blockplacements__block',
+    'layfield' => 'field__blockplacements__layfield',
+    'layout' => 'field__blockplacements__layout',
+  );
+  foreach ($fns AS $ftype => $fn) {
+    if (isset($wrapper->{$fn}) && $ps = $wrapper->{$fn}->value()) {
+      $metadata['block_placements'] = array();
+      foreach ($ps As $p) {
+        $d = array('type' => $ftype);
+        if (!empty($p['block_id'])) {
+          $b = entity_metadata_wrapper('catalyst', catalyst_load_single($p['block_id']));
+          $d['block'] = $b->field__machine->machine->value();
+        }
+        foreach (array('visibility', 'pages', 'cache', 'region', 'weight') AS $f) {
+          if (isset($p[$f])) $d[$f] = $p[$f];
+        }
+        $metadata['block_placements'][] = (object)$d;
+        //$metadata['block_placements'] = $p;
+      }
+    }
+  }
+  return $metadata;
+}
+
+/**
+ * Implements hook_catalyst_import_entity_alter().
+ */
+function catalyst_block_catalyst_import_entity_alter(&$wrapper, $metadata, $path) {
+  if (!empty($metadata['blocks_related'])) {
+    catalyst_import_set_reference($wrapper, 'field__blocks_related', 'block', $metadata['blocks_related']);
+  }
+}

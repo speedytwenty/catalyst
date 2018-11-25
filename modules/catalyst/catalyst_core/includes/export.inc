@@ -343,3 +343,110 @@ function catalyst_json_encode($var) {
   //$var = drupal_json_decode(drupal_json_encode($var), TRUE);
   return json_encode($var, JSON_PRETTY_PRINT);
 }
+
+function catalyst_export_entities($entities, $path = '') {
+  if (empty($path)) {
+    $path = drupal_realpath(drupal_tempnam('temporary://', 'zip_'));
+  }
+  $archive = new ZipArchive;
+  if ($archive->open($path, ZipArchive::CREATE) === TRUE) {
+    $implements = module_implements('catalyst_export_entity');
+    $dirs = array();
+    foreach ($entities AS $entity) {
+      $wrapper = entity_metadata_wrapper('catalyst', $entity);
+      $machine = $wrapper->field__machine->machine->value();
+      if (!in_array($entity->type, $dirs)) {
+        $archive->addEmptyDir($entity->type);
+        $dirs[] = $entity_type;
+      }
+      $archive->addEmptyDir(sprintf('%s/%s', $entity->type, $machine));
+      $metadata = catalyst_export_metadata($entity, $wrapper);
+      ksort($metadata);
+      $filepath = sprintf('%s/%s/catalyst.json', $entity->type, $machine);
+      $contents = catalyst_json_encode($metadata);
+      $archive->addFromString($filepath, $contents);
+      if (isset($wrapper->field__body) && $body = entity_valval($wrapper->field__body)) {
+        switch ($entity->type) {
+          case 'javascript':
+            $ext = 'js';
+            break;
+          case 'stylesheet':
+            $ext = 'css';
+            break;
+          default: // doctype, layout, page, template, block
+            $ext = 'html';
+            break;
+        }
+        $archive->addFromString(sprintf('%s/%s/body.%s', $entity->type, $machine, $ext), $body);
+      }
+      if (isset($wrapper->field__preprocess) && $preprocess = entity_valval($wrapper->field__preprocess)) {
+        $archive->addFromstring(sprintf('%s/%s/preprocess.php', $entity->type, $machine), "<?php \n".$preprocess);
+      }
+      if (isset($wrapper->field__admin_notes) && $notes = $wrapper->field__admin_notes->value()) {
+        $archive->addFromString(sprintf('%s/%s/README.md', $entity->type, $machine), $notes['value']);
+      }
+      foreach (array('css', 'js') AS $ftype) {
+        $sts = array(
+          'custom' => '',
+          'layout' => '__layout',
+          'page' => '__page',
+        );
+        foreach ($sts AS $fname => $fsuffix) {
+          $fn = 'field__' . $ftype . $fsuffix;
+          if (isset($wrapper->{$fn}) && $val = $wrapper->{$fn}->value()) {
+            $archive->addFromString(sprintf('%s/%s/%s.%s', $entity->type, $machine, $fname, $ftype), $val['value']);
+          }
+        }
+      }
+      if (isset($wrapper->field__access) && $val = entity_valval($wrapper->field__access)) {
+        $archive->addFromString(sprintf('%s/%s/access.php', $entity->type, $machine, $ftype), $val);
+      }
+      if (isset($wrapper->field__html_head) && $val = entity_valval($wrapper->field__html_head)) {
+        $archive->addFromString(sprintf('%s/%s/head.html', $entity->type, $machine, $ftype), $val);
+      }
+      if (isset($wrapper->field__files) && $files = $wrapper->field__files->value()) {
+        $archive->addEmptyDir(sprintf('%s/%s/files', $entity->type, $machine));
+        foreach ($files AS $file) {
+          drush_print('File from:' . drupal_realpath($file['uri']));
+          $archive->addFile(drupal_realpath($file['uri']), sprintf('%s/%s/files/%s', $entity->type, $machine, $file['origname']));
+        }
+      }
+      foreach ($implements AS $module) {
+        $func = $module . '_catalyst_export_entity';
+        $func($archive, $entity, $wrapper);
+      }
+    }
+    $archive->close();
+    return $path;
+  }
+  else throw new Exception('Failed to open archive for creation.');
+}
+
+function catalyst_export_metadata($entity, $wrapper) {
+  $metadata = array();
+  $metadata = array(
+    'type' => $wrapper->getBundle(),
+    'label' => $wrapper->label(),
+    'machine' => $wrapper->field__machine->machine->value(),
+    'created' => date(DATE_RFC2822, $wrapper->created->value()),
+    'changed' => date(DATE_RFC2822, $wrapper->changed->value()),
+    'internal' => (bool)$wrapper->field__internal->value(),
+  );
+  if ($entity->type != 'package' && $package = $wrapper->field__package->value()) {
+    $p = entity_metadata_wrapper('catalyst', $package);
+    $metadata['package'] = $p->field__machine->machine->value();
+  }
+  if (isset($wrapper->field__menu) && $data = entity_valval($wrapper->field__menu)) {
+    $metadata['data'] = $data;
+  }
+  if (isset($wrapper->field__debug)) {
+    $metadata['debug'] = (bool)$wrapper->field__debug->value();
+  }
+  if (isset($wrapper->field__drupal_processing)) {
+    $metadata['drupal_processing'] = (bool)$wrapper->field__drupal_processing->value();
+  }
+  //if (isset($wrapper->field__files) && $files = $wrapper->field__files->value()) {
+  //  $metadata['files'] = $files;
+  //}
+  return array_merge(module_invoke_all('catalyst_export_metadata', $entity, $wrapper), $metadata);
+}

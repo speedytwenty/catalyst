@@ -94,3 +94,34 @@ function catalyst_doctype_catalyst_export_alter(&$export, $original, $group, $ex
     }
   }
 }
+
+/**
+ * Implements hook_catalyst_export_metadata().
+ */
+function catalyst_doctype_catalyst_export_metadata($entity, $wrapper) {
+  $metadata = array();
+  foreach (array('', '_charset', '_content_type') AS $suffix) {
+    $fn = 'field__doctype' . $suffix;
+    if (isset($wrapper->{$fn}) && $val = $wrapper->{$fn}->value()) {
+      if (empty($suffix)) $val = entity_metadata_wrapper('catalyst', $val)->field__machine->machine->value();
+      $metadata['doctype'.$suffix] = $val;
+    }
+  }
+  return $metadata;
+}
+
+/**
+ * Implements hook_catalyst_import_entity_alter().
+ */
+function catalyst_doctype_catalyst_import_entity_alter(&$wrapper, $metadata, $path) {
+  if (!empty($metadata['doctype'])) {
+    catalyst_import_set_reference($wrapper, 'field__doctype', 'doctype', $metadata['doctype']);
+  }
+  foreach (array('chartset', 'content_type') AS $suf) {
+    $key = 'doctype_'.$suf;
+    if (isset($metadata[$key])) {
+      $fn = 'field__'.$key;
+      $wrapper->{$fn}->set($metadata[$key]);
+    }
+  }
+}

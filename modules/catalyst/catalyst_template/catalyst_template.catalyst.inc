@@ -88,3 +88,31 @@ function catalyst_template_catalyst_prepare_export($export, $group, $exports) {
     'bundle' => $wrapper->field__template_bundle->machine->value(),
   );
 }
+
+/**
+ * Implements hook_catalyst_export_metadata().
+ */
+function catalyst_template_catalyst_export_metadata($entity, $wrapper) {
+  $metadata = array();
+  foreach (array('bundle', 'entity_type') AS $suffix) {
+    $fn = 'field__template_' . $suffix;
+    if (isset($wrapper->{$fn}) && $val = $wrapper->{$fn}->value()) {
+      if (empty($suffix)) $val = entity_metadata_wrapper('catalyst', $val)->field__machine->machine->value();
+      $metadata['template_'.$suffix] = $val;
+    }
+  }
+  return $metadata;
+}
+
+/**
+ * Implements hook_catalyst_import_entity_alter().
+ */
+function catalyst_template_catalyst_import_entity_alter(&$wrapper, $metadata, $path) {
+  foreach (array('bundle', 'entity_type') AS $suf) {
+    $key = 'template_'.$suf;
+    if (isset($metadata[$key])) {
+      $fn = 'field__'.$key;
+      $wrapper->{$fn}->set($metadata[$key]);
+    }
+  }
+}

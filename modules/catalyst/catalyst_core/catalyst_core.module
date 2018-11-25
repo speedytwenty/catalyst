@@ -127,6 +127,9 @@ function catalyst_core_hook_info() {
   // Fields, entities, and node related hooks
   $hooks['catalyst_node_types'] = $group;
   $hooks['catalyst_safe_fields'] = $group;
+  $hooks['catalyst_export_metadata'] = $group;
+  $hooks['catalyst_export_entity'] = $group;
+  $hooks['catalyst_import_entity_alter'] = $group;
   return $hooks;
 }
 
@@ -485,4 +488,16 @@ function catalyst_entity_map() {
     }
   }
   return $map;
+}
+
+function catalyst_package_load_entities($id) {
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'catalyst')
+    ->entityCondition('bundle', 'package', '!=')
+    ->fieldCondition('field__package', 'target_id', $id, '=')
+    ->execute();
+  if (isset($result['catalyst'])) {
+    $ids = array_keys($result['catalyst']);
+    return entity_load('catalyst', $ids);
+  }
 }

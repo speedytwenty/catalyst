@@ -36,12 +36,20 @@ function catalyst_admin_save_edit_form_alter(&$form, &$form_state) {
   );
   $base_form_id = $form_state['build_info']['base_form_id'];
   if (array_key_exists($base_form_id, $save_edit_forms)) {
-    $form['actions']['catatalyst_save_edit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Save & Edit'),
-      '#submit' => array('catalyst_admin_save_edit_submit'),
+    array_unshift($form['#submit'], 'catalyst_admin_save_edit_submit');
+    $form['actions']['save_edit'] = array(
+      '#weight' => 99999,
+      '#type' => 'checkbox',
+      '#title' => t('Continue editing'),
+      '#default_value' => variable_get('catalyst_save_edit', 1),
       '#save_edit' => $save_edit_forms[$base_form_id],
     );
+    //$form['actions']['catatalyst_save_edit'] = array(
+    //  '#type' => 'submit',
+    //  '#value' => t('Save & Edit'),
+    //  '#submit' => array('catalyst_admin_save_edit_submit'),
+    //  '#save_edit' => $save_edit_forms[$base_form_id],
+    //);
   }
 }
 
@@ -49,22 +57,24 @@ function catalyst_admin_save_edit_form_alter(&$form, &$form_state) {
  * Save & Edit submit handler.
  */
 function catalyst_admin_save_edit_submit($form, &$form_state) {
-  $save_edit = $form_state['triggering_element']['#save_edit'];
-  $save_edit['submit callback']($form, $form_state);
-  if ($redirect = $save_edit['redirect callback']($form, $form_state)) {
-    if (isset($_REQUEST['destination'])) {
-      $form_state['redirect'] = url($redirect, array(
-        'query' => array(
-          'destination' => $_REQUEST['destination'],
-        ),
-        'absolute' => TRUE,
-      ));
-      $_GET['destination'] = $form_state['redirect'];
-      unset($_REQUEST['destination']);
-    }
-    else {
-      // just go back to the form edit page, and dont worry about the redirect
-      $form_state['redirect'] = $redirect;
+  if ($form_state['values']['save_edit']) {
+    $save_edit = $form['actions']['save_edit']['#save_edit'];
+    $save_edit['submit callback']($form, $form_state);
+    if ($redirect = $save_edit['redirect callback']($form, $form_state)) {
+      if (isset($_REQUEST['destination'])) {
+        $form_state['redirect'] = url($redirect, array(
+          'query' => array(
+            'destination' => $_REQUEST['destination'],
+          ),
+          'absolute' => TRUE,
+        ));
+        $_GET['destination'] = $form_state['redirect'];
+        unset($_REQUEST['destination']);
+      }
+      else {
+        // just go back to the form edit page, and dont worry about the redirect
+        $form_state['redirect'] = $redirect;
+      }
     }
   }
 }

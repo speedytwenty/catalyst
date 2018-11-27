@@ -3,3 +3,13 @@
 /**
  * @file
  */
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function catalyst_test_entity_info_alter(&$entity_info) {
+  $entity_info['user']['view modes']['catalyst_test'] = array(
+    'label' => 'Catalyst Test',
+    'custom settings' => TRUE,
+  );
+}

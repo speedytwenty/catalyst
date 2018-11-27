@@ -61,15 +61,6 @@ function catalyst_page_delivery_callback_alter(&$delivery_callback) {
   }
 }
 
-function catalyst_load($bundle, $ids = FALSE, $conditions = array(), $reset = FALSE) {
-  $conditions['type'] = $bundle;
-  return entity_load('catalyst', $ids, $conditions, $reset);
-}
-
-function catalyst_load_single($id) {
-  return entity_load_single('catalyst', $id);
-}
-
 function catalyst_theme_active() {
   global $theme, $base_theme_info;
   if ($theme == 'notheme') {

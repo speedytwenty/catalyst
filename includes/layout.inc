@@ -20,7 +20,6 @@ function catalyst_layout_initialize() {
     // shouldn't be altered but this gives other modules a chance to call
     // catalyst_set_layout().
     drupal_alter('catalyst_layout', $resolved_layout);
-
     catalyst_set_layout($resolved_layout);
   }
 }
@@ -50,6 +49,16 @@ function catalyst_set_layout($layout = NULL, $entity_type = 'catalyst') {
 
     if (is_int($layout)) {
       $layout = entity_load_single('catalyst', $layout, array('type' => 'layout'));
+    }
+    // Remove any previously css and js added by a previously set layout
+    // This should be fixed so that the layout isn't actually rendered when it's set
+    foreach (array('js', 'css') AS $type) {
+      $items =& drupal_static('drupal_add_'.$type);
+      foreach ($items AS $key => $item) {
+        if ($item['group'] == 101) {
+          unset($items[$key]);
+        }
+      }
     }
     $stored_layout = new CatalystEntityLayout($layout);
   }

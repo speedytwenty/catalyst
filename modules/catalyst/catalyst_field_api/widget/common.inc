@@ -33,8 +33,9 @@ function block_placement_widget_block_options() {
 
   if (!isset($options)) {
     $options = array();
-    if ($blocks = catalyst_block_load()) {
-      foreach ($blocks AS $block) {
+    $registry = catalyst_registry_list(CATALYST_REGISTRY_LIST_ENABLED);
+    if (!empty($registry['blocks'])) {
+      foreach ($registry['blocks'] AS $block) {
         $options[$block->id] = $block->title;
       }
     }

@@ -357,7 +357,7 @@ function catalyst_export_entities($entities, $path = '') {
       $machine = $wrapper->field__machine->machine->value();
       if (!in_array($entity->type, $dirs)) {
         $archive->addEmptyDir($entity->type);
-        $dirs[] = $entity_type;
+        $dirs[] = $entity->type;
       }
       $archive->addEmptyDir(sprintf('%s/%s', $entity->type, $machine));
       $metadata = catalyst_export_metadata($entity, $wrapper);
@@ -436,8 +436,11 @@ function catalyst_export_metadata($entity, $wrapper) {
     $p = entity_metadata_wrapper('catalyst', $package);
     $metadata['package'] = $p->field__machine->machine->value();
   }
-  if (isset($wrapper->field__menu) && $data = entity_valval($wrapper->field__menu)) {
-    $metadata['data'] = $data;
+  foreach (array('menu', 'data') AS $suf) {
+    $fn = 'field__'.$suf;
+    if (isset($wrapper->{$fn}) && $data = entity_valval($wrapper->{$fn})) {
+      $metadata[$suf] = $data;
+    }
   }
   if (isset($wrapper->field__debug)) {
     $metadata['debug'] = (bool)$wrapper->field__debug->value();

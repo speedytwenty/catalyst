@@ -205,10 +205,3 @@ function catalyst_block_showblock($machine_name, $variables = array()) {
   // Check permission and output dummy block warning of missing block
   //return  '<h3>Block content here</h3>';
 }
-
-/**
- * Load multiple blocks with or without conditions.
- */
-function catalyst_block_load($bids = FALSE, $conditions = array(), $reset = FALSE) {
-  return catalyst_load('block', $bids, $conditions, $reset);
-}

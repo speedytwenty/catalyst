@@ -99,7 +99,7 @@ function drush_catalyst_core_catalyst_revert_all_packages() {
 function drush_catalyst_core_catalyst_package_info($machine) {
   $package = catalyst_lookup_entity('package', $machine);
   $p = entity_metadata_wrapper('catalyst', $package);
-  $data = entity_valval($p->field__menu);
+  $data = entity_valval($p->field__data);
   drush_print($p->label());
   if ($admin_notes == $p->field__admin_notes->value()) {
     drush_print($admin_notes);
@@ -130,7 +130,7 @@ function drush_catalyst_core_catalyst_package_list() {
     $table = array(array('Name', 'Machine name', 'Module', 'Subdirectory'));
     foreach ($packages AS $package) {
       $p = entity_metadata_wrapper('catalyst', $package);
-      $data = entity_valval($p->field__menu);
+      $data = entity_valval($p->field__data);
       $table[] = array(
         $p->title->value(),
         $p->field__machine->machine->value(),

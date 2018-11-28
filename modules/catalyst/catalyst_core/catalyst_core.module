@@ -5,6 +5,18 @@
  */
 
 include_once 'catalyst_core.features.inc';
+include_once 'common/registry.inc';
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function catalyst_core_entity_view_alter(&$build, $type) {
+  if ($type == 'catalyst' && !catalyst_theme_active()) {
+    if (in_array($build['#view_mode'], array('full', 'teaser'))) {
+      $build['#page'] = TRUE;
+    }
+  }
+}
 
 /**
  * Implements hook_theme().
@@ -34,6 +46,13 @@ function catalyst_core_theme() {
  */
 function catalyst_core_catalyst_twig_render_alter(&$twig, &$variables, $key = NULL) {
   $twig->addFunction(new Twig_SimpleFunction('coreblock', 'catalyst_coreblock'));
+  $twig->addFunction(new Twig_SimpleFunction('form', 'catalyst_twigform'));
+}
+
+function catalyst_twigform($callback) {
+  $args = func_get_args();
+  $form = call_user_func_array('drupal_get_form', $args);
+  return render($form);
 }
 
 
@@ -130,6 +149,7 @@ function catalyst_core_hook_info() {
   $hooks['catalyst_export_metadata'] = $group;
   $hooks['catalyst_export_entity'] = $group;
   $hooks['catalyst_import_entity_alter'] = $group;
+  $hooks['catalyst_registry_alter'] = $group;
   return $hooks;
 }
 
@@ -194,14 +214,53 @@ function catalyst_core_form_filter_admin_overview_alter(&$form, &$form_state) {
   }
 }
 
+function catalyst_form($form, $type, $machine, $vars) {
+  $form['#catalyst_form'] = array(
+    'vars' => $vars,
+    'source' => array(
+      'type' => $type,
+      'machine' => $machine,
+    ),
+  );
+  return $form;
+}
+
 /**
  * Implements hook_form_alter().
  */
 function catalyst_core_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['#catalyst_form']) && !empty($form['#catalyst_form'])) {
+    //if (!isset($form['#process'])) $form['#process'] = array();
+    //array_unshift($form['#process'], 'catalyst_form_process');
+    $source = $form['#catalyst_form']['source'];
+    $item = catalyst_registry_entry($source['type'], $source['machine']);
+    if (isset($item['assets']['preprocess.php'])) {
+      $path = str_replace(drupal_realpath(DRUPAL_ROOT).'/', '', $item['assets']['preprocess.php']['filepath']);
+      $form_state['build_info']['files']['catalyst_preprocess'] = $path;
+      dsm($form_state['build_info']);
+    }
+  }
   if (isset($form['field__menu'])) {
     catalyst_form_load_include($form_state, 'menu_widget');
     catalyst_menu_widget_form_alter($form, $form_state);
   }
+  if (isset($form['field__data']) && $form['#bundle'] == 'package') {
+    catalyst_form_load_include($form_state, 'package_form_alter');
+    catalyst_package_form_alter($form, $form_state);
+  }
+}
+
+/**
+ *
+ */
+function catalyst_form_process($form, &$form_state) {
+  if (!function_exists($form_state['build_info']['form_id'])) {
+    $source = $form['#catalyst_form']['source'];
+    //if ($preprocess_php = entity_valval($item['wrapper']->field__preprocess)) {
+    //  catalyst_eval($preprocess_php, $form['#catalyst_form']['vars']);
+    //}
+  }
+  return $form;
 }
 
 /**
@@ -468,9 +527,9 @@ function catalyst_coreblock($module, $delta = 0, $render = true) {
   )));
 }
 
-function catalyst_lookup_entity($bundle, $machine_name, $entity_type = 'catalyst') {
-  $map = catalyst_entity_map();
-  return isset($map[$entity_type][$bundle][$machine_name]) ? $map[$entity_type][$bundle][$machine_name] : FALSE;
+function catalyst_lookup_entity($type, $machine, $refresh = FALSE) {
+  $entry = catalyst_registry_entry($type, $machine, $refresh);
+  return $entry && !empty($entry['id']) ? $entry['id'] : FALSE;
 }
 
 function catalyst_entity_map() {
@@ -490,14 +549,108 @@ function catalyst_entity_map() {
   return $map;
 }
 
-function catalyst_package_load_entities($id) {
-  $query = new EntityFieldQuery();
-  $result = $query->entityCondition('entity_type', 'catalyst')
-    ->entityCondition('bundle', 'package', '!=')
-    ->fieldCondition('field__package', 'target_id', $id, '=')
-    ->execute();
-  if (isset($result['catalyst'])) {
-    $ids = array_keys($result['catalyst']);
-    return entity_load('catalyst', $ids);
+/**
+ *
+ * @code
+ * Load all entities of one type.
+ * catalyst_load('block');
+ *
+ * Load multiple entities by numeric db id.
+ * Depends on the first parameter being a numeric (non-associative) array with
+ * integer values.
+ * catalyst_load(array(1, 2, 3), TRUE);
+ *
+ * Load multiple entities by machine name.
+ * Depends on the second parameter being a numeric (non-associative) array with
+ * string values.
+ * catalyst_load('block', array('block_1', 'block_2'));
+ *
+ * Load multiple entities by conditions.
+ * Depends on the second parameter being an ASSOCIATIVE array.
+ * catalyst_load('block', array('filter1' => 1));
+ * @endcode
+ */
+function catalyst_load($a0) {
+  $arg = func_get_args();
+  if (is_array($a0)) {
+    $refresh = isset($arg[1]) ? $arg[1] : FALSE;
+    $entities = entity_load('catalyst', $a0, array(), $refresh);
+  }
+  else {
+    $type = $a0;
+    if (!isset($arg[1]) || !is_array($arg[1])) {
+      $query = new EntityFieldQuery();
+      $result = $query->entityCondition('entity_type', 'catalyst', '=')
+        ->propertyCondition('type', $type, '=')
+        ->execute();
+      $entities = entity_load('catalyst', array_keys($result['catalyst']), array(), isset($arg[1]) && $arg[1]);
+    }
+    else {
+      $keys = array_keys($arg[1]);
+      $refresh = isset($arg[2]) && $arg[2];
+      if (is_numeric($keys[0])) {
+        foreach ($arg[1] AS $mxd) {
+          if (is_numeric($mxd)) {
+            $ids[] = $mxd;
+          }
+          else if ($id = catalyst_lookup_entity($type, $mxd)) {
+            $ids[] = $id;
+          }
+        }
+        $entities = entity_load('catalyst', $ids, array(), $refresh);
+      }
+      else {
+        $entities = entity_load('catalyst', NULL, $conditions, $refresh);
+      }
+    }
+  }
+  $return = array();
+  foreach ($entities AS $key => $entity) {
+    $return[$key] = catalyst_registry_entry($entity->type, $entity->machine);
+    $return[$key]['machine'] = $entity->machine;
+    $return[$key]['type'] = $entity->type;
+    $return[$key]['entity'] = $entity;
+    $return[$key]['wrapper'] = entity_metadata_wrapper('catalyst', $entity);
+  }
+  return $return;
+}
+
+/**
+ * @code
+ * Load by machine name (with optional refresh option):
+ * catalyst_load_single('block', 'my_block', TRUE);
+ *
+ * Load by entity id (with optional refresh option):
+ * catalyst_load_single(133);
+ *
+ * @endcode
+ */
+function catalyst_load_single($a0) {
+  $arg = func_get_args();
+  if (count($arg) < 1) {
+    throw new Exception('Invalid parameteres in '.__function__);
+  }
+  else if (is_numeric($arg[0])) {
+    $id = $arg[0];
+    $refresh = isset($arg[1]) ? $arg[1] : FALSE;
+    $entities = catalyst_load(array($id), $refresh);
+  }
+  else {
+    $id = $arg[1];
+    $refresh = isset($arg[2]) ? $arg[2] : FALSE;
+    $entities = catalyst_load($arg[0], array($id), $refresh);
+  }
+  return array_shift($entities);
+}
+
+/**
+ * Implements hook_entity_load().
+ */
+function catalyst_core_entity_load(&$entities, $entity_type) {
+  if ($entity_type != 'catalyst') return;
+  foreach ($entities AS $key => &$entity) {
+    $lang = $entity->language;
+    // Provide shortcut for machine
+    $entity->machine = $entity->field__machine[$lang][0]['machine'];
   }
 }

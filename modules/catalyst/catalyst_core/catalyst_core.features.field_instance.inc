@@ -84,6 +84,44 @@ function catalyst_core_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'catalyst-package-field__data'.
+  $field_instances['catalyst-package-field__data'] = array(
+    'bundle' => 'package',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 5,
+      ),
+      'template' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__data',
+    'label' => 'Data',
+    'required' => 0,
+    'settings' => array(
+      'namespace' => 1,
+      'serialization' => 'serialize',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'serialized_field',
+      'settings' => array(),
+      'type' => 'serialized_hidden',
+      'weight' => 4,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-package-field__internal'.
   $field_instances['catalyst-package-field__internal'] = array(
     'bundle' => 'package',
@@ -182,6 +220,7 @@ function catalyst_core_field_default_field_instances() {
 
   // Translatables
   // Included for use with string extractors like potx.
+  t('Data');
   t('Description');
   t('Internal');
   t('Machine name');

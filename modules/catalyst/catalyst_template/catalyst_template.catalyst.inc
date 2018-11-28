@@ -116,3 +116,17 @@ function catalyst_template_catalyst_import_entity_alter(&$wrapper, $metadata, $p
     }
   }
 }
+
+/**
+ * Implements hook_catalyst_registry_alter().
+ */
+function catalyst_template_catalyst_registry_alter(&$registry) {
+  foreach ($registry['template'] AS $machine => &$entry) {
+    if (isset($entry['wrapper'])) {
+      $entry['template'] = array(
+        'entity_type' => $entry['wrapper']->field__template_entity_type->machine->value(),
+        'bundle' => $entry['wrapper']->field__template_bundle->machine->value(),
+      );
+    }
+  }
+}

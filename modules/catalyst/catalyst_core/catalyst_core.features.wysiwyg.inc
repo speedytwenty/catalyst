@@ -29,7 +29,7 @@ function catalyst_core_wysiwyg_default_profiles() {
       'default' => 1,
       'show_toggle' => 0,
       'user_choose' => 0,
-      'version' => NULL,
+      'version' => '1.2.1',
     ),
     'name' => 'formatcatalyst_css',
   );
@@ -53,7 +53,7 @@ function catalyst_core_wysiwyg_default_profiles() {
       'default' => 1,
       'show_toggle' => 0,
       'user_choose' => 0,
-      'version' => NULL,
+      'version' => '1.2.1',
     ),
     'name' => 'formatcatalyst_doc',
   );
@@ -77,7 +77,7 @@ function catalyst_core_wysiwyg_default_profiles() {
       'default' => 1,
       'show_toggle' => 0,
       'user_choose' => 0,
-      'version' => NULL,
+      'version' => '1.2.1',
     ),
     'name' => 'formatcatalyst_html',
   );
@@ -101,7 +101,7 @@ function catalyst_core_wysiwyg_default_profiles() {
       'default' => 1,
       'show_toggle' => 0,
       'user_choose' => 0,
-      'version' => NULL,
+      'version' => '1.2.1',
     ),
     'name' => 'formatcatalyst_js',
   );
@@ -125,7 +125,7 @@ function catalyst_core_wysiwyg_default_profiles() {
       'default' => 1,
       'show_toggle' => 0,
       'user_choose' => 0,
-      'version' => NULL,
+      'version' => '1.2.1',
     ),
     'name' => 'formatcatalyst_php',
   );

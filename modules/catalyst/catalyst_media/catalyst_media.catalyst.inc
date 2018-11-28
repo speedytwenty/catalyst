@@ -280,3 +280,20 @@ function catalyst_media_catalyst_import_entity_alter(&$wrapper, $metadata, $path
     }
   }
 }
+
+/**
+ * Implements hook_catalyst_registry_alter().
+ */
+function catalyst_media_catalyst_registry_alter(&$registry) {
+  foreach ($registry AS $type => &$entries) {
+    foreach ($entries AS $machine => &$entry) {
+      if (isset($entry['wrapper'])) {
+        $w = $entry['wrapper'];
+        if (isset($w->field__media_file) && $file = $w->field__media_file->value()) {
+          if (!isset($entry['files'])) $entry['files'] = array();
+          $entry['files'][] = $file + array('source' => 'media_file');
+        }
+      }
+    }
+  }
+}

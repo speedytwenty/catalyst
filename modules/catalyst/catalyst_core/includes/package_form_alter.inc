@@ -17,8 +17,6 @@ function catalyst_package_form_alter(&$form, &$form_state) {
   else {
     $data = entity_valval($wrapper->field__data);
   }
-
-  //$form['#submit'][] = 'catalyst_package_form_submit';
   $widget = array(
     '#type' => 'container',
     '#tree' => TRUE,
@@ -39,10 +37,4 @@ function catalyst_package_form_alter(&$form, &$form_state) {
     '#width' => 30,
   );
   $form['field__data'][$language][0]['value'] = $widget;
-}
-
-function catalyst_package_form_submit($form, &$form_state) {
-  dsm($form);
-  dsm($form_state);
-  die;
 }

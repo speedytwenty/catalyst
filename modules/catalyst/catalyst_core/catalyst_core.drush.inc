@@ -21,6 +21,12 @@ function catalyst_core_drush_command() {
         'path' => 'The path of the directory or zip archive to import from.',
       ),
     ),
+    'catalyst-rollback' => array(
+      'description' => 'Deletes all database items that match exports in a directory (based on type+machine).',
+      'arguments' => array(
+        'path' => 'The path of the directory or zip archive to import from.',
+      ),
+    ),
     'catalyst-package-revert' => array(
       'description' => "Revert a (previously exported) package's database entities to the code state.",
       'aliases' => array('catpr'),
@@ -60,6 +66,12 @@ function catalyst_core_drush_command() {
         'package' => 'The machine name of the package to export.',
       ),
     ),
+    'catalyst-package-rollback' => array(
+      'description' => 'Deletes database entities for a package (based on type+machine).',
+      'arguments' => array(
+        'package' => 'The machine name of the package to export.',
+      ),
+    ),
   );
 }
 
@@ -90,6 +102,18 @@ function drush_catalyst_core_catalyst_import($path = '') {
   }
 }
 
+function drush_catalyst_core_catalyst_package_rollback($machine) {
+  $package = catalyst_load_single('package', $machine);
+  catalyst_include('import');
+  catalyst_import_rollback_directory($package->file_path);
+}
+
+
+function drush_catalyst_core_catalyst_rollback($dir) {
+  catalyst_include('import');
+  catalyst_import_rollback_directory($dir);
+}
+
 function drush_catalyst_core_catalyst_package_revert() {
 }
 
@@ -97,27 +121,25 @@ function drush_catalyst_core_catalyst_revert_all_packages() {
 }
 
 function drush_catalyst_core_catalyst_package_info($machine) {
-  $package = catalyst_lookup_entity('package', $machine);
-  $p = entity_metadata_wrapper('catalyst', $package);
-  $data = entity_valval($p->field__data);
-  drush_print($p->label());
-  if ($admin_notes == $p->field__admin_notes->value()) {
+  $package = catalyst_load_single('package', $machine);
+  drush_print($package->label);
+  if (isset($package->wrapper->field__admin_notes) && $admin_notes = $package->wrapper->field__admin_notes->value()) {
     drush_print($admin_notes);
   }
-  drush_print(dt('Module: @module', array('@module' => empty($data['module']) ? '-' : $data['module'])));
-  drush_print(dt('Subdirectory: @subdir', array('@subdir' => empty($data['subdir']) ? '-' : $data['subdir'])));
-  $entities = catalyst_package_load_entities($p->getIdentifier());
-  if ($entities) {
-    drush_print(dt('Entities contained in @package:', array('@package' => $p->label())));
+  drush_print(dt('Module: @module', array('@module' => empty($package->module) ? '-' : $package->module)));
+  drush_print(dt('Subdirectory: @subdir', array('@subdir' => empty($package->subdir) ? '-' : $package->subdir)));
+  if ($package->entries) {
+    drush_print(dt('Components contained in @package:', array('@package' => $package->label)));
     $table = array(array('Label', 'Type', 'Machine name', 'Modified'));
-    foreach ($entities AS $entity) {
-      $e = entity_metadata_wrapper('catalyst', $entity);
-      $table[] = array(
-        $e->label(),
-        $e->type->value(),
-        $e->field__machine->machine->value(),
-        date('D M j G:i:s T Y', $p->changed->value()),
-      );
+    foreach ($package->entries AS $type => $entries) {
+      foreach ($entries AS $entry) {
+        $table[] = array(
+          $entry->label,
+          $entry->type,
+          $entry->machine,
+          //date('D M j G:i:s T Y', $p->changed->value()),
+        );
+      }
     }
     drush_print_table($table);
   }
@@ -127,15 +149,15 @@ function drush_catalyst_core_catalyst_package_info($machine) {
 function drush_catalyst_core_catalyst_package_list() {
   $packages = catalyst_load('package');
   if ($packages) {
-    $table = array(array('Name', 'Machine name', 'Module', 'Subdirectory'));
+    $table = array(array('Name', 'Machine name', 'ID', 'Module', 'Subdirectory', 'Components'));
     foreach ($packages AS $package) {
-      $p = entity_metadata_wrapper('catalyst', $package);
-      $data = entity_valval($p->field__data);
       $table[] = array(
-        $p->title->value(),
-        $p->field__machine->machine->value(),
-        empty($data['module']) ? '-' : $data['module'],
-        empty($data['subdir']) ? '-' : $data['subdir'],
+        $package->label,
+        $package->machine,
+        !empty($package->id) ? $package->id : '-',
+        empty($package->module) ? '-' : $package->module,
+        empty($package->subdir) ? '-' : $package->subdir,
+        $package->total_entries,
       );
     }
     drush_print_table($table, TRUE);

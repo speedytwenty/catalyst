@@ -24,38 +24,46 @@ function catalyst_registry_build($dirs = NULL) {
     $wrapper = entity_metadata_wrapper('catalyst', $entity);
     $machine = $wrapper->field__machine->machine->value();
     $type = $wrapper->getBundle();
-    $registry_entry = array(
+    $registry_entry = (object)array(
       'id' => $wrapper->getIdentifier(),
       'label' => $wrapper->label(),
-      'wrapper' => $wrapper,
       'dependencies' => $default_reg,
       'internal' => (bool)$wrapper->field__internal->value(),
+      'type' => $wrapper->getBundle(),
+      'machine' => $machine,
+      'entity' => $entity,
+      'wrapper' => $wrapper,
     );
     if ($type == 'package') {
       $package = $machine;
-      $data = $wrapper->field__data->value();
+      $data = entity_valval($wrapper->field__data);
     }
     elseif (!empty($wrapper->field__package->value())) {
       $package = $wrapper->field__package->field__machine->machine->value();
-      $data = $wrapper->field__package->field__data->value();
+      $data = entity_valval($wrapper->field__package->field__data);
       $package_is_exportable = !empty($data['module']);
     }
     else $package = NULL;
+    if (isset($data)) {
+      foreach (array('module', 'subdir') AS $k) {
+        if (!empty($data[$k])) $registry_entry->{$k} = $data[$k];
+      }
+    }
 
     if ($package) {
-      $registry_entry['package_is_exportable'] = !empty($data['module']);
+      $registry_entry->package_is_exportable = !empty($data['module']);
       if ($type != 'package') {
-        $registry_entry['package'] = $package;
+        $registry_entry->package = $package;
       }
     }
     if (isset($wrapper->field__menu) && $menu = entity_valval($wrapper->field__menu)) {
-      $registry_entry['menu'] = $menu;
+      $registry_entry->menu = $menu;
     }
     if (isset($wrapper->field__files) && $files = $wrapper->field__files->value()) {
-      $registry_entry['files'] = array();
+      $registry_entry->files = array();
       foreach ($files AS $file) {
         //_catalyst_registry_entry_set_timestamp($entry, 'timestamp', $file['timestamp'], 'files');
-        $registry_entry['files'][] = $file + array('source' => 'files');
+        $registry_entry->files[] = $file + array('source' => 'files');
       }
     }
     $registry[$type][$machine] = $registry_entry;
@@ -74,15 +82,20 @@ function catalyst_registry_build($dirs = NULL) {
       $registry_entry = $registry[$type][$machine];
     }
     else {
-      $registry_entry = array('label' => $json['label']);
+      $registry_entry = (object)array(
+        'label' => $json['label'],
+        'type' => $type,
+        'machine' => $machine,
+        'dependencies' => $default_reg,
+      );
     }
-    if (!empty($json['package']) && empty($registry_entry['package'])) {
-      $registry_entry['package'] = $json['package'];
+    if (!empty($json['package']) && empty($registry_entry->package)) {
+      $registry_entry->package = $json['package'];
     }
     elseif ($json['type'] == 'package') {
       foreach (array('module', 'subdir') AS $k) {
         if (!empty($json[$k])) {
-          $registry_entry[$k] = $json[$k];
+          $registry_entry->{$k} = $json[$k];
         }
       }
     }
@@ -91,59 +104,72 @@ function catalyst_registry_build($dirs = NULL) {
     $assets = array();
     foreach ($files AS $filepath => $file) {
       $fpre = str_replace($dirpre . '/', '', $filepath);
-      $assets[$fpre] = array(
+      $assets[$fpre] = (object)array(
         'filepath' => $filepath,
         'filename' => $file->filename,
         'timestamp' => filemtime($filepath),
         'hash' => md5(file_get_contents($filepath)),
       );
     }
-    if (empty($registry_entry['file_path'])) {
+    if (empty($registry_entry->file_path)) {
       if ($assets) {
-        $registry_entry['assets'] = $assets;
+        $registry_entry->assets = $assets;
       }
-      $registry_entry['file_path'] = $result;
+      $registry_entry->file_path = $result;
       $registry[$type][$machine] = $registry_entry;
     }
     else {
-      //dsm('duplicate: ' . $type .':'.$machine);
-      if (!isset($registry[$type][$machine]['duplicates'])) {
-        $registry[$type][$machine]['duplicates'] = array();
+      if (!isset($registry[$type][$machine]->duplicates)) {
+        $registry[$type][$machine]->duplicates = array();
       }
-      $registry_entry['file_path'] = $result;
-      unset($registry_entry['wrapper']);
-      unset($registry_entry['id']);
-      $dup = array('file_path' => $registry_entry['file_path']);
-      if (!empty($registry_entry['package'])) {
-        $dup['package'] = $registry_entry['package'];
+      $registry_entry->file_path = $result;
+      unset($registry_entry->wrapper);
+      unset($registry_entry->entity);
+      //unset($registry_entry->id);
+      $dup = array('file_path' => $registry_entry->file_path);
+      if (!empty($registry_entry->package)) {
+        $dup['package'] = $registry_entry->package;
       }
       if ($assets) {
         $dup['assets'] = $assets;
       }
-      $registry[$type][$machine]['duplicates'][] = $dup;
+      $registry[$type][$machine]->duplicates[] = $dup;
+    }
+  }
+  $package_info = catalyst_registry_sort_packages($registry);
+  foreach ($registry AS $type => &$entries) {
+    foreach ($entries AS $machine => &$entry) {
+      if (!empty($entry->package)) {
+        $p = $entry->package;
+        $dep = (object)array('machine' => $p);
+        if (!empty($registry['package']) && !empty($registry['package'][$p])) {
+          if (!empty($registry['package'][$p]->id)) {
+            $dep->id = $registry['package'][$p]->id;
+          }
+          if (!empty($registry['package'][$p]->file_path)) {
+            $dep->file_path = $registry['package'][$p]->file_path;
+          }
+          if (!empty($registry['package'][$p]->file_path)) {
+            $dep->file_path = $registry['package'][$p]->file_path;
+          }
+        }
+        $entry->dependencies['package'][] = $dep;
+      }
+      if ($type == 'package') {
+        $entry->entries = $package_info['packages'][$entry->machine]->entities;
+        $entry->total_entries = 0;
+        foreach (array_keys($entry->entries) AS $t) {
+          $entry->total_entries += count($entry->entries[$t]);
+        }
+      }
+      $entry->dependencies = array_filter($entry->dependencies);
     }
   }
   drupal_alter('catalyst_registry', $registry);
   foreach ($registry AS $type => &$entries) {
     foreach ($entries AS $machine => &$entry) {
-      if (!empty($entry['package'])) {
-        $p = $entry['package'];
-        $dep = array('machine' => $p);
-        if (!empty($registry['package']) && !empty($registry['package'][$p])) {
-          if (!empty($registry['package'][$p]['id'])) {
-            $dep['id'] = $registry['package'][$p]['id'];
-          }
-          if (!empty($registry['package'][$p]['file_path'])) {
-            $dep['file_path'] = $registry['package'][$p]['file_path'];
-          }
-          if (!empty($registry['package'][$p]['file_path'])) {
-            $dep['file_path'] = $registry['package'][$p]['file_path'];
-          }
-        }
-        $entry['dependencies']['package'][] = $dep;
-      }
-      $entry['dependencies'] = array_filter($entry['dependencies']);
-      unset($entry['wrapper']);
+      unset($entry->entity);
+      unset($entry->wrapper);
     }
   }
   return $registry;
@@ -186,7 +212,7 @@ function catalyst_registry_list($type = CATALYST_REGISTRY_LIST_ENABLED, $refresh
       $registry = $enabled = $disabled = catalyst_get_registry($refresh);
       foreach ($registry AS $t => $entries) {
         foreach ($entries AS $machine => $entry) {
-          if (empty($entry['id'])) {
+          if (empty($entry->id)) {
             unset($enabled[$t][$machine]);
           }
           else {
@@ -215,7 +241,7 @@ function catalyst_registry_list($type = CATALYST_REGISTRY_LIST_ENABLED, $refresh
       $registry = catalyst_registry_list(CATALYST_REGISTRY_LIST_ENABLED, $refresh);
       foreach ($registry AS $type => $entries) {
         foreach ($entries AS $machine => $entry) {
-          if (!empty($entry['file_path'])) {
+          if (!empty($entry->file_path)) {
             unset($registry[$type][$machine]);
           }
         }
@@ -227,7 +253,7 @@ function catalyst_registry_list($type = CATALYST_REGISTRY_LIST_ENABLED, $refresh
       $registry = catalyst_registry_list(CATALYST_REGISTRY_LIST_ENABLED, $refresh);
       foreach ($registry AS $t => $entries) {
         foreach ($entries AS $machine => $entry) {
-          $index[$entry['id']] = array(
+          $index[$entry->id] = array(
             'type' => $t,
             'machine' => $machine,
           )+$entry;
@@ -264,10 +290,10 @@ function catalyst_registry_list_details($refresh = FALSE, $types = array()) {
 function catalyst_registry_entry_packages($re, $type, $machine) {
   if ($type == 'package') return array($machine);
   $packages = array();
-  if (!empty($re['package'])) $packages[] = $re['package'];
-  if (!empty($re['duplicates'])) {
-    foreach ($re['duplicates'] AS $dup) {
-      if (!empty($dup['package'])) $packages[] = $dup['package'];
+  if (!empty($re->package)) $packages[] = $re->package;
+  if (!empty($re->duplicates)) {
+    foreach ($re->duplicates AS $dup) {
+      if (!empty($dup->package)) $packages[] = $dup->package;
     }
   }
   return $packages;
@@ -276,21 +302,21 @@ function catalyst_registry_entry_packages($re, $type, $machine) {
 function catalyst_registry_sort_packages($registry) {
   $packages = array();
   $orphans = array();
-  foreach ($registry AS $type => $registry_entry) {
-    foreach ($registry[$type] AS $machine => $registry_entry) {
+  foreach ($registry AS $type => &$entries) {
+    foreach ($entries AS $machine => &$registry_entry) {
       if ($pks = catalyst_registry_entry_packages($registry_entry, $type, $machine)) {
         foreach ($pks AS $pkg) {
           if (!isset($packages[$pkg])) {
-            $packages[$pkg] = array('entities' => array());
+            $packages[$pkg] = (object)array('entities' => array());
           }
           if ($type == 'package') {
-            $packages[$pkg] += $registry_entry;
+            $packages[$pkg] = (object)array_merge((array)$registry_entry, (array)$packages[$pkg]);
           }
           else {
-            if (!isset($packages[$pkg]['entities'][$type])) {
-              $packages[$pkg]['entities'][$type] = array();
+            if (!isset($packages[$pkg]->entities[$type])) {
+              $packages[$pkg]->entities[$type] = array();
             }
-            $packages[$pkg]['entities'][$type][$machine] = $registry_entry;
+            $packages[$pkg]->entities[$type][$machine] = $registry_entry;
           }
         }
       }
@@ -310,7 +336,7 @@ function catalyst_registry_sort_packages($registry) {
  */
 function catalyst_get_registry($refresh = FALSE) {
   $registry =& drupal_static(__FUNCTION__);
-  $refresh = $refresh || variable_get('catalyst_registry_refresh', FALSE);
+  $refresh = $refresh || variable_get('catalyst_registry_rebuild', FALSE);
   if (!$registry || $refresh) {
     if (!$refresh && $cached = cache_get('catalyst_registry')) {
       $registry = $cached->data;
@@ -322,4 +348,8 @@ function catalyst_get_registry($refresh = FALSE) {
     }
   }
   return $registry;
+}
+
+function catalyst_registry_needs_rebuild() {
+  variable_set('catalyst_registry_rebuild', 1);
 }

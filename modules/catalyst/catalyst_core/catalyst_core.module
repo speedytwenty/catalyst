@@ -183,7 +183,7 @@ function catalyst_core_menu_alter(&$menu_items) {
  * catalyst entities.
  */
 function catalyst_core_form_field_ui_field_overview_form_alter(&$form, &$form_state) {
-  if ($form['#entity_type'] == 'catalyst')  {
+  if ($form['#entity_type'] != 'catalyst')  {
     // After build callback in catalyst_core/includes/uncommoon.inc
     catalyst_form_load_include($form_state, 'uncommon');
     // Make any alterations as late as possible
@@ -237,7 +237,6 @@ function catalyst_core_form_alter(&$form, &$form_state, $form_id) {
     if (isset($item['assets']['preprocess.php'])) {
       $path = str_replace(drupal_realpath(DRUPAL_ROOT).'/', '', $item['assets']['preprocess.php']['filepath']);
       $form_state['build_info']['files']['catalyst_preprocess'] = $path;
-      dsm($form_state['build_info']);
     }
   }
   if (isset($form['field__menu'])) {
@@ -529,7 +528,7 @@ function catalyst_coreblock($module, $delta = 0, $render = true) {
 
 function catalyst_lookup_entity($type, $machine, $refresh = FALSE) {
   $entry = catalyst_registry_entry($type, $machine, $refresh);
-  return $entry && !empty($entry['id']) ? $entry['id'] : FALSE;
+  return $entry && !empty($entry['id']) ? $entry['id'] : NULL;
 }
 
 function catalyst_entity_map() {
@@ -588,6 +587,7 @@ function catalyst_load($a0) {
     else {
       $keys = array_keys($arg[1]);
       $refresh = isset($arg[2]) && $arg[2];
+      $ids = array();
       if (is_numeric($keys[0])) {
         foreach ($arg[1] AS $mxd) {
           if (is_numeric($mxd)) {
@@ -597,7 +597,10 @@ function catalyst_load($a0) {
             $ids[] = $id;
           }
         }
-        $entities = entity_load('catalyst', $ids, array(), $refresh);
+        if ($ids) {
+          $entities = entity_load('catalyst', $ids, array(), $refresh);
+        }
+        else return array();
       }
       else {
         $entities = entity_load('catalyst', NULL, $conditions, $refresh);
@@ -606,11 +609,12 @@ function catalyst_load($a0) {
   }
   $return = array();
   foreach ($entities AS $key => $entity) {
-    $return[$key] = catalyst_registry_entry($entity->type, $entity->machine);
-    $return[$key]['machine'] = $entity->machine;
-    $return[$key]['type'] = $entity->type;
-    $return[$key]['entity'] = $entity;
-    $return[$key]['wrapper'] = entity_metadata_wrapper('catalyst', $entity);
+    $entry = catalyst_registry_entry($entity->type, $entity->machine);
+    $entry->machine = $entity->machine;
+    $entry->type = $entity->type;
+    $entry->entity = $entity;
+    $entry->wrapper = entity_metadata_wrapper('catalyst', $entity);
+    $return[$key] = $entry;
   }
   return $return;
 }
@@ -653,4 +657,29 @@ function catalyst_core_entity_load(&$entities, $entity_type) {
     // Provide shortcut for machine
     $entity->machine = $entity->field__machine[$lang][0]['machine'];
   }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function catalyst_core_entity_update($entity, $type) {
+  if ($type == 'catalyst') catalyst_registry_needs_rebuild();
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function catalyst_core_entity_insert($entity, $type) {
+  if ($type == 'catalyst') catalyst_registry_needs_rebuild();
+}
+
+/**
+ * Returns catalyst fields that are *safe* for other entity types.
+ */
+function catalyst_safe_fields() {
+  $fields = module_invoke_all(__FUNCTION__);
+  $fields[] = 'field__js';
+  $fields[] = 'field__css';
+  drupal_alter(__FUNCTION__, $fields);
+  return $fields;
 }

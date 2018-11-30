@@ -51,11 +51,14 @@ function catalyst_admin_save_export_form_alter(&$form, &$form_state) {
   $form['#submit'][] = 'catalyst_admin_save_export_submit';
 }
 
+/**
+ * Save & export submit handler
+ */
 function catalyst_admin_save_export_submit($form, &$form_state) {
   if ($form_state['values']['save_export']) {
     catalyst_include('export');
-    $entity = entity_load_single('catalyst', $form_state['catalyst']->id);
-    $archive_path = catalyst_export_entities(array($entity));
+    $entry = catalyst_load_single($form_state['catalyst']->id);
+    $archive_path = catalyst_export_entities(array($entry->entity));
     $export_path = drupal_get_path('module', $form_state['save_export']['module']) . '/' . $form_state['save_export']['subdir'];
     $archive = new ZipArchive;
     if ($archive->open($archive_path)) {
@@ -63,9 +66,11 @@ function catalyst_admin_save_export_submit($form, &$form_state) {
       $archive->close();
     }
     unlink($archive_path);
-    dsm('exported to ' . $export_path);
-    return;
-    dsm($path);
-    catalyst_export_entities(array($form_state['catalyst']), $path);
+    drupal_set_message(t('Exported %source_label (@type:@machine )to %path', array(
+      '@type' => $entry->type,
+      '@machine' => $entry->machine,
+      '%source_label' => $entry->wrapper->getLabel(),
+      '%path' => $export_path,
+    )));
   }
 }

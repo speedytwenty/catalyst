@@ -105,14 +105,13 @@ function catalyst_deregister_import($info) {
 }
 
 function catalyst_import_directory($path) {
-  if (_catalyst_import_is_legacy($path)) {
-    catalyst_import_directory_legacy($path);
-  }
-  else {
-    $files_results = array_keys(file_scan_directory($path, '/catalyst\.json/'));
-    foreach ($files_results AS $fr) {
-      $metadata = drupal_json_decode(file_get_contents($fr), TRUE);
-      dsm($metadata['type'] . ':' . $metadata['machine']);
+  $files_results = array_keys(file_scan_directory($path, '/catalyst\.json/'));
+  foreach ($files_results AS $fr) {
+    $metadata = drupal_json_decode(file_get_contents($fr), TRUE);
+    if (_catalyst_import_is_legacy($metadata)) {
+      catalyst_import_directory_legacy($path);
+    }
+    else {
       catalyst_import_entity($metadata, dirname($fr));
     }
   }
@@ -125,12 +124,11 @@ function catalyst_import_clone_entity($machine, $metadata, $path, $title = '') {
 }
 
 function catalyst_import_entity($metadata, $path) {
-  if ($eid = catalyst_lookup_entity($metadata['type'], $metadata['machine'])) {
-    $entity = entity_load_single('catalyst', $eid);
-    $wrapper = entity_metadata_wrapper('catalyst', $entity);
+  if ($id = catalyst_import_lookup_id($metadata['type'], $metadata['machine'])) {
+    $entity = entity_load_single('catalyst', $id);
+    $wrapper = entity_metadata_wrapper('catalyst', $id);
   }
   else {
-    dsm('NEW entity');
     $entity = entity_create('catalyst', array('type' => $metadata['type']));
     $wrapper = entity_metadata_wrapper('catalyst', $entity);
     if (isset($metadata['created'])) {
@@ -216,23 +214,31 @@ function catalyst_import_entity($metadata, $path) {
       ));
     }
   }
+  if ($files = file_scan_directory($path . '/files', '/.*/')) {
+    $values = [];
+    foreach (array_keys($files) AS $filepath) {
+      $values[] = catalyst_import_file($filepath);
+    }
+    $wrapper->field__files->set($values);
+  }
   drupal_alter('catalyst_import_entity', $wrapper, $metadata, $path);
   $wrapper->save();
 }
 
-function _catalyst_import_is_legacy($path) {
-  return file_exists($path . '/catalyst.json');
+function _catalyst_import_is_legacy($metadata) {
+  $keys = array_keys($metadata);
+  return is_numeric($keys[0]);
 }
 
 function catalyst_import_create_stub($type, $machine) {
   $entity = catalyst_entity_create($type, $machine);
-  $wrapper = entity_metadata_wrapper('catalyst', $machine);
+  $wrapper = entity_metadata_wrapper('catalyst', $entity);
   $wrapper->save();
   return $wrapper->getIdentifier();
 }
 
 function catalyst_import_ensure_stub($type, $machine) {
-  if ($eid = catalyst_lookup_entity($type, $machine)) {
+  if ($eid = catalyst_import_lookup_id($type, $machine)) {
     return $eid;
   }
   return catalyst_import_create_stub($type, $machine);
@@ -253,7 +259,7 @@ function catalyst_import_set_reference(&$wrapper, $field_name, $type, $machine) 
       $pid = (int)catalyst_import_ensure_stub($type, $mach);
       foreach ($cvalues AS $cval) {
         if ($cval->id == $pid) {
-          continue (1);
+          continue (2);
         }
       }
       array_push($cvalues, entity_load_single('catalyst', $pid));
@@ -262,7 +268,84 @@ function catalyst_import_set_reference(&$wrapper, $field_name, $type, $machine) 
     $wrapper->{$field_name}->set($cvalues);
     return $pids;
   }
+  else if (empty($machine)) {
+    throw new InvalidArgumentException(t('Missing or empty machine parameter.'));
+  }
   $pid = catalyst_import_ensure_stub($type, $machine);
   $wrapper->{$field_name}->set($pid);
   return $pid;
+}
+
+function catalyst_import_rollback_directory($dir, $package = NULL) {
+  $return = array(
+    'messages' => array(),
+  );
+  if (!is_dir($dir)) {
+    $return['error'] = t('The directory %dir does not exist.', array('%dir' => $dir));
+    return $return;
+  }
+  if (!file_exists($dir)) {
+    $return['error'] = t('The directory %dir does not exist.', array('%dir' => $dir));
+    return $return;
+  }
+  if (!$files = array_keys(file_scan_directory($dir, '/catalyst\.json/'))) {
+    $return['error'] = t('The directory %dir does not contain any catalyst.json files.', array('%dir' => $dir));
+    return $return;
+  }
+  $ids = array();
+  foreach ($files AS $filepath) {
+    $json = drupal_json_decode(file_get_contents($filepath), TRUE);
+    if ($id = catalyst_import_lookup_id($json['type'], $json['machine'])) {
+      $ids[] = $id;
+      $return['messages'][] = t('Removed catalyst @type @id (@machine)', array(
+        '@type' => $json['type'],
+        '@id' => $id,
+        '@machine' => $json['machine'],
+      ));
+    }
+  }
+  entity_delete_multiple('catalyst', $ids);
+  return $return;
+}
+
+function catalyst_import_file($filepath) {
+  $file = catalyst_import_create_file_entity($filepath);
+  return (array) file_save($file);
+}
+
+function catalyst_import_create_file_entity($destination, $uid = 1) {
+  $file = (object) array(
+    'uri' => $destination,
+    'uid' => $uid,
+    'filename' => drupal_basename($destination),
+    'filemime' => file_get_mimetype(urldecode($destination)),
+    'status' => FILE_STATUS_PERMANENT,
+    'display' => 1,
+  );
+
+  if ($slash_pos = strpos($file->filemime, '/')) {
+    $file->type = substr($file->filemime, 0, $slash_pos);
+  }
+  else $file->type = 'file';
+
+  $existing_files = file_load_multiple(array(), array('uri' => $file->uri));
+  if (count($existing_files)) {
+    $existing = reset($existing_files);
+    $file->fid = $existing->fid;
+    $file->filename = $existing->filename;
+  }
+  return $file;
+}
+
+function catalyst_import_lookup_id($type, $machine, $multiple = FALSE) {
+  $query = new EntityFieldQuery;
+  $result = $query->entityCondition('entity_type', 'catalyst', '=')
+    ->entityCondition('bundle', $type)
+    ->fieldCondition('field__machine', 'machine', $machine, '=')
+    ->execute();
+  if (!empty($result['catalyst'])) {
+    $keys = array_keys($result['catalyst']);
+    return $multiple ? $keys : array_shift($keys);
+  }
+  return NULL;
 }

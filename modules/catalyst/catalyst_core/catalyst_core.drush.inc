@@ -110,8 +110,20 @@ function drush_catalyst_core_catalyst_package_rollback($machine) {
 
 
 function drush_catalyst_core_catalyst_rollback($dir) {
+  drush_print(dt('Rolling back directory: @dir', array('@dir' => $dir)));
   catalyst_include('import');
-  catalyst_import_rollback_directory($dir);
+  $result = catalyst_import_rollback_directory($dir);
+  drush_catalyst_result($result);
+}
+
+function drush_catalyst_result($result) {
+  if (!empty($result['errors'])) {
+  }
+  if (!empty($result['messages'])) {
+    foreach ($result['messages'] AS $msg) {
+      drush_print($msg);
+    }
+  }
 }
 
 function drush_catalyst_core_catalyst_package_revert() {

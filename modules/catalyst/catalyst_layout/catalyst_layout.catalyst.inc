@@ -114,7 +114,10 @@ function catalyst_layout_catalyst_ignore_menus_alter(&$ignore_menus) {
  */
 function catalyst_layout_catalyst_export_metadata($component) {
   $metadata = array();
-  foreach (array('drupal_css', 'drupal_js', 'page_title_pattern', 'regions', 'show_messages') AS $suffix) {
+  if (isset($component->wrapper->field__layout_show_messages)) {
+    $metadata['layout_show_messages'] = (bool)$component->wrapper->field__layout_show_messages->value();
+  }
+  foreach (array('drupal_css', 'drupal_js', 'page_title_pattern', 'regions') AS $suffix) {
     $fn = 'field__layout_' . $suffix;
     if (isset($component->wrapper->{$fn}) && $val = $component->wrapper->{$fn}->value()) {
       $metadata['layout_'.$suffix] = $val;

@@ -72,7 +72,9 @@ function catalyst_import_scan_directory($dir) {
         }
         $metadata['assets'] = catalyst_import_component_assets($fd);
         drupal_alter('catalyst_import_metadata', $metadata);
-        $results[] = $metadata;
+        $results[] = array_filter($metadata, function ($e) {
+          return $e !== NULL && $e !== '' && $e !== array();
+        });
       }
     }
     return $results;
@@ -225,19 +227,25 @@ function catalyst_import_legacy_metadata(&$results, $info, $filepath) {
       'content' => 'body',
       'access_php' => 'access',
       'menu_options' => 'menu',
+      'block_placements' => 'blockplacements',
+      'regions' => 'layout_regions',
+      'page_title_pattern' => 'layout_page_title_pattern',
+      'show_messages' => 'layout_show_messages',
+      'js_custom' => 'js',
+      'css_custom' => 'css',
     );
     switch ($type) {
       case 'layout':
         $map += array(
-          'javascripts' => 'media_javascripts__layout',
-          'stylesheets' => 'media_stylesheets__layout',
+          'javascripts' => 'media_javascripts_layout',
+          'stylesheets' => 'media_stylesheets_layout',
         );
         break;
-      case 'tempalte':
+      case 'template':
       case 'page':
         $map += array(
-          'javascripts' => 'media_javascripts__page',
-          'stylesheets' => 'media_stylesheets__page',
+          'javascripts' => 'media_javascripts_page',
+          'stylesheets' => 'media_stylesheets_page',
         );
         break;
       default:
@@ -259,6 +267,14 @@ function catalyst_import_legacy_metadata(&$results, $info, $filepath) {
           unset($item[$k]);
         }
       }
+      foreach (array('js', 'css') AS $key) {
+        if (!empty($item[$key]) && $field = catalyst_resolve_field($key, $item['type'])) {
+          $newkey = str_replace('__', '_', str_replace('field__', '', $field['field_name']));
+          if ($newkey == $key) $newkey .= '_custom';
+          $item[$newkey] = $item[$key];
+          unset($item[$key]);
+        }
+      }
       if (!empty($item['files'])) {
         $files_path = isset($item['files_path']) ? $item['files_path'] : 'files';
         $item['assets'] = array();
@@ -272,24 +288,42 @@ function catalyst_import_legacy_metadata(&$results, $info, $filepath) {
           );
         }
       }
-      if (!empty($item['block_placements'])) {
-        foreach (array_keys($item['block_placements']) AS $i) {
+      if (!empty($item['blockplacements'])) {
+        foreach (array_keys($item['blockplacements']) AS $i) {
           switch ($type) {
-            case 'block':
             case 'layout':
-              $item['block_placements'][$i]['type'] = $type;
+              $item['blockplacements'][$i]['block'] = $item['block_placement_ids'][$i];
+              $item['blockplacements'][$i]['type'] = $type;
+              break;
+            case 'block':
+              $item['blockplacements'][$i]['layout'] = $item['block_placement_ids'][$i];
+              $item['blockplacements'][$i]['type'] = $type;
               break;
             case 'page':
             case 'template':
-              $item['block_placements'][$i]['type'] = 'layfield';
+              $item['blockplacements'][$i]['block'] = $item['block_placement_ids'][$i];
+              $item['blockplacements'][$i]['type'] = 'layfield';
               break;
           }
-          $item['block_placements'][$i]['machine'] = $item['block_placement_ids'][$i];
         }
         unset($item['block_placement_ids']);
       }
+      if (!empty($item['file_path'])) {
+        $item['media_file'] = $item['file_path'];
+        if (!isset($item['assets'])) $item['assets'] = array();
+        $filepath = sprintf('%s/%s/%s', $dir, $item['files_path'], $item['media_file']);
+        $item['assets'][$item['media_file']] = (object)array(
+          'filepath' => $filepath,
+          'filename' => basename($filepath),
+          'timestamp' => filemtime($filepath),
+          'hash' => md5(file_get_contents($filepath)),
+        );
+        unset($item['file_path']);
+      }
       unset($item['id']);
-      $results[] = $item;
+      $results[] = array_filter($item, function ($e) {
+          return $e !== NULL && $e !== '' && $e !== array();
+      });
     }
   }
 }

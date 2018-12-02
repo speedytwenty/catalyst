@@ -705,12 +705,11 @@ function catalyst_resolve_field($field_name_abbr, $bundle, $entity_type = 'catal
   if (!isset($cache[$entity_type][$bundle][$field_name_abbr])) {
     $suffixes = array($field_name_abbr);
     switch ($field_name_abbr) {
+      case 'css':
+      case 'js':
       case 'media_stylesheets':
       case 'media_javascripts':
         array_push($suffixes, $field_name_abbr . '__layout', $field_name_abbr . '__page');
-        break;
-      case 'css':
-      case 'js':
         break;
       case 'blockplacements':
         $suffixes = array(

@@ -223,10 +223,10 @@ function catalyst_media_catalyst_export_metadata($component) {
       $metadata['media_'.$suf] = $mt;
     }
   }
-  foreach (array('javascripts', 'stylesheets') AS $type) {
+  foreach (array('javascripts', 'stylesheets', 'files') AS $type) {
     if ($field = catalyst_resolve_field('media_'.$type, $component->type)) {
       $fn = $field['field_name'];
-      $key = str_replace('field__', '', $fn);
+      $key = str_replace('__', '_', str_replace('field__', '', $fn));
       if (isset($component->wrapper) &&  $component->wrapper->{$fn}->value()) {
         if (!isset($metadata[$key])) $metadata[$key] = array();
         foreach ($component->wrapper->{$fn} AS $item) {

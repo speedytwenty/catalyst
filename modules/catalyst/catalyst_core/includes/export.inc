@@ -344,29 +344,57 @@ function catalyst_json_encode($var) {
   return json_encode($var, JSON_PRETTY_PRINT);
 }
 
-function catalyst_export_entities($entities, $path = '') {
-  if (empty($path)) {
-    $path = drupal_realpath(drupal_tempnam('temporary://', 'zip_'));
+function catalyst_export_package($machine) {
+  catalyst_get_registry(TRUE);
+  if ($package = catalyst_load_single('package', $machine, TRUE)) {
+    if (empty($package->module)) {
+      throw new Exception(t('The package @machine is not assigned to a module.', array('@machine' => $machine)));
+    }
+    $components = array($package);
+    foreach ($package->entries AS $bundle => $entries) {
+      foreach ($entries AS $entry) {
+        if ($comp = catalyst_load_single($bundle, $entry)) {
+          $components[] = $comp;
+        }
+        else if (!catalyst_registry_entry($bundle, $entry)) {
+          throw new Exception(t('Failed to load catalyst @bundle:@machine.', array(
+            '@bundle' => $bundle,
+            '@machine' => $entry->machine,
+          )));
+        }
+      }
+    }
+    unset($package->entries);
+    $subdir = empty($package->subdir) ? '.' : $package->subdir;
+    $path = drupal_get_path('module', $package->module) . '/' . $subdir;
+    dsm($components);
+    return catalyst_export_components($components, $path);
   }
+  throw new InvalidArgumentException(t('The package @machine does not exist (in the database).', array(
+    '@machine' => $machine,
+  )));
+}
+
+function catalyst_export_components($components, $extract_to = '') {
+  $path = drupal_realpath(drupal_tempnam('temporary://', 'zip_'));
   $archive = new ZipArchive;
   if ($archive->open($path, ZipArchive::CREATE) === TRUE) {
-    $implements = module_implements('catalyst_export_entity');
+    $implements = module_implements('catalyst_export_component');
     $dirs = array();
-    foreach ($entities AS $entity) {
-      $wrapper = entity_metadata_wrapper('catalyst', $entity);
-      $machine = $wrapper->field__machine->machine->value();
-      if (!in_array($entity->type, $dirs)) {
-        $archive->addEmptyDir($entity->type);
-        $dirs[] = $entity->type;
+    foreach ($components AS $component) {
+      if (!is_object($component)) { dsm('not obj'); dsm($component); }
+      if (!in_array($component->type, $dirs)) {
+        $archive->addEmptyDir($component->type);
+        $dirs[] = $component->type;
       }
-      $archive->addEmptyDir(sprintf('%s/%s', $entity->type, $machine));
-      $metadata = catalyst_export_metadata($entity, $wrapper);
+      $archive->addEmptyDir(sprintf('%s/%s', $component->type, $component->machine));
+      $metadata = catalyst_export_metadata($component);
       ksort($metadata);
-      $filepath = sprintf('%s/%s/catalyst.json', $entity->type, $machine);
+      $filepath = sprintf('%s/%s/catalyst.json', $component->type, $component->machine);
       $contents = catalyst_json_encode($metadata);
       $archive->addFromString($filepath, $contents);
-      if (isset($wrapper->field__body) && $body = entity_valval($wrapper->field__body)) {
-        switch ($entity->type) {
+      if (isset($component->wrapper->field__body) && $body = entity_valval($component->wrapper->field__body)) {
+        switch ($component->type) {
           case 'javascript':
             $ext = 'js';
             break;
@@ -377,13 +405,13 @@ function catalyst_export_entities($entities, $path = '') {
             $ext = 'html';
             break;
         }
-        $archive->addFromString(sprintf('%s/%s/body.%s', $entity->type, $machine, $ext), $body);
+        $archive->addFromString(sprintf('%s/%s/body.%s', $component->type, $component->machine, $ext), $body);
       }
-      if (isset($wrapper->field__preprocess) && $preprocess = entity_valval($wrapper->field__preprocess)) {
-        $archive->addFromstring(sprintf('%s/%s/preprocess.php', $entity->type, $machine), "<?php \n".$preprocess);
+      if (isset($component->wrapper->field__preprocess) && $preprocess = entity_valval($component->wrapper->field__preprocess)) {
+        $archive->addFromstring(sprintf('%s/%s/preprocess.php', $component->type, $component->machine), "<?php\n".$preprocess);
       }
-      if (isset($wrapper->field__admin_notes) && $notes = $wrapper->field__admin_notes->value()) {
-        $archive->addFromString(sprintf('%s/%s/README.md', $entity->type, $machine), $notes['value']);
+      if (isset($component->wrapper->field__admin_notes) && $notes = $component->wrapper->field__admin_notes->value()) {
+        $archive->addFromString(sprintf('%s/%s/README.md', $component->type, $component->machine), $notes['value']);
       }
       foreach (array('css', 'js') AS $ftype) {
         $sts = array(
@@ -393,63 +421,69 @@ function catalyst_export_entities($entities, $path = '') {
         );
         foreach ($sts AS $fname => $fsuffix) {
           $fn = 'field__' . $ftype . $fsuffix;
-          if (isset($wrapper->{$fn}) && $val = $wrapper->{$fn}->value()) {
-            $archive->addFromString(sprintf('%s/%s/%s.%s', $entity->type, $machine, $fname, $ftype), $val['value']);
+          if (isset($component->wrapper->{$fn}) && $val = $component->wrapper->{$fn}->value()) {
+            $archive->addFromString(sprintf('%s/%s/%s.%s', $component->type, $component->machine, $fname, $ftype), $val['value']);
           }
         }
       }
-      if (isset($wrapper->field__access) && $val = entity_valval($wrapper->field__access)) {
-        $archive->addFromString(sprintf('%s/%s/access.php', $entity->type, $machine, $ftype), $val);
+      if (isset($component->wrapper->field__access) && $val = entity_valval($component->wrapper->field__access)) {
+        $archive->addFromString(sprintf('%s/%s/access.php', $component->type, $component->machine, $ftype), "<?php\n" .$val);
       }
-      if (isset($wrapper->field__html_head) && $val = entity_valval($wrapper->field__html_head)) {
-        $archive->addFromString(sprintf('%s/%s/head.html', $entity->type, $machine, $ftype), $val);
+      if (isset($component->wrapper->field__html_head) && $val = entity_valval($component->wrapper->field__html_head)) {
+        $archive->addFromString(sprintf('%s/%s/head.html', $component->type, $component->machine, $ftype), $val);
       }
-      if (isset($wrapper->field__files) && $files = $wrapper->field__files->value()) {
-        $archive->addEmptyDir(sprintf('%s/%s/files', $entity->type, $machine));
+      if (isset($component->wrapper->field__files) && $files = $component->wrapper->field__files->value()) {
+        $archive->addEmptyDir(sprintf('%s/%s/files', $component->type, $component->machine));
         foreach ($files AS $file) {
-          drush_print('File from:' . drupal_realpath($file['uri']));
-          $archive->addFile(drupal_realpath($file['uri']), sprintf('%s/%s/files/%s', $entity->type, $machine, $file['origname']));
+          $archive->addFile(drupal_realpath($file['uri']), sprintf('%s/%s/files/%s', $component->type, $component->machine, $file['origname']));
         }
       }
       foreach ($implements AS $module) {
-        $func = $module . '_catalyst_export_entity';
-        $func($archive, $entity, $wrapper);
+        $func = $module . '_catalyst_export_component';
+        $func($archive, $component);
       }
     }
     $archive->close();
+    if (!empty($extract_to)) {
+      dsm('Extracted to: '. $extract_to);
+      $archive = new ZipArchive;
+      $archive->open($path);
+      $archive->extractTo($extract_to);
+      $archive->close();
+      unlink($path);
+    }
     return $path;
   }
   else throw new Exception('Failed to open archive for creation.');
 }
 
-function catalyst_export_metadata($entity, $wrapper) {
+function catalyst_export_metadata($component) {
   $metadata = array();
   $metadata = array(
-    'type' => $wrapper->getBundle(),
-    'label' => $wrapper->label(),
-    'machine' => $wrapper->field__machine->machine->value(),
-    'created' => date(DATE_RFC2822, $wrapper->created->value()),
-    'changed' => date(DATE_RFC2822, $wrapper->changed->value()),
-    'internal' => (bool)$wrapper->field__internal->value(),
+    'type' => $component->type,
+    'label' => $component->label,
+    'machine' => $component->machine,
+    //'created' => date(DATE_RFC2822, $component->wrapper->created->value()),
+    //'changed' => date(DATE_RFC2822, $component->wrapper->changed->value()),
+    'internal' => isset($component->internal) ? (bool)$component->internal : FALSE,
   );
-  if ($entity->type != 'package' && $package = $wrapper->field__package->value()) {
-    $p = entity_metadata_wrapper('catalyst', $package);
+  if ($component->type != 'package' && $p = $component->wrapper->field__package) {
     $metadata['package'] = $p->field__machine->machine->value();
   }
-  foreach (array('menu', 'data') AS $suf) {
-    $fn = 'field__'.$suf;
-    if (isset($wrapper->{$fn}) && $data = entity_valval($wrapper->{$fn})) {
-      $metadata[$suf] = $data;
+  if (isset($component->wrapper->field__menu) && $data = entity_valval($component->wrapper->field__menu)) {
+    $metadata['menu'] = $data;
+  }
+  if (!empty($component->module) && $component->type == 'package') {
+    $metadata['module'] = $component->module;
+    if (!empty($component->subdir)) {
+      $metadata['subdir'] = $component->subdir;
     }
   }
-  if (isset($wrapper->field__debug)) {
-    $metadata['debug'] = (bool)$wrapper->field__debug->value();
+  if (isset($component->wrapper->field__debug)) {
+    $metadata['debug'] = (bool)$component->wrapper->field__debug->value();
   }
-  if (isset($wrapper->field__drupal_processing)) {
-    $metadata['drupal_processing'] = (bool)$wrapper->field__drupal_processing->value();
+  if (isset($component->wrapper->field__drupal_processing)) {
+    $metadata['drupal_processing'] = (bool)$component->wrapper->field__drupal_processing->value();
   }
-  //if (isset($wrapper->field__files) && $files = $wrapper->field__files->value()) {
-  //  $metadata['files'] = $files;
-  //}
-  return array_merge(module_invoke_all('catalyst_export_metadata', $entity, $wrapper), $metadata);
+  return array_merge(module_invoke_all('catalyst_export_metadata', $component, $metadata), $metadata);
 }

@@ -98,22 +98,22 @@ function catalyst_doctype_catalyst_export_alter(&$export, $original, $group, $ex
 /**
  * Implements hook_catalyst_export_metadata().
  */
-function catalyst_doctype_catalyst_export_metadata($entity, $wrapper) {
+function catalyst_doctype_catalyst_export_metadata($component) {
   $metadata = array();
-  foreach (array('', '_charset', '_content_type') AS $suffix) {
+  foreach (array('_charset', '_content_type') AS $suffix) {
     $fn = 'field__doctype' . $suffix;
-    if (isset($wrapper->{$fn}) && $val = $wrapper->{$fn}->value()) {
-      if (empty($suffix)) $val = entity_metadata_wrapper('catalyst', $val)->field__machine->machine->value();
+    if (isset($component->wrapper->{$fn}) && $val = $component->wrapper->{$fn}->value()) {
       $metadata['doctype'.$suffix] = $val;
     }
   }
+  if (!empty($component->doctype)) $metadata['doctype'] = $component->doctype;
   return $metadata;
 }
 
 /**
- * Implements hook_catalyst_import_entity_alter().
+ * Implements hook_catalyst_import_alter().
  */
-function catalyst_doctype_catalyst_import_entity_alter(&$wrapper, $metadata, $path) {
+function catalyst_doctype_catalyst_import_alter(&$wrapper, $metadata, $path) {
   if (!empty($metadata['doctype'])) {
     catalyst_import_set_reference($wrapper, 'field__doctype', 'doctype', $metadata['doctype']);
   }
@@ -122,6 +122,21 @@ function catalyst_doctype_catalyst_import_entity_alter(&$wrapper, $metadata, $pa
     if (isset($metadata[$key])) {
       $fn = 'field__'.$key;
       $wrapper->{$fn}->set($metadata[$key]);
+    }
+  }
+}
+
+/**
+ * Implements hook_catalyst_registry_alter().
+ */
+function catalyst_doctype_catalyst_registry_alter(&$registry) {
+  foreach ($registry AS $bundle => $entries) {
+    foreach ($entries AS $machine => &$entry) {
+      if (isset($entry->wrapper) && $doctype_field = catalyst_resolve_field('doctype', $bundle)) {
+        if ($entry->wrapper->field__doctype->value()) {
+          $entry->doctype = $entry->wrapper->field__doctype->field__machine->machine->value();
+        }
+      }
     }
   }
 }

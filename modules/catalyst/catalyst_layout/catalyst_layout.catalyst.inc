@@ -112,22 +112,27 @@ function catalyst_layout_catalyst_ignore_menus_alter(&$ignore_menus) {
 /**
  * Implements hook_catalyst_export_metadata().
  */
-function catalyst_layout_catalyst_export_metadata($entity, $wrapper) {
+function catalyst_layout_catalyst_export_metadata($component) {
   $metadata = array();
-  foreach (array('', '_drupal_css', '_drupal_js', '_page_title_pattern', '_regions', '_show_messages') AS $suffix) {
-    $fn = 'field__layout' . $suffix;
-    if (isset($wrapper->{$fn}) && $val = $wrapper->{$fn}->value()) {
-      if (empty($suffix)) $val = entity_metadata_wrapper('catalyst', $val)->field__machine->machine->value();
-      $metadata['layout'.$suffix] = $val;
+  foreach (array('drupal_css', 'drupal_js', 'page_title_pattern', 'regions', 'show_messages') AS $suffix) {
+    $fn = 'field__layout_' . $suffix;
+    if (isset($component->wrapper->{$fn}) && $val = $component->wrapper->{$fn}->value()) {
+      $metadata['layout_'.$suffix] = $val;
     }
+  }
+  if (!empty($component->layout) && $layout_field = catalyst_resolve_field('layout', $component->type)) {
+    $metadata['layout'] = $component->layout;
   }
   return $metadata;
 }
 
 /**
- * Implements hook_catalyst_import_entity_alter().
+ * Implements hook
+
+/**
+ * Implements hook_catalyst_import_alter().
  */
-function catalyst_layout_catalyst_import_entity_alter(&$wrapper, $metadata, $path) {
+function catalyst_layout_catalyst_import_alter(&$wrapper, $metadata, $path) {
   if (!empty($metadata['layout'])) {
     catalyst_import_set_reference($wrapper, 'field__layout', 'layout', $metadata['layout']);
   }
@@ -137,6 +142,21 @@ function catalyst_layout_catalyst_import_entity_alter(&$wrapper, $metadata, $pat
     if (isset($metadata[$key])) {
       $fn = 'field__'.$key;
       $wrapper->{$fn}->set($metadata[$key]);
+    }
+  }
+}
+
+/**
+ * Implements hook_catalyst_registry_alter().
+ */
+function catalyst_layout_catalyst_registry_alter(&$registry) {
+  foreach ($registry AS $bundle => &$entries) {
+    if ($layout_field = catalyst_resolve_field('layout', $bundle)) {
+      foreach ($entries AS $machine => &$entry) {
+        if (isset($entry->wrapper) && isset($entry->wrapper->field__layout) && $entry->wrapper->field__layout->value()) {
+          $entry->layout = $entry->wrapper->field__layout->field__machine->machine->value();
+        }
+      }
     }
   }
 }

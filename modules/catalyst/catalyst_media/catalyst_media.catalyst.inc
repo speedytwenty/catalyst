@@ -211,16 +211,31 @@ function catalyst_media_catalyst_export_alter(&$export, $original, $group, $expo
 /**
  * Implements hook_catalyst_export_metadata().
  */
-function catalyst_media_catalyst_export_metadata($entity, $wrapper) {
+function catalyst_media_catalyst_export_metadata($component) {
   $metadata = array();
+  if (!empty($component->media_file)) {
+    $metadata['media_file'] = $component->media_file;
+  }
   $sufs = array('javascript_defer', 'javascript_scope', 'path', 'type', 'stylesheet_media');
   foreach ($sufs AS $suf) {
     $fn = 'field__media_'.$suf;
-    if (isset($wrapper->{$fn}) && $mt = $wrapper->{$fn}->value()) {
-    drush_print($fn);
-      $metadata['media_'.$suf] = $wrapper->{$fn}->value();
+    if (isset($component->wrapper->{$fn}) && $mt = $component->wrapper->{$fn}->value()) {
+      $metadata['media_'.$suf] = $mt;
     }
   }
+  foreach (array('javascripts', 'stylesheets') AS $type) {
+    if ($field = catalyst_resolve_field('media_'.$type, $component->type)) {
+      $fn = $field['field_name'];
+      $key = str_replace('field__', '', $fn);
+      if (isset($component->wrapper) &&  $component->wrapper->{$fn}->value()) {
+        if (!isset($metadata[$key])) $metadata[$key] = array();
+        foreach ($component->wrapper->{$fn} AS $item) {
+          $metadata[$key][] = $item->field__machine->machine->value();
+        }
+      }
+    }
+  }
+  return $metadata;
   $mfs = array(
     'files',
     'javascripts',
@@ -232,7 +247,7 @@ function catalyst_media_catalyst_export_metadata($entity, $wrapper) {
   );
   foreach ($mfs AS $suffix) {
     $fn = 'field__media_' . $suffix;
-    if (isset($wrapper->{$fn}) && $vals = $wrapper->{$fn}->value()) {
+    if (isset($component->wrapper->{$fn}) && $vals = $component->wrapper->{$fn}->value()) {
       $ms = array();
       foreach ($vals AS $val) {
         $ms[] = entity_metadata_wrapper('catalyst', $val)->field__machine->machine->value();
@@ -244,30 +259,32 @@ function catalyst_media_catalyst_export_metadata($entity, $wrapper) {
 }
 
 /**
- * Implements hook_catalyst_export_entity().
+ * Implements hook_catalyst_export_component().
  */
-function catalyst_media_catalyst_export_entity(&$archive, $entity, $wrapper) {
-  $machine = $wrapper->field__machine->machine->value();
-  if (isset($wrapper->field__media_file) && $file = $wrapper->field__media_file->value()) {
-    $archive->addFile(drupal_realpath($file['uri']), sprintf('%s/%s/%s', $entity->type, $machine, $file['origname']));
+function catalyst_media_catalyst_export_component(&$archive, $component) {
+  if (isset($component->wrapper->field__media_file) && $file = $component->wrapper->field__media_file->value()) {
+    $archive->addFile(drupal_realpath($file['uri']), sprintf('%s/%s/%s', $component->type, $component->machine, $file['origname']));
   }
 }
 
+
 /**
- * Implements hook_catalyst_import_entity_alter().
+ * Implements hook_catalyst_import_alter().
  */
-function catalyst_media_catalyst_import_entity_alter(&$wrapper, $metadata, $path) {
+function catalyst_media_catalyst_import_alter(&$wrapper, $metadata, $path) {
   if (!empty($metadata['media_files'])) {
     catalyst_import_set_reference($wrapper, 'field__media_files', 'file', $metadata['media_files']);
   }
-  foreach (array('javascript' => 'javascripts', 'stylesheet' => 'stylesheets') AS $type => $fsuf) {
-    foreach (array('', '__layout', '__page') AS $suf) {
-      $key = 'media_'.$fsuf.$suf;
-      if (isset($metadata[$key])) {
-        $fn = 'field__'.$key;
-        if (!empty($metadata[$key])) {
-          catalyst_import_set_reference($wrapper, $fn, $type, $metadata[$key]);
-        }
+  if (!empty($metadata['media_file'])) {
+    $media_file = $metadata['assets'][$metadata['media_file']];
+    $file = catalyst_import_file($media_file->filepath);
+    $wrapper->field__media_file->set($file);
+  }
+  foreach (array('javascript' => 'javascripts', 'stylesheet' => 'stylesheets') AS $type => $suffix) {
+    if ($field = catalyst_resolve_field('media_'. $suffix, $wrapper->getBundle())) {
+      $key = str_replace('__', '_', str_replace('field__', '', $field['field_name']));
+      if (!empty($metadata[$key])) {
+        catalyst_import_set_reference($wrapper, $field['field_name'], $type, $metadata[$key]);
       }
     }
   }
@@ -285,14 +302,16 @@ function catalyst_media_catalyst_import_entity_alter(&$wrapper, $metadata, $path
  * Implements hook_catalyst_registry_alter().
  */
 function catalyst_media_catalyst_registry_alter(&$registry) {
-  foreach ($registry AS $type => &$entries) {
-    foreach ($entries AS $machine => &$entry) {
-      if (isset($entry->wrapper)) {
-        if (isset($entry->wrapper->field__media_file) && $file = $entry->wrapper->field__media_file->value()) {
+  foreach ($registry AS $bundle => &$entries) {
+    if ($field = catalyst_resolve_field('media_file', $bundle)) {
+      foreach ($entries AS $machine => &$entry) {
+        if (isset($entry->wrapper) && $file = $entry->wrapper->field__media_file->value()) {
           if (!isset($entry->files)) $entry->files = array();
           $entry->files[] = $file + array('source' => 'media_file');
+          $entry->media_file = $file['filename'];
         }
       }
     }
   }
 }
+

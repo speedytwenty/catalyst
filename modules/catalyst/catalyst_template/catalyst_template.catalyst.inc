@@ -92,27 +92,23 @@ function catalyst_template_catalyst_prepare_export($export, $group, $exports) {
 /**
  * Implements hook_catalyst_export_metadata().
  */
-function catalyst_template_catalyst_export_metadata($entity, $wrapper) {
+function catalyst_template_catalyst_export_metadata($component) {
   $metadata = array();
-  foreach (array('bundle', 'entity_type') AS $suffix) {
-    $fn = 'field__template_' . $suffix;
-    if (isset($wrapper->{$fn}) && $val = $wrapper->{$fn}->value()) {
-      if (empty($suffix)) $val = entity_metadata_wrapper('catalyst', $val)->field__machine->machine->value();
-      $metadata['template_'.$suffix] = $val;
-    }
+  if (!empty($component->template)) {
+    $metadata['template'] = $component->template;
   }
   return $metadata;
 }
 
 /**
- * Implements hook_catalyst_import_entity_alter().
+ * Implements hook_catalyst_import_alter().
  */
-function catalyst_template_catalyst_import_entity_alter(&$wrapper, $metadata, $path) {
-  foreach (array('bundle', 'entity_type') AS $suf) {
-    $key = 'template_'.$suf;
-    if (isset($metadata[$key])) {
-      $fn = 'field__'.$key;
-      $wrapper->{$fn}->set($metadata[$key]);
+function catalyst_template_catalyst_import_alter(&$wrapper, $metadata, $path) {
+  if (!empty($metadata['template'])) {
+    if ($wrapper->getBundle() == 'template') {
+      $wrapper->field__data->set(array(
+        'value' => $metadata['template']
+      ));
     }
   }
 }
@@ -122,11 +118,8 @@ function catalyst_template_catalyst_import_entity_alter(&$wrapper, $metadata, $p
  */
 function catalyst_template_catalyst_registry_alter(&$registry) {
   foreach ($registry['template'] AS $machine => &$entry) {
-    if (isset($entry->wrapper)) {
-      $entry->template = array(
-        'entity_type' => $entry->wrapper->field__template_entity_type->machine->value(),
-        'bundle' => $entry->wrapper->field__template_bundle->machine->value(),
-      );
+    if (isset($entry->wrapper) && $data = $entry->wrapper->field__data->value()) {
+      $entry->template = $data['value'];
     }
   }
 }

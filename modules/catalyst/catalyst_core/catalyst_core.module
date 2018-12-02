@@ -146,9 +146,9 @@ function catalyst_core_hook_info() {
   // Fields, entities, and node related hooks
   $hooks['catalyst_node_types'] = $group;
   $hooks['catalyst_safe_fields'] = $group;
+  $hooks['catalyst_import_alter'] = $group;
   $hooks['catalyst_export_metadata'] = $group;
-  $hooks['catalyst_export_entity'] = $group;
-  $hooks['catalyst_import_entity_alter'] = $group;
+  $hooks['catalyst_export_component'] = $group;
   $hooks['catalyst_registry_alter'] = $group;
   return $hooks;
 }
@@ -528,7 +528,7 @@ function catalyst_coreblock($module, $delta = 0, $render = true) {
 
 function catalyst_lookup_entity($type, $machine, $refresh = FALSE) {
   $entry = catalyst_registry_entry($type, $machine, $refresh);
-  return $entry && !empty($entry['id']) ? $entry['id'] : NULL;
+  return $entry && !empty($entry->id) ? $entry->id : NULL;
 }
 
 function catalyst_entity_map() {
@@ -591,7 +591,7 @@ function catalyst_load($a0) {
       if (is_numeric($keys[0])) {
         foreach ($arg[1] AS $mxd) {
           if (is_numeric($mxd)) {
-            $ids[] = $mxd;
+            $ids[] = (int)$mxd;
           }
           else if ($id = catalyst_lookup_entity($type, $mxd)) {
             $ids[] = $id;
@@ -667,6 +667,13 @@ function catalyst_core_entity_update($entity, $type) {
 }
 
 /**
+ * Implements hook_entity_delete().
+ */
+function catalyst_core_entity_delete($entity, $type) {
+  if ($type == 'catalyst') catalyst_registry_needs_rebuild();
+}
+
+/**
  * Implements hook_entity_insert().
  */
 function catalyst_core_entity_insert($entity, $type) {
@@ -682,4 +689,51 @@ function catalyst_safe_fields() {
   $fields[] = 'field__css';
   drupal_alter(__FUNCTION__, $fields);
   return $fields;
+}
+
+/**
+ * Resolve a field to it's type.
+ *
+ * @param
+ */
+function catalyst_resolve_field($field_name_abbr, $bundle, $entity_type = 'catalyst') {
+  static $cache;
+  if (!isset($cache)) $cache = array();
+  if (!isset($cache[$entity_type])) $cache[$entity_type] = array();
+  if (!isset($cache[$entity_type][$bundle])) $cache[$entity_type][$bundle] = array();
+  $field_name_abbr = str_replace('field__', '', $field_name_abbr);
+  if (!isset($cache[$entity_type][$bundle][$field_name_abbr])) {
+    $suffixes = array($field_name_abbr);
+    switch ($field_name_abbr) {
+      case 'media_stylesheets':
+      case 'media_javascripts':
+        array_push($suffixes, $field_name_abbr . '__layout', $field_name_abbr . '__page');
+        break;
+      case 'css':
+      case 'js':
+        break;
+      case 'blockplacements':
+        $suffixes = array(
+          $field_name_abbr . '__block',
+          $field_name_abbr . '__layout',
+          $field_name_abbr . '__layfield',
+        );
+        break;
+    }
+    $instances = field_info_instances($entity_type, $bundle);
+    $result = FALSE;
+    foreach ($suffixes AS $suffix) {
+      $field_name = 'field__' . $suffix;
+      if (isset($instances[$field_name])) {
+        $result = $instances[$field_name];
+        if (!empty($result['settings']['better_formats']['allowed_formats'])) {
+          $formats = array_keys(array_filter($result['settings']['better_formats']['allowed_formats']));
+          $result['format'] = array_pop($formats);
+        }
+        break;
+      }
+    }
+    $cache[$entity_type][$bundle][$field_name_abbr] = $result;
+  }
+  return $cache[$entity_type][$bundle][$field_name_abbr];
 }

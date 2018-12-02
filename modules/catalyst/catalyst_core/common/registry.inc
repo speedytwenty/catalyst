@@ -19,13 +19,13 @@ function catalyst_registry_build($dirs = NULL) {
     'stylesheet' => array(),
     'template' => array(),
   );
-  $entities = entity_load('catalyst');
+  $entities = entity_load('catalyst', FALSE, array(), TRUE);
   foreach ($entities AS $entity) {
     $wrapper = entity_metadata_wrapper('catalyst', $entity);
     $machine = $wrapper->field__machine->machine->value();
     $type = $wrapper->getBundle();
     $registry_entry = (object)array(
-      'id' => $wrapper->getIdentifier(),
+      'id' => (int)$wrapper->getIdentifier(),
       'label' => $wrapper->label(),
       'dependencies' => $default_reg,
       'internal' => (bool)$wrapper->field__internal->value(),
@@ -111,22 +111,24 @@ function catalyst_registry_build($dirs = NULL) {
         'hash' => md5(file_get_contents($filepath)),
       );
     }
-    if (empty($registry_entry->file_path)) {
+    if (empty($registry[$type][$machine])) {
       if ($assets) {
         $registry_entry->assets = $assets;
       }
-      $registry_entry->file_path = $result;
+      $registry_entry->filepath = $result;
       $registry[$type][$machine] = $registry_entry;
     }
     else {
+      continue;
       if (!isset($registry[$type][$machine]->duplicates)) {
         $registry[$type][$machine]->duplicates = array();
       }
-      $registry_entry->file_path = $result;
-      unset($registry_entry->wrapper);
-      unset($registry_entry->entity);
+      $registry_entry->filepath = $result;
+      //$registry_entry->wrapper = $registry_entry->entity = NULL;
+      //unset($registry_entry->wrapper);
+      //unset($registry_entry->entity);
       //unset($registry_entry->id);
-      $dup = array('file_path' => $registry_entry->file_path);
+      $dup = array('filepath' => $registry_entry->filepath);
       if (!empty($registry_entry->package)) {
         $dup['package'] = $registry_entry->package;
       }
@@ -146,17 +148,17 @@ function catalyst_registry_build($dirs = NULL) {
           if (!empty($registry['package'][$p]->id)) {
             $dep->id = $registry['package'][$p]->id;
           }
-          if (!empty($registry['package'][$p]->file_path)) {
-            $dep->file_path = $registry['package'][$p]->file_path;
+          if (!empty($registry['package'][$p]->filepath)) {
+            $dep->filepath = $registry['package'][$p]->filepath;
           }
-          if (!empty($registry['package'][$p]->file_path)) {
-            $dep->file_path = $registry['package'][$p]->file_path;
+          if (!empty($registry['package'][$p]->filepath)) {
+            $dep->filepath = $registry['package'][$p]->filepath;
           }
         }
         $entry->dependencies['package'][] = $dep;
       }
       if ($type == 'package') {
-        $entry->entries = $package_info['packages'][$entry->machine]->entities;
+        $entry->entries = $package_info['packages'][$entry->machine]->entries;
         $entry->total_entries = 0;
         foreach (array_keys($entry->entries) AS $t) {
           $entry->total_entries += count($entry->entries[$t]);
@@ -241,7 +243,7 @@ function catalyst_registry_list($type = CATALYST_REGISTRY_LIST_ENABLED, $refresh
       $registry = catalyst_registry_list(CATALYST_REGISTRY_LIST_ENABLED, $refresh);
       foreach ($registry AS $type => $entries) {
         foreach ($entries AS $machine => $entry) {
-          if (!empty($entry->file_path)) {
+          if (!empty($entry->filepath)) {
             unset($registry[$type][$machine]);
           }
         }
@@ -307,16 +309,16 @@ function catalyst_registry_sort_packages($registry) {
       if ($pks = catalyst_registry_entry_packages($registry_entry, $type, $machine)) {
         foreach ($pks AS $pkg) {
           if (!isset($packages[$pkg])) {
-            $packages[$pkg] = (object)array('entities' => array());
+            $packages[$pkg] = (object)array('entries' => array());
           }
           if ($type == 'package') {
             $packages[$pkg] = (object)array_merge((array)$registry_entry, (array)$packages[$pkg]);
           }
           else {
-            if (!isset($packages[$pkg]->entities[$type])) {
-              $packages[$pkg]->entities[$type] = array();
+            if (!isset($packages[$pkg]->entries[$type])) {
+              $packages[$pkg]->entries[$type] = array();
             }
-            $packages[$pkg]->entities[$type][$machine] = $registry_entry;
+            $packages[$pkg]->entries[$type][$machine] = $registry_entry->machine;
           }
         }
       }
@@ -344,7 +346,7 @@ function catalyst_get_registry($refresh = FALSE) {
     else {
       $registry = catalyst_registry_build();
       cache_set('catalyst_registry', $registry);
-      variable_del('catalyst_registry_refresh');
+      variable_del('catalyst_registry_rebuild');
     }
   }
   return $registry;

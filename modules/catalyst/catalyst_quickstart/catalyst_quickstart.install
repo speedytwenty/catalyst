@@ -12,7 +12,6 @@
  *  - image
  *  - rdf
  *  - taxonomy
- *  - webform
  *  - wysiwyg
  *  Adds the filtered_html and full_html input formats.
  */
@@ -32,7 +31,6 @@ function catalyst_quickstart_install() {
     'search',
     'taxonomy',
     'wysiwyg',
-    'webform',
     'catalyst_template',
   ), TRUE);
 

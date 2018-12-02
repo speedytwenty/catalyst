@@ -123,10 +123,6 @@ projects[views_php][version] = "1.0-alpha3"
 projects[views_php][type] = "module"
 projects[views_php][subdir] = "contrib"
 
-projects[webform][version] = "4.15"
-projects[webform][type] = "module"
-projects[webform][subdir] = "contrib"
-
 projects[wysiwyg][version] = "2.x-dev"
 projects[wysiwyg][type] = "module"
 projects[wysiwyg][subdir] = "contrib"

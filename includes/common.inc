@@ -290,6 +290,9 @@ function catalyst_get_js($scope = 'header') {
       unset($javascript[$i]);
     }
   }
+  if (!in_array(JS_DEFAULT, $layout->getDrupalJSOptions())) {
+    unset($javascript['settings']);
+  }
   return drupal_get_js($scope, $javascript);
 }
 

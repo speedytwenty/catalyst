@@ -38,13 +38,52 @@ function _catalyst_template_load($entity_type, $bundle, $load_default = TRUE) {
  */
 function catalyst_form_eck__entity__form_alter(&$form, &$form_state) {
   if ($form['#entity_type'] == 'catalyst' && catalyst_entity_is_a('template', $form['#entity'])) {
-    catalyst_form_load_include($form_state, 'admin', 'template');
-    if (catalyst_entity_is_new($form['#entity'])) {
-      $form['#after_build'][] = 'catalyst_template_add_form_after_build';
+    $entity_type = $form['#entity_type'];
+    $bundle = $form['#bundle'];
+    $lang = LANGUAGE_NONE;
+    $field_instance = field_info_instance($entity_type, 'field__data', $bundle);
+    if (isset($form_state['values']['field__data'][$lang][0]['value'])) {
+      $data = $form_state['values']['field__data'][$lang][0]['value'];
     }
     else {
-      $form['#after_build'][] = 'catalyst_template_form_after_build';
+      $wrapper = entity_metadata_wrapper($entity_type, $form_state[$entity_type]);
+      $data = entity_valval($wrapper->field__data);
     }
+    $form['field__template_entity_type']['#access'] = FALSE;
+    $form['field__template_bundle']['#access'] = FALSE;
+    $html_id = drupal_html_id('template_options');
+    $ajax = array(
+      'callback' => 'catalyst_template_widget_ajax',
+      'wrapper' => $html_id,
+    );
+    $widget = array(
+      '#id' => $html_id,
+      '#tree' => TRUE,
+      '#type' => 'container',
+    );
+    $widget['entity_type'] = array(
+      '#type' => 'select',
+      '#title' => t('Entity type'),
+      '#options' => catalyst_template_entity_type_options(),
+      '#ajax' => $ajax,
+      '#required' => TRUE,
+      '#default_value' => $data['entity_type'],
+    );
+    if (!empty($data['entity_type'])) {
+      $widget['bundle'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('Bundles'),
+        '#options' => catalyst_template_bundle_options($data['entity_type']),
+        '#default_value' => $data['bundle'],
+      );
+      $widget['view_modes'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('View modes'),
+        '#options' => catalyst_template_view_mode_options($data['entity_type']),
+        '#default_value' => $data['view_modes'],
+      );
+    }
+    $form['field__data'][$lang][0]['value'] = $widget;
   }
 }
 
@@ -60,4 +99,38 @@ function catalyst_template_entity_view_alter(&$build, $type) {
     $build['#theme_original'] = $build['#theme'];
     $build['#theme'] = 'catalyst_template';
   }
+}
+
+/**
+ * Provides view mode options for a specific entity type.
+ */
+function catalyst_template_view_mode_options($entity_type) {
+  $info = entity_get_info($entity_type);
+  $options = array();
+  foreach ($info['view modes'] AS $v => $vm) {
+    $options[$v] = $vm['label'];
+  }
+  return $options;
+}
+
+function catalyst_template_entity_type_options() {
+  $types = entity_get_info();
+  $options = array();
+  foreach ($types AS $type => $info) {
+    $options[$type] = $info['label'];
+  }
+  return $options;
+}
+
+function catalyst_template_bundle_options($entity_type) {
+  $info = entity_get_info($entity_type);
+  $options = array();
+  foreach ($info['bundles'] AS $k => $v) {
+    $options[$k] = $v['label'];
+  }
+  return $options;
+}
+
+function catalyst_template_widget_ajax($form, &$form_state) {
+  return $form['field__data'][LANGUAGE_NONE][0]['value'];
 }

@@ -38,6 +38,11 @@ function catalyst_core_theme() {
       'template' => 'catalyst-menu-widget-menu-options',
       'path' => catalyst_get_path() . '/theme',
     ),
+    'catalyst' => array(
+      'render element' => 'element',
+      'template' => 'catalyst',
+      'path' => catalyst_get_path() . '/theme',
+    ),
   );
 }
 
@@ -663,21 +668,30 @@ function catalyst_core_entity_load(&$entities, $entity_type) {
  * Implements hook_entity_update().
  */
 function catalyst_core_entity_update($entity, $type) {
-  if ($type == 'catalyst') catalyst_registry_needs_rebuild();
+  _catalyst_entity_change($entity, $type);
 }
 
 /**
  * Implements hook_entity_delete().
  */
 function catalyst_core_entity_delete($entity, $type) {
-  if ($type == 'catalyst') catalyst_registry_needs_rebuild();
+  _catalyst_entity_change($entity, $type);
 }
 
 /**
  * Implements hook_entity_insert().
  */
 function catalyst_core_entity_insert($entity, $type) {
-  if ($type == 'catalyst') catalyst_registry_needs_rebuild();
+  _catalyst_entity_change($entity, $type);
+}
+
+function _catalyst_entity_change($entity, $type) {
+  if ($type == 'catalyst') {
+    catalyst_registry_needs_rebuild();
+    if ($field = catalyst_resolve_field('field__menu', $entity->type)) {
+      variable_set('menu_rebuild_needed', TRUE);
+    }
+  }
 }
 
 /**

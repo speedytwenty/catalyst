@@ -58,7 +58,7 @@ function catalyst_admin_save_export_submit($form, &$form_state) {
   if ($form_state['values']['save_export']) {
     catalyst_include('export');
     $entry = catalyst_load_single($form_state['catalyst']->id);
-    $archive_path = catalyst_export_entities(array($entry->entity));
+    $archive_path = catalyst_export_components(array($entry->entity));
     $export_path = drupal_get_path('module', $form_state['save_export']['module']) . '/' . $form_state['save_export']['subdir'];
     $archive = new ZipArchive;
     if ($archive->open($archive_path)) {

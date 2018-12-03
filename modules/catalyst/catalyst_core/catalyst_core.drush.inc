@@ -81,43 +81,50 @@ function drush_catalyst_core_catalyst_import($path = '') {
     drush_set_error(NULL, dt('Missing path argument.'));
     return;
   }
-  if (file_exists($path)) {
-    catalyst_include('import');
-    if (is_dir($path)) {
-      drush_print(dt('Importing from directory: @path', array('@path' => $path)));
-      catalyst_import_directory($path);
-    }
-    else {
-      if (mime_content_type($path) == 'zip') {
-        drush_print(dt('Importing from archive: @path', array('@path' => $path)));
-        catalyst_import_archive($path);
-      }
-      else {
-        drush_set_error(NULL, dt('Unknown mime type for @path.', array('@path' => $path)));
-      }
-    }
+  drush_print(dt('Importing from directory: @path', array('@path' => $path)));
+  $result = array();
+  catalyst_include('import');
+  if (is_dir($path)) {
+    $result = catalyst_import_directory($path);
   }
   else {
-    drush_set_error(NULL, dt('@path not found.', array('@path' => $path)));
+    if (mime_content_type($path) == 'zip') {
+      drush_print(dt('Importing from archive: @path', array('@path' => $path)));
+      $result = catalyst_import_archive($path);
+    }
+    else {
+      drush_set_error(NULL, dt('Error: Invalid archive. Unknown mime type for @path.', array('@path' => $path)));
+    }
   }
+  drush_catalyst_result($result);
 }
 
 function drush_catalyst_core_catalyst_package_rollback($machine) {
-  $package = catalyst_load_single('package', $machine);
   catalyst_include('import');
-  catalyst_import_rollback_directory($package->file_path);
+  $result = catalyst_import_rollback_package($package->file_path);
+  drush_catalyst_result($result);
 }
 
 
-function drush_catalyst_core_catalyst_rollback($dir) {
-  drush_print(dt('Rolling back directory: @dir', array('@dir' => $dir)));
+function drush_catalyst_core_catalyst_rollback($path) {
+  $path = sprintf('%s/%s', DRUPAL_ROOT, $path);
+  if (!file_exists($path)) {
+    drush_print(dt('Error: @path does not exist.', array('@path' => $path)));
+    return;
+  }
+  else if (!is_dir($path)) {
+    drush_print(dt('Error: @path is not a directory.', array('@path' => $path)));
+    return;
+  }
+  drush_print(dt('Rolling back directory: @dir', array('@dir' => $path)));
   catalyst_include('import');
-  $result = catalyst_import_rollback_directory($dir);
+  $result = catalyst_import_rollback_directory($path);
   drush_catalyst_result($result);
 }
 
 function drush_catalyst_result($result) {
-  if (!empty($result['errors'])) {
+  if (!empty($result['error'])) {
+    drush_print(dt('Error: @error', array('@error' => $result['error'])));
   }
   if (!empty($result['messages'])) {
     foreach ($result['messages'] AS $msg) {
@@ -133,7 +140,12 @@ function drush_catalyst_core_catalyst_revert_all_packages() {
 }
 
 function drush_catalyst_core_catalyst_package_info($machine) {
-  $package = catalyst_load_single('package', $machine);
+  if (!$package = catalyst_load_single('package', $machine)) {
+    drush_print(dt('The catalyst package @machine does not exist.', array(
+      '@machine' => $machine,
+    )));
+    return;
+  }
   drush_print($package->label);
   if (isset($package->wrapper->field__admin_notes) && $admin_notes = $package->wrapper->field__admin_notes->value()) {
     drush_print($admin_notes);
@@ -142,20 +154,27 @@ function drush_catalyst_core_catalyst_package_info($machine) {
   drush_print(dt('Subdirectory: @subdir', array('@subdir' => empty($package->subdir) ? '-' : $package->subdir)));
   if ($package->entries) {
     drush_print(dt('Components contained in @package:', array('@package' => $package->label)));
-    $table = array(array('Label', 'Type', 'Machine name', 'Modified'));
-    foreach ($package->entries AS $type => $entries) {
-      foreach ($entries AS $entry) {
+    $total = 0;
+    foreach ($package->entries AS $bundle => $entries) {
+      drush_print(t('@label (@count)', array(
+        '@label' => ucfirst($bundle) . 's',
+        '@count' => count($entries),
+      )));
+      $table = array(array('Label', 'Machine name', 'ID', 'Modified'));
+      foreach ($entries AS $machine) {
+        $entry = catalyst_load_single($bundle, $machine);
         $table[] = array(
           $entry->label,
-          $entry->type,
           $entry->machine,
-          //date('D M j G:i:s T Y', $p->changed->value()),
+          !empty($entry->id) ? $entry->id : '-',
+          isset($entry->wrapper) ? date('D M j G:i:s T Y', $entry->wrapper->changed->value()) : '-',
         );
+        $total++;
       }
+      drush_print_table($table);
     }
-    drush_print_table($table);
   }
-  drush_print(dt('@count total entities.', array('@count' => count($entities))));
+  drush_print(dt('@count total entities.', array('@count' => $total)));
 }
 
 function drush_catalyst_core_catalyst_package_list() {
@@ -189,7 +208,7 @@ function drush_catalyst_core_catalyst_package_export($machine, $module, $subdir)
     $ids[] = $p->getIdentifier();
     $entities = entity_load('catalyst', $ids);
     catalyst_include('export');
-    $archive_path =& catalyst_export_entities($entities);
+    $archive_path =& catalyst_export_components($entities);
     $export_path = drupal_get_path('module', $module);
     if ($subdir) {
       $export_path .= '/' . $subdir;

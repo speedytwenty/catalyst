@@ -344,7 +344,7 @@ function catalyst_json_encode($var) {
   return json_encode($var, JSON_PRETTY_PRINT);
 }
 
-function catalyst_export_package($machine) {
+function catalyst_export_package($machine, $path = NULL) {
   catalyst_get_registry(TRUE);
   if ($package = catalyst_load_single('package', $machine, TRUE)) {
     if (empty($package->module)) {
@@ -367,7 +367,6 @@ function catalyst_export_package($machine) {
     unset($package->entries);
     $subdir = empty($package->subdir) ? '.' : $package->subdir;
     $path = drupal_get_path('module', $package->module) . '/' . $subdir;
-    dsm($components);
     return catalyst_export_components($components, $path);
   }
   throw new InvalidArgumentException(t('The package @machine does not exist (in the database).', array(

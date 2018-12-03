@@ -79,20 +79,28 @@ function catalyst_import_scan_directory($dir) {
     }
     return $results;
   }
-  else {
-    return FALSE;
-  }
+  return FALSE;
 }
 
 function catalyst_import_directory($path, $status = CATALYST_IMPORT_STATUS_TEMPORARY) {
   $return = array('messages' => array());
-  $results = catalyst_import_scan_directory($path);
-  foreach ($results AS $metadata) {
-    if ($wrapper = catalyst_import_entity($metadata, $status)) {
-      $return['messages'][] = t('Imported/updated catalyst @type: @machine.', array(
-        '@type' => $wrapper->getBundle(),
-        '@machine' => $wrapper->field__machine->machine->value(),
-      ));
+  if (!file_exists($path)) {
+    $return['error'] = t('The directory @dir does not exist.', array('@dir' => $path));
+  }
+  elseif (!is_dir($path)) {
+    $return['error'] = t('The directory @dir does not exist.', array('@dir' => $path));
+  }
+  elseif (!$results = catalyst_import_scan_directory($path)) {
+    $return['error'] = t('The directory @dir does not contain any catalyst.json files.', array('@dir' => $path));
+  }
+  else {
+    foreach ($results AS $metadata) {
+      if ($wrapper = catalyst_import_entity($metadata, $status)) {
+        $return['messages'][] = t('Imported/updated catalyst @type: @machine.', array(
+          '@type' => $wrapper->getBundle(),
+          '@machine' => $wrapper->field__machine->machine->value(),
+        ));
+      }
     }
   }
   return $return;
@@ -215,8 +223,8 @@ function catalyst_import_component_assets($dir) {
  */
 function catalyst_import_legacy_metadata(&$results, $info, $filepath) {
   $dir = dirname($filepath);
-  foreach ($info['migrations'] AS $type_key => $m) {
-    $type = str_replace('catalyst_test__', '', $type_key);
+  foreach ($info['migrations'] AS $m) {
+    $type = str_replace('.json', '', $m['source_filename']);
     $contents = file_get_contents($dir . '/' . $m['source_filename']);
     $items = drupal_json_decode($contents, TRUE);
     $map = array(
@@ -488,14 +496,14 @@ function catalyst_import_rollback_directory($dir, $package = NULL) {
   $return = array(
     'messages' => array(),
   );
-  if (!is_dir($dir)) {
-    $return['error'] = t('The directory %dir does not exist.', array('%dir' => $dir));
+  if (!file_exists($dir)) {
+    $return['error'] = t('The directory @dir does not exist.', array('@dir' => $dir));
   }
-  else if (!file_exists($dir)) {
-    $return['error'] = t('The directory %dir does not exist.', array('%dir' => $dir));
+  elseif (!is_dir($dir)) {
+    $return['error'] = t('The directory @dir does not exist.', array('@dir' => $dir));
   }
-  else if (!$items = catalyst_import_scan_directory($dir)) {
-    $return['error'] = t('The directory %dir does not contain any catalyst.json files.', array('%dir' => $dir));
+  elseif (!$items = catalyst_import_scan_directory($dir)) {
+    $return['error'] = t('The directory @dir does not contain any catalyst.json files.', array('@dir' => $dir));
   }
   else {
     $ids = array();
@@ -509,7 +517,12 @@ function catalyst_import_rollback_directory($dir, $package = NULL) {
         ));
       }
     }
-    entity_delete_multiple('catalyst', $ids);
+    if ($ids) {
+      entity_delete_multiple('catalyst', $ids);
+    }
+    else {
+      $return['messages'][] = dt('Nothing to rollback.');
+    }
   }
   return $return;
 }

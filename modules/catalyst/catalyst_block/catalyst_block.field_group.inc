@@ -26,6 +26,7 @@ function catalyst_block_field_group_info() {
       0 => 'field__internal',
       1 => 'field__package',
       2 => 'field__preprocess',
+      3 => 'field__access',
     ),
     'format_type' => 'tab',
     'format_settings' => array(

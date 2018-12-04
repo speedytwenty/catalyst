@@ -303,10 +303,12 @@ function catalyst_load_blocks() {
   $blocks = array();
   foreach ($block_info AS $placement) {
     $placement = (object)$placement;
-    if ($block = entity_load_single('catalyst', $placement->block_id)) {
-      $machine = $block->field__machine[$block->language][0]['machine'];
-      $blocks[$placement->region][$machine] = array(
-        'content' => entity_view('catalyst', array($block)),
+    if ($block = catalyst_load_single($placement->block_id)) {
+      if ($accessphp = entity_valval($block->wrapper->field__access)) {
+        if (!(boolean)catalyst_eval($accessphp, $variables)) continue;
+      }
+      $blocks[$placement->region][$block->machine] = array(
+        'content' => entity_view('catalyst', array($block->entity)),
         '#weight' => $placement->weight,
       );
     }

@@ -195,13 +195,15 @@ function catalyst_block_catalyst_twig_render_alter(&$twig, &$variables, $key = N
  *   Pass custom variables to the block.
  */
 function catalyst_block_showblock($machine_name, $variables = array()) {
-  if ($eid = catalyst_lookup_entity('block', $machine_name)) {
-    $block = entity_load_single('catalyst', $eid);
-    $block->template_variables = $variables;
-    $blocks = array($block);
-    $build = entity_view('catalyst', $blocks);
+  if ($block = catalyst_load_single('block', $machine_name)) {
+    if ($accessphp = entity_valval($block->wrapper->field__access)) {
+      if (!(boolean)catalyst_eval($accessphp, $variables)) return;
+    }
+    $block->entity->template_variables = $variables;
+    $build = entity_view('catalyst', array($block->entity));
     return render($build);
   }
+  return;
   // Check permission and output dummy block warning of missing block
   //return  '<h3>Block content here</h3>';
 }

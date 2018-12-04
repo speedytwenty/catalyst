@@ -10,6 +10,78 @@
 function catalyst_block_field_default_field_instances() {
   $field_instances = array();
 
+  // Exported field_instance: 'catalyst-block-field__access'.
+  $field_instances['catalyst-block-field__access'] = array(
+    'bundle' => 'block',
+    'default_value' => array(
+      0 => array(
+        'value' => 'return user_access(\'access content\');',
+        'format' => 'catalyst_php',
+      ),
+    ),
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 15,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__access',
+    'label' => 'Access',
+    'required' => 1,
+    'settings' => array(
+      'better_formats' => array(
+        'allowed_formats' => array(
+          'catalyst_css' => 0,
+          'catalyst_doc' => 0,
+          'catalyst_html' => 0,
+          'catalyst_js' => 0,
+          'catalyst_php' => 'catalyst_php',
+          'plain_text' => 0,
+        ),
+        'allowed_formats_toggle' => 1,
+        'default_order_toggle' => 0,
+        'default_order_wrapper' => array(
+          'formats' => array(
+            'catalyst_css' => array(
+              'weight' => 0,
+            ),
+            'catalyst_doc' => array(
+              'weight' => 0,
+            ),
+            'catalyst_html' => array(
+              'weight' => 0,
+            ),
+            'catalyst_js' => array(
+              'weight' => 0,
+            ),
+            'catalyst_php' => array(
+              'weight' => 0,
+            ),
+            'plain_text' => array(
+              'weight' => 10,
+            ),
+          ),
+        ),
+      ),
+      'text_processing' => 1,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 8,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 5,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-block-field__admin_notes'.
   $field_instances['catalyst-block-field__admin_notes'] = array(
     'bundle' => 'block',
@@ -361,7 +433,7 @@ function catalyst_block_field_default_field_instances() {
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 8,
+      'weight' => 7,
     ),
   );
 
@@ -661,7 +733,7 @@ function catalyst_block_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'entityreference_autocomplete_tags',
-      'weight' => 7,
+      'weight' => 6,
     ),
   );
 
@@ -740,6 +812,7 @@ function catalyst_block_field_default_field_instances() {
 
   // Translatables
   // Included for use with string extractors like potx.
+  t('Access');
   t('Content');
   t('Custom CSS');
   t('Custom Files');

@@ -241,6 +241,12 @@ function catalyst_import_legacy_metadata(&$results, $info, $filepath) {
       'show_messages' => 'layout_show_messages',
       'js_custom' => 'js',
       'css_custom' => 'css',
+      'drupal_css_options' => 'layout_drupal_css',
+      'drupal_js_options' => 'layout_drupal_js',
+      'charset' => 'doctype_charset',
+      'http_content_type' => 'doctype_content_type',
+      'scope' => 'media_javascript_scope',
+      'media' => 'media_stylesheet_media',
     );
     switch ($type) {
       case 'layout':
@@ -487,7 +493,7 @@ function catalyst_import_set_reference(&$wrapper, $field_name, $type, $machine) 
   else if (empty($machine)) {
     throw new InvalidArgumentException(t('Missing or empty machine parameter.'));
   }
-  $pid = catalyst_import_ensure_stub($type, $machine);
+  $pid = (int)catalyst_import_ensure_stub($type, $machine);
   $wrapper->{$field_name}->set($pid);
   return $pid;
 }
@@ -508,13 +514,15 @@ function catalyst_import_rollback_directory($dir, $package = NULL) {
   else {
     $ids = array();
     foreach ($items AS $item) {
-      if ($id = catalyst_import_lookup_id($item['type'], $item['machine'])) {
-        $ids[] = $id;
-        $return['messages'][] = t('Removed catalyst @type @id (@machine)', array(
-          '@type' => $item['type'],
-          '@id' => $id,
-          '@machine' => $item['machine'],
-        ));
+      if ($id = catalyst_import_lookup_id($item['type'], $item['machine'], TRUE)) {
+        foreach ($id AS $_id) {
+          $ids[] = (int)$_id;
+          $return['messages'][] = t('Removed catalyst @type @id (@machine)', array(
+            '@type' => $item['type'],
+            '@id' => $_id,
+            '@machine' => $item['machine'],
+          ));
+        }
       }
     }
     if ($ids) {
@@ -586,7 +594,7 @@ function catalyst_import_lookup_id($type, $machine, $multiple = FALSE) {
     foreach ($keys AS $k => $key) {
       $keys[$k] = (int)$key;
     }
-    return $multiple ? $keys : array_shift($keys);
+    return $multiple ? array_values($keys) : array_shift($keys);
   }
   return NULL;
 }

@@ -19,9 +19,8 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
-        'module' => 'catalyst_field_api',
         'settings' => array(),
-        'type' => 'block_placement_entity_formatter',
+        'type' => 'hidden',
         'weight' => 20,
       ),
       'template' => array(
@@ -289,7 +288,7 @@ function catalyst_page_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',

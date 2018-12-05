@@ -183,7 +183,7 @@ function catalyst_template_field_default_field_instances() {
     'bundle' => 'template',
     'default_value' => array(
       0 => array(
-        'value' => '{{ content }}',
+        'value' => '{{ content|render }}',
         'format' => 'catalyst_html',
       ),
     ),

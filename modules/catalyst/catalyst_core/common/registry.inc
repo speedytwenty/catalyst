@@ -111,7 +111,7 @@ function catalyst_registry_build($dirs = NULL) {
         'hash' => md5(file_get_contents($filepath)),
       );
     }
-    if (empty($registry[$type][$machine])) {
+    if (empty($registry[$type][$machine]->filepath)) {
       if ($assets) {
         $registry_entry->assets = $assets;
       }
@@ -119,15 +119,14 @@ function catalyst_registry_build($dirs = NULL) {
       $registry[$type][$machine] = $registry_entry;
     }
     else {
-      continue;
       if (!isset($registry[$type][$machine]->duplicates)) {
         $registry[$type][$machine]->duplicates = array();
       }
       $registry_entry->filepath = $result;
-      //$registry_entry->wrapper = $registry_entry->entity = NULL;
-      //unset($registry_entry->wrapper);
-      //unset($registry_entry->entity);
-      //unset($registry_entry->id);
+      $registry_entry->wrapper = $registry_entry->entity = NULL;
+      unset($registry_entry->wrapper);
+      unset($registry_entry->entity);
+      unset($registry_entry->id);
       $dup = array('filepath' => $registry_entry->filepath);
       if (!empty($registry_entry->package)) {
         $dup['package'] = $registry_entry->package;

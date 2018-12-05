@@ -10,9 +10,9 @@ include_once 'common/registry.inc';
 /**
  * Implements hook_entity_view_alter().
  */
-function catalyst_core_entity_view_alter(&$build, $type) {
-  if ($type == 'catalyst' && !catalyst_theme_active()) {
-    if (in_array($build['#view_mode'], array('full', 'teaser'))) {
+function catalyst_core_entity_view_alter(&$build, $entity_type) {
+  if ($entity_type == 'catalyst') {
+    if (!catalyst_theme_active() && in_array($build['#view_mode'], array('full', 'teaser'))) {
       $build['#page'] = TRUE;
     }
   }
@@ -52,6 +52,8 @@ function catalyst_core_theme() {
 function catalyst_core_catalyst_twig_render_alter(&$twig, &$variables, $key = NULL) {
   $twig->addFunction(new Twig_SimpleFunction('coreblock', 'catalyst_coreblock'));
   $twig->addFunction(new Twig_SimpleFunction('form', 'catalyst_twigform'));
+  $twig->addFunction(new Twig_SimpleFunction('entity_uri', 'entity_uri'));
+  $twig->addFilter(new Twig_SimpleFilter('entity_valval', 'entity_valval'));
 }
 
 function catalyst_twigform($callback) {
@@ -219,11 +221,11 @@ function catalyst_core_form_filter_admin_overview_alter(&$form, &$form_state) {
   }
 }
 
-function catalyst_form($form, $type, $machine, $vars) {
+function catalyst_form($form, $bundle, $machine, $vars = array()) {
   $form['#catalyst_form'] = array(
     'vars' => $vars,
     'source' => array(
-      'type' => $type,
+      'type' => $bundle,
       'machine' => $machine,
     ),
   );
@@ -238,9 +240,9 @@ function catalyst_core_form_alter(&$form, &$form_state, $form_id) {
     //if (!isset($form['#process'])) $form['#process'] = array();
     //array_unshift($form['#process'], 'catalyst_form_process');
     $source = $form['#catalyst_form']['source'];
-    $item = catalyst_registry_entry($source['type'], $source['machine']);
-    if (isset($item['assets']['preprocess.php'])) {
-      $path = str_replace(drupal_realpath(DRUPAL_ROOT).'/', '', $item['assets']['preprocess.php']['filepath']);
+    $item = catalyst_load_single($source['type'], $source['machine']);
+    if (isset($item->assets['preprocess.php'])) {
+      $path = str_replace(drupal_realpath(DRUPAL_ROOT).'/', '', $item->assets['preprocess.php']->filepath);
       $form_state['build_info']['files']['catalyst_preprocess'] = $path;
     }
   }

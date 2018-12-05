@@ -19,6 +19,7 @@ function catalyst_twig_render($template, $variables = array(), $key = NULL) {
 
   $extensions = array(
     'addFunction' => array(
+      'drupal_get_destination' => new Twig_SimpleFunction('drupal_get_destination', 'drupal_get_destination'),
       't' => new Twig_SimpleFunction('t', 't'),
       'render' => new Twig_SimpleFunction('render', 'catalyst_render'),
       'url' => new Twig_SimpleFunction('url', 'url'),

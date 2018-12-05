@@ -32,7 +32,7 @@ function catalyst_block_field_default_field_instances() {
     'entity_type' => 'catalyst',
     'field_name' => 'field__access',
     'label' => 'Access',
-    'required' => 1,
+    'required' => 0,
     'settings' => array(
       'better_formats' => array(
         'allowed_formats' => array(

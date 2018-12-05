@@ -26,28 +26,28 @@ function catalyst_template_catalyst_plugin_info() {
       'crud' => array(
         'admin' => array(
           'path' => 'admin/catalyst/template',
-          'menu_item' => array(
-            'title' => 'Templates',
-            'page callback' => 'catalyst_template_admin_list',
-            'file path' => catalyst_get_path('template') . '/includes',
-            'file' => 'admin.inc',
-            'access callback' => 'eck__multiple_access_check',
-            'weight' => 20,
-          ),
-          'parent_menu_item' => array(
-            'path' => 'admin/catalyst/template/list',
-            'title' => 'List',
-            'weight' => -10,
-          ),
+          //'menu_item' => array(
+          //  'title' => 'Templates',
+          //  'page callback' => 'catalyst_template_admin_list',
+          //  'file path' => catalyst_get_path('template') . '/includes',
+          //  'file' => 'admin.inc',
+          //  'access callback' => 'eck__multiple_access_check',
+          //  'weight' => 20,
+          //),
+          //'parent_menu_item' => array(
+          //  'path' => 'admin/catalyst/template/list',
+          //  'title' => 'List',
+          //  'weight' => -10,
+          //),
         ),
         'add' => array(
-          'path' => 'admin/catalyst/template/add/%/%',
-          'menu_item' => array(
-            'page callback' => 'catalyst_template_admin_add',
-            'page arguments' => array(4,5),
-            'file path' => catalyst_get_path('template') . '/includes',
-            'file' => 'admin.inc',
-          ),
+          'path' => 'admin/catalyst/template/add',
+          //'menu_item' => array(
+          //  'page callback' => 'catalyst_template_admin_add',
+          //  'page arguments' => array(4,5),
+          //  'file path' => catalyst_get_path('template') . '/includes',
+          //  'file' => 'admin.inc',
+          //),
         ),
         'edit' => array(
           'path' => 'admin/catalyst/template/%eckentity',

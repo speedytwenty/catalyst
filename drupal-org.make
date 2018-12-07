@@ -79,10 +79,6 @@ projects[migrate_extras][version] = "2.5"
 projects[migrate_extras][type] = "module"
 projects[migrate_extras][subdir] = "contrib"
 
-projects[module_filter][version] = "2.1"
-projects[module_filter][type] = "module"
-projects[module_filter][subdir] = "contrib"
-
 projects[navbar][version] = "1.7"
 projects[navbar][type] = "module"
 projects[navbar][subdir] = "contrib"
@@ -126,10 +122,6 @@ projects[views_bulk_operations][subdir] = "contrib"
 projects[views_php][version] = "1.0-alpha3"
 projects[views_php][type] = "module"
 projects[views_php][subdir] = "contrib"
-
-projects[webform][version] = "4.15"
-projects[webform][type] = "module"
-projects[webform][subdir] = "contrib"
 
 projects[wysiwyg][version] = "2.x-dev"
 projects[wysiwyg][type] = "module"

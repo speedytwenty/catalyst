@@ -1,0 +1,23 @@
+{
+    "internal": true,
+    "label": "Catalyst Template Admin ist",
+    "machine": "catalyst_admin_template_list",
+    "menu": {
+        "path": "admin\/catalyst\/template\/list",
+        "menu": {
+            "type": "default tab",
+            "title": "List",
+            "description": "",
+            "name": "management",
+            "weight": "-11",
+            "parent": {
+                "type": "normal",
+                "title": "Templates",
+                "description": "",
+                "weight": "0"
+            }
+        }
+    },
+    "package": "catalyst_admin_ui",
+    "type": "page"
+}

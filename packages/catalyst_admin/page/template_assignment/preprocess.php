@@ -1,5 +1,5 @@
 <?php
-$entity_info = catalyst_template_entity_info();
+$entity_info = catalyst_template_get_entity_info();
 if (!module_exists('catalyst_devel')) unset($entity_info['catalyst']);
 $variables['entity_types'] = $entity_info;
 //$variables['entity_types'] = array('user' => $entity_info['user']);

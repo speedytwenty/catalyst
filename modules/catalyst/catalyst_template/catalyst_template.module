@@ -196,6 +196,9 @@ function catalyst_template_candidates($entity_type, $bundle = NULL, $view_mode =
     if ($bundle && $bundles && !in_array($bundle, $bundles)) continue;
     $candidates[$machine] = $entry;
   }
+  uasort($candidates, function ($a, $b) {
+    return $a->template['weight'] > $b->template['weight'] ? 1 : -1;
+  });
   return $candidates;
 }
 
@@ -297,7 +300,7 @@ function catalyst_template_default($entity_type, $bundle = NULL, $view_mode = NU
   return;
 }
 
-function catalyst_template_entity_info() {
+function catalyst_template_get_entity_info() {
   $entity_info = entity_get_info();
   foreach ($entity_info AS $entity_type => $entity_type_info) {
     if (empty($entity_type_info['view modes'])) unset($entity_info[$entity_type]);

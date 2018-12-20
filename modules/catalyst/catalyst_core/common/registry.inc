@@ -115,7 +115,7 @@ function catalyst_registry_build($dirs = NULL) {
       if ($assets) {
         $registry_entry->assets = $assets;
       }
-      $registry_entry->filepath = $result;
+      $registry_entry->filepath = str_replace(DRUPAL_ROOT . '/', '', $result);
       $registry[$type][$machine] = $registry_entry;
     }
     else {

@@ -1,0 +1,14 @@
+.page-custom-css-test,
+.page-custom-css-no-override {
+  border: 2px solid green;
+  padding: 4px;
+  margin: 4px;
+}
+.page-shared-css-override,
+.page-local-css-override,
+.page-remote-css-override,
+.block-custom-css-override-page,
+.layout-custom-css-override-page,
+.stylesheet-custom-css-override-page {
+  border-style: groove;
+}

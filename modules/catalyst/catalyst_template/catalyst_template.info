@@ -58,6 +58,4 @@ features[field_instance][] = catalyst-template-field__preprocess
 features[field_instance][] = catalyst-template-field__template_bundle
 features[field_instance][] = catalyst-template-field__template_entity_type
 features[variable][] = field_bundle_settings_catalyst__template
-files[] = includes/template.inc
-files[] = includes/migrate.inc
 project path = profiles/catalyst/modules/catalyst

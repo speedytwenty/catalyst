@@ -78,6 +78,4 @@ features[field_instance][] = catalyst-stylesheet-field__package
 features[variable][] = field_bundle_settings_catalyst__file
 features[variable][] = field_bundle_settings_catalyst__javascript
 features[variable][] = field_bundle_settings_catalyst__stylesheet
-files[] = includes/migrate.inc
-files[] = includes/template.inc
 project path = profiles/catalyst/modules/catalyst

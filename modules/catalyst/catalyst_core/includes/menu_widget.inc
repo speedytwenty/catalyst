@@ -18,16 +18,15 @@ function catalyst_menu_widget_form_alter(&$form, &$form_state) {
   $entity_type = $form['#entity_type'];
   $bundle = $form['#bundle'];
   $wrapper = entity_metadata_wrapper($entity_type, $entity);
-  $language = $form['field__menu']['#language'];
   $field_instance = field_info_instance($entity_type, 'field__menu', $bundle);
-  if (isset($form_state['values']['field__menu'][$language][0]['value'])) {
-    $values = $form_state['values']['field__menu'][$language][0]['value'];
+  if (isset($form_state['values']['field__menu'][LANGUAGE_NONE][0]['value'])) {
+    $values = $form_state['values']['field__menu'][LANGUAGE_NONE][0]['value'];
   }
   else {
     $values = entity_valval($wrapper->field__menu);
   }
 
-  $form['field__menu'][$language][0]['value'] = catalyst_menu_widget($field_instance, $values);
+  $form['field__menu'][LANGUAGE_NONE][0]['value'] = catalyst_menu_widget($field_instance, $values);
   $form['#submit'][] = 'catalyst_menu_widget_submit';
 }
 
@@ -159,16 +158,15 @@ function catalyst_menu_widget($field_instance, $values = array()) {
 
 function catalyst_menu_widget_ajax($form, &$form_state) {
   $entity = $form['#entity'];
-  $language = $form['field__menu']['#language'];
-  $type = $form_state['values']['field__menu'][$language][0]['value']['menu']['type'];
+  $type = $form_state['values']['field__menu'][LANGUAGE_NONE][0]['value']['menu']['type'];
   if ($type != 'none') {
-    $widget = &$form['field__menu'][$language][0]['value'];
+    $widget = &$form['field__menu'][LANGUAGE_NONE][0]['value'];
     $widget['menu']['#collapsed'] = FALSE;
     if ($idx = array_search('collapsed', $widget['menu']['#attributes']['class'])) {
       unset($widget['menu']['#attributes']['class'][$idx]);
     }
   }
-  return $form['field__menu'][$language][0]['value'];
+  return $form['field__menu'][LANGUAGE_NONE][0]['value'];
 }
 
 function catalyst_menu_widget_menu_alter(&$menu_items) {

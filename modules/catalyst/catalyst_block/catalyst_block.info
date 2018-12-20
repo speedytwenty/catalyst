@@ -51,6 +51,4 @@ features[field_instance][] = catalyst-block-field__media_stylesheets
 features[field_instance][] = catalyst-block-field__package
 features[field_instance][] = catalyst-block-field__preprocess
 features[variable][] = field_bundle_settings_catalyst__block
-files[] = includes/template.inc
-files[] = catalyst_block.migrate.inc
 project path = profiles/catalyst/modules/catalyst

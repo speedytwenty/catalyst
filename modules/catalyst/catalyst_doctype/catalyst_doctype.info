@@ -38,6 +38,4 @@ features[field_instance][] = catalyst-doctype-field__machine
 features[field_instance][] = catalyst-doctype-field__package
 features[field_instance][] = catalyst-doctype-field__preprocess
 features[variable][] = field_bundle_settings_catalyst__doctype
-files[] = includes/template.inc
-files[] = catalyst_doctype.migrate.inc
 project path = profiles/catalyst/modules/catalyst

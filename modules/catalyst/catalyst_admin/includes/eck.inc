@@ -14,6 +14,7 @@
 function catalyst_admin_eck_entity_info_alter(&$entity_info) {
   // Reset the access callback which is overriden in catalyst_core
   $entity_info['catalyst']['access callback'] = 'eck__entity_access';
+  $entity_info['catalyst']['controller class'] = 'CatalystEntityAPIController';
   $plugins = catalyst_get_plugin_info();
   foreach ($plugins AS $plugin => $plugin_info) {
     if ($crud_info = catalyst_admin_plugin_eck_crud($plugin_info)) {

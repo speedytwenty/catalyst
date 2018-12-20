@@ -66,6 +66,4 @@ features[field_instance][] = catalyst-layout-field__media_stylesheets__layout
 features[field_instance][] = catalyst-layout-field__package
 features[field_instance][] = catalyst-layout-field__preprocess
 features[variable][] = field_bundle_settings_catalyst__layout
-files[] = includes/template.inc
-files[] = catalyst_layout.migrate.inc
 project path = profiles/catalyst/modules/catalyst

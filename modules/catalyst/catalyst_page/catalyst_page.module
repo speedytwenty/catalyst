@@ -7,34 +7,12 @@
 include_once 'catalyst_page.features.inc';
 
 /**
- * Implements hook_theme().
+ * Implements hook_entity_view().
  */
-function catalyst_page_theme() {
-  return array(
-    'page_content' => array(
-      'variables' => array(
-        'template' => NULL,
-      ),
-    ),
-  );
-}
-
-/**
- * Implements hook_entity_view_alter().
- */
-function catalyst_page_entity_view_alter(&$build) {
-  if (isset($build['field__body']) && isset($build['#entity']) && $build['#view_mode'] == 'full'
-    && $build['#entity_type'] == 'catalyst' && $build['#bundle'] == 'page') {
-    if ($template = $build['field__body'][0]['#markup']) {
-      $build['field__body'][0]['#markup'] = theme('page_content', array(
-        'template' => new CatalystEntityPage($build['#entity']),
-      ));
-    }
+function catalyst_page_entity_view($entity, $entity_type, $view_mode, $page = FALSE) {
+  if ($entity_type == 'catalyst' && $entity->type == 'page') {
+    $entity->setVariable('title', drupal_get_title());
   }
-}
-
-function template_preprocess_page_content(&$variables) {
-  $variables['title'] = drupal_get_title();
 }
 
 function catalyst_page_preprocess_page_content(&$variables) {

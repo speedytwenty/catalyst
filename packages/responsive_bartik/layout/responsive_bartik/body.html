@@ -1,0 +1,136 @@
+<div id="page-wrapper"><div id="page">
+  <header id="header" role="banner" class="{{ (secondary_menu) ? 'with-secondary-menu': 'without-secondary-menu' }}"><div class="section clearfix">
+    {% if secondary_menu %}
+      <nav id="secondary-menu" role="navigation" class="navigation">
+        {{ secondary_menu }}
+      </nav> <!-- /#secondary-menu -->
+    {% endif %}
+    
+    
+    {% if filepath('responsive_bartik_logo') %}
+      <a href="{{ front_page }}" title="{{ t('Home') }}" rel="home" id="logo">
+        <img src="{{ filepath('responsive_bartik_logo') }}" alt="{{ t('Home') }}" />
+      </a>
+    {% endif %}
+
+    {% if site_name or site_slogan %}
+      <div id="name-and-slogan"{% if hide_site_name and hide_site_slogan %} class="element-invisible"{% endif %}>
+
+        {% if site_name %}
+          {% if title %}
+            <div id="site-name"{% if hide_site_name %} class="element-invisible"{% endif %}>
+              <strong>
+                <a href="{{ front_page }}" title="{{ t('Home') }}" rel="home"><span>{{ site_name }}</span></a>
+              </strong>
+            </div>
+          {% else %} {# Use h1 when the content title is empty #}
+            <h1 id="site-name"{% if hide_site_name %} class="element-invisible"{% endif %}>
+              <a href="{{ front_page }}" title="{{ t('Home') }}" rel="home"><span>{{ site_name }}</span></a>
+            </h1>
+          {% endif %}
+        {% endif %}
+
+        {% if site_slogan %}
+          <div id="site-slogan"{% if hide_site_slogan %} class="element-invisible"{% endif %}>
+            {{ site_slogan }}
+          </div>
+        {% endif %}
+
+      </div> <!-- /#name-and-slogan -->
+    {% endif %}
+
+    {{ render(region.header) }}
+
+    {% if main_menu %}
+      <nav id="main-menu" role="navigation" class="navigation">
+        {{ main_menu }}
+      </nav> <!-- /#main-menu -->
+    {% endif %}
+  </div></header> <!-- /.section, /#header -->
+
+  {% if messages %}
+    <div id="messages"><div class="section clearfix">
+      {{ messages }}
+    </div></div> <!-- /.section, /#messages -->
+  {% endif %}
+
+  {% if region.featured %}
+    <div id="featured"><div class="section clearfix">
+      {{ render(region.featured) }}
+    </div></div> <!-- /.section, /#featured -->
+  {% endif %}
+
+  <div id="main-wrapper" class="clearfix"><div id="main" role="main" class="clearfix">
+
+    {{ breadcrumb }}
+
+    <div id="content" class="column"><div class="section">
+      {% if region.highlighted %}<div id="highlighted">{{ render(region.highlighted) }}</div>{% endif %}
+      <a id="main-content"></a>
+      {{ render(title_prefix) }}
+      {% if title %}
+        <h1 class="title" id="page-title">
+          {{ title }}
+        </h1>
+      {% endif %}
+      {{ render(title_suffix) }}
+      {% if tabs %}
+        <div class="tabs">
+          {{ render(tabs) }}
+        </div>
+      {% endif %}
+      {{ render(region.help) }}
+      {% if action_links %}
+        <ul class="action-links">
+          {{ render(action_links) }}
+        </ul>
+      {% endif %}
+      <div id="page-content">
+        {{ content }}
+      </div>
+      {{ feed_icons }}
+
+    </div></div> <!-- /.section, /#content -->
+
+    {% if region.sidebar_first %}
+      <div id="sidebar-first" class="column sidebar"><div class="section">
+        {{ render(region.sidebar_first) }}
+      </div></div> <!-- /.section, /#sidebar-first -->
+    {% endif %}
+
+    {% if region.sidebar_second %}
+      <div id="sidebar-second" class="column sidebar"><div class="section">
+        {{ render(region.sidebar_second) }}
+      </div></div> <!-- /.section, /#sidebar-second -->
+    {% endif %}
+
+  </div></div> <!-- /#main, /#main-wrapper -->
+
+  {% if region.triptych_first or region.triptych_middle or region.triptych_last %}
+    <div id="triptych-wrapper"><div id="triptych" class="clearfix">
+      {{ render(region.triptych_first) }}
+      {{ render(region.triptych_middle) }}
+      {{ render(region.triptych_last) }}
+    </div></div> <!-- /#triptych, /#triptych-wrapper -->
+  {% endif %}
+
+  <div id="footer-wrapper"><div class="section">
+
+    {% if region.footer_first or region.footer_second or region.footer_third or region.footer_fourth %}
+      <div id="footer-columns" class="clearfix">
+        {{ render(region.footer_first) }}
+        {{ render(region.footer_second) }}
+        {{ render(region.footer_third) }}
+        {{ render(region.footer_fourth) }}
+      </div> <!-- /#footer-columns -->
+    {% endif %}
+
+    {% if region.footer %}
+      <footer id="footer" role="contentinfo" class="clearfix">
+        {{ render(region.footer) }}
+      </footer> <!-- /#footer -->
+    {% endif %}
+
+  </div></div> <!-- /.section, /#footer-wrapper -->
+
+</div></div> <!-- /#page, /#page-wrapper -->

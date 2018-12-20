@@ -1,0 +1,48 @@
+{
+    "blockplacements": [
+        {
+            "region": "page_test_region",
+            "weight": "0",
+            "cache": "0",
+            "block": "page_region_block_test"
+        }
+    ],
+    "internal": false,
+    "label": "Catalyst Page Test #1",
+    "layout": "catalyst_test_1",
+    "machine": "catalyst_test_1x",
+    "media_files": [
+        "page_shared_test",
+        "page_local_test",
+        "page_remote_test"
+    ],
+    "media_javascripts_page": [
+        "page_shared_test",
+        "page_local_test",
+        "page_remote_test",
+        "page_footer_test"
+    ],
+    "media_stylesheets_page": [
+        "page_shared_test",
+        "page_local_test",
+        "page_remote_test"
+    ],
+    "menu": {
+        "path": "catalyst-test\/test-1x",
+        "menu": {
+            "type": "default tab",
+            "title": "Page Test 1x",
+            "description": "",
+            "name": "main-menu",
+            "weight": "0",
+            "parent": {
+                "type": "normal",
+                "title": "Catalyst Test 1x",
+                "description": "",
+                "weight": "0"
+            }
+        }
+    },
+    "package": "catalyst_test_1x",
+    "type": "page"
+}

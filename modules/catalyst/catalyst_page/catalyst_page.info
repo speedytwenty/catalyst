@@ -59,6 +59,4 @@ features[variable][] = field_bundle_settings_catalyst__page
 features_exclude[field_base][field__data] = field__data
 features_exclude[field_base][field___block_placements_entity] = field___block_placements_entity
 features_exclude[field_instance][catalyst-page-field__data] = catalyst-page-field__data
-files[] = includes/template.inc
-files[] = catalyst_page.migrate.inc
 project path = profiles/catalyst/modules/catalyst

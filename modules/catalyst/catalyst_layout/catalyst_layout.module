@@ -7,15 +7,180 @@
 
 include_once 'catalyst_layout.features.inc';
 
-/**
- * Implements hook_entity_view().
- */
-function catalyst_layout_entity_view($entity, $type, $view_mode, $langcode) {
-  if ($view_mode == 'full' && isset($entity->field__layout)) {
-    $wrapper = entity_metadata_wrapper($type, $entity);
-    if ($layout = $wrapper->field__layout->value()) {
-      catalyst_set_layout($layout);
+function catalyst_theme_active() {
+  global $theme, $base_theme_info;
+  if ($theme == 'notheme') {
+    return TRUE;
+  }
+  if (is_array($base_theme_info)) {
+    foreach ($base_theme_info AS $theme_info) {
+      if ($theme_info->name == 'notheme') {
+        return TRUE;
+      }
     }
+  }
+  return FALSE;
+}
+
+function catalyst_get_layout() {
+  if ($layout = catalyst_set_layout()) {
+    return $layout;
+  }
+  $default_layout = variable_get('catalyst_layout_default', NULL);
+  if (!empty($default_layout) && $layout = catalyst_load_single('layout', $default_layout)) {
+    return catalyst_set_layout($layout->entity);
+  }
+  return catalyst_set_layout(catalyst_layout_fallback());
+}
+
+function catalyst_layout_fallback() {
+  $layout = entity_create('catalyst', array(
+    'type' => 'layout',
+    'machine' => 'undefined',
+  ));
+  $layout->wrapper()->field__body->set(array(
+    'value' => '<div id="layout">{{ content|render }}</div>',
+    'format' => 'catalyst_twig',
+  ));
+  $doctype = entity_create('catalyst', array(
+    'type' => 'doctype',
+    'machine' => 'undefined',
+  ));
+  $doctype->wrapper()->field__body->set(array(
+    'value' => field__body_default_value(),
+    'format' => 'catalyst_twig',
+  ));
+  $layout->wrapper()->field__doctype->set($doctype);
+  return $layout;
+}
+
+function catalyst_set_layout(CatalystEntity $layout = NULL) {
+  $stored_layout =& drupal_static('catalyst_layout');
+  if ($layout !== NULL) {
+    if (!isset($stored_layout) || $stored_layout->machine != $layout->machine) {
+      $stored_layout = $layout;
+    }
+  }
+  return $stored_layout;
+}
+
+/**
+ * Get the current doctype (from the layout)
+ */
+function catalyst_get_doctype() {
+  $layout = catalyst_get_layout();
+  return $layout->wrapper()->field__doctype->value();
+}
+
+/**
+ * Returns the rendered CSS for a page.
+ *
+ * Removes CSS not added by the catalyst system.
+ *
+ * @see drupal_get_css()
+ * @see catalyst_html_preprocess()
+ */
+function catalyst_get_css() {
+  $css = &drupal_static('drupal_add_css', array());
+  $remove_groups = array(CSS_SYSTEM, CSS_DEFAULT, CSS_THEME);
+  $layout = catalyst_get_layout();
+  $remove_groups = array_diff($remove_groups, $layout->wrapper()->field__layout_drupal_css->value());
+
+  foreach (array_keys($css) AS $i) {
+    if (in_array($css[$i]['group'], $remove_groups)) {
+      unset($css[$i]);
+    }
+  }
+  return drupal_get_css($css);
+}
+
+function catalyst_get_js($scope = 'header') {
+  $javascript = &drupal_static('drupal_add_js', array());
+  $remove_groups = array(JS_DEFAULT, JS_LIBRARY, JS_THEME);
+  $layout = catalyst_get_layout();
+  $layout_options = $layout->wrapper()->field__layout_drupal_js->value();
+  $remove_groups = array_diff($remove_groups, $layout_options);
+
+  foreach (array_keys($javascript) AS $i) {
+    if ($i == 'settings') continue;
+    if ($javascript[$i]['scope'] == $scope
+      && in_array($javascript[$i]['group'], $remove_groups)) {
+      unset($javascript[$i]);
+    }
+  }
+  if (!in_array(JS_DEFAULT, $layout_options)) {
+    unset($javascript['settings']);
+  }
+  return drupal_get_js($scope, $javascript);
+}
+
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function catalyst_layout_ctools_plugin_directory($owner, $type) {
+  if ($owner == 'catalyst' && $type == 'plugin') return 'plugins/catalyst';
+}
+
+/**
+ * Implements hook_page_build().
+ */
+function catalyst_layout_page_build(&$page) {
+  if (catalyst_theme_active()) {
+    $page['#theme_wrappers'] = array();
+    $page['#theme'] = 'page';
+    $page['#post_render'][] = 'catalyst_page_post_render';
+  }
+}
+
+function catalyst_page_post_render($content, $elements) {
+  $layout = catalyst_get_layout();
+  $variables = $layout->variables();
+  $variables['content'] = $content;
+  //catalyst_process_layout($variables);
+  $layout->setVariables($variables);
+  $doctype = catalyst_get_doctype();
+  //$doctype = catalyst_layout_get_doctype();
+  $variables['page'] = array();
+  foreach (element_children($elements) AS $i) {
+    $variables['page'][$i] = $elements[$i];
+  }
+  $doctype->setVariables($variables);
+  $build = $layout->view('template', LANGUAGE_NONE, TRUE);
+  return drupal_render($build);
+}
+
+/**
+ * Implements hook_entity_export_alter().
+ */
+function catalyst_layout_entity_export_alter(&$vars, $entity, $entity_type) {
+  if ($entity_type == 'catalyst' && $entity->type == 'layout') {
+    if (!empty($vars['field__layout_page_title_pattern'])) {
+      $vars['page_title_pattern'] = $entity->wrapper()->field__layout_page_title_pattern->value();
+    }
+    if (!empty($vars['field__layout_regions'])) {
+      $vars['regions'] = $entity->wrapper()->field__layout_regions->value();
+    }
+    if (!empty($vars['field__layout_show_messages'])) {
+      $vars['show_messages'] = $entity->wrapper()->field__layout_show_messages->value();
+    }
+    if (!empty($vars['field__layout_drupal_js'])) {
+      $vars['drupal_js'] = array_filter($entity->wrapper()->field__layout_drupal_js->value());
+    }
+    if (!empty($vars['field__layout_drupal_css'])) {
+      $vars['drupal_css'] = array_filter($entity->wrapper()->field__layout_drupal_css->value());
+    }
+    unset(
+      $vars['field__layout_drupal_css'],
+      $vars['field__layout_drupal_js'],
+      $vars['field__layout_page_title_pattern'],
+      $vars['field__layout_show_messages'],
+      $vars['field__layout_regions']
+    );
+  }
+  else if (!empty($vars['field__layout'])) {
+    $vars['layout'] = $entity->wrapper()->field__layout->value()->normalize();
+    unset($vars['field__layout']);
   }
 }
 
@@ -35,72 +200,16 @@ function catalyst_layout_menu() {
   );
 }
 
-/**
- * Implements hook_page_build().
- */
-function catalyst_layout_page_build(&$page) {
-  if (catalyst_theme_active() && !isset($page['#layout'])) {
-    $page['#layout'] = catalyst_get_layout();
-    $page['#doctype'] = catalyst_get_doctype();
-  }
-}
-
-/**
- * Preprocess the layout.
- */
-function catalyst_preprocess_layout(&$variables) {
-  $layout = $variables['page']['#layout'];
-
-  if ($add_html_head = $layout->getHTMLHead()) {
-    drupal_add_html_head(
-      array(
-        '#type' => 'markup',
-        '#markup' => $add_html_head,
-      ),
-      'layout_html_head'
-    );
-  }
-
-  // Preprocessing defined by the layout
-  if ($preprocess_php = $layout->getPreprocessPHP()) {
-    catalyst_eval($preprocess_php, $variables);
-  }
-}
-
-/**
- * Preprocess a doctype based on layout configuration.
- */
-function catalyst_preprocess_doctype(&$variables) {
-  $layout = $variables['page']['#layout'];
-  // Customize the page title based on the layouts pattern
-  if ($page_title_pattern = $layout->getPageTitlePattern()) {
-    module_load_include('inc', 'catalyst', 'includes/twig');
-    $variables['head_title'] = catalyst_twig_render(
-      $page_title_pattern,
-      $variables['head_title_array'],
-      'layout_page_title_pattern'
-    );
-  }
-}
-
-/**
- * Helper shortcut function for fetching a layout template.
- */
-function catalyst_layout_get_template(Entity $layout) {
-  $build = eck__entity__view('catalyst', 'layout', $layout);
-  return render($build);
-}
-
 function catalyst_layout_system_regions($layout = NULL) {
   if ($layout === NULL) {
     $layout = catalyst_get_layout();
   }
-  return $layout->getRegions();
+  return $layout->wrapper()->field__layout_regions->value();
 }
 
 /**
  * Implements hook_block_placements().
  */
 function catalyst_layout_block_placements() {
-  return catalyst_get_layout()->getBlockPlacements();
+  return catalyst_get_layout()->wrapper()->field__blockplacements__layout->value();
 }

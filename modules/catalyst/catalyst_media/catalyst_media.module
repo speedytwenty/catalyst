@@ -12,18 +12,325 @@ define('CATALYST_MEDIA_GROUP_PAGE', 303);
 define('CATALYST_MEDIA_GROUP_OTHER', 404);
 
 /**
- * Implements hook_entity_view_alter().
+ * Implements hook_entity_insert().
  */
-function catalyst_media_entity_view_alter(&$build, $type) {
-  if (isset($build['field__body']) && isset($build['#entity'])
-    && $build['#entity_type'] == 'catalyst'
-    && in_array($build['#bundle'], array('stylesheet', 'javascript'))) {
-    if ($template = $build['field__body'][0]['#markup']) {
-      theme('media_content', array(
-        'template' => $template,
-      ));
+function catalyst_media_insert($entity, $entity_type) {
+  catalyst_media_entity_save($entity, $entity_type);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function catalyst_media_entity_update($entity, $entity_type) {
+  catalyst_media_entity_save($entity, $entity_type);
+}
+
+/**
+ *
+ */
+function catalyst_media_entity_save($entity, $entity_type) {
+  if ($entity_type == 'catalyst' && in_array($entity->type, array('stylesheet', 'javascript'))) {
+    if ($entity->wrapper()->field__media_type->value() == 'custom') {
+      catalyst_media_save_file($entity);
     }
   }
+}
+
+/**
+ */
+function catalyst_media_save_file(CatalystEntity $entity) {
+  if ($entity->type  == 'javascript') {
+    $filepath = catalyst_media_javascript_path($entity);
+  }
+  else {
+    $filepath = catalyst_media_stylesheet_path($entity);
+  }
+  drupal_mkdir(dirname($filepath), NULL, TRUE);
+  $build = $entity->view('template');
+  $data = drupal_render($build);
+  if (file_exists(drupal_realpath($filepath))) drupal_unlink($filepath);
+  file_unmanaged_save_data($data, $filepath, FILE_EXISTS_REPLACE);
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function catalyst_media_field_formatter_info() {
+  return array(
+    'catalyst_media_stylesheet' => array(
+      'label' => t('Attached Stylesheets'),
+      'field types' => array('entityreference'),
+    ),
+    'catalyst_media_javascript' => array(
+      'label' => t('Attached Javascripts'),
+      'field types' => array('entityreference'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function catalyst_media_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  switch ($display['type']) {
+    case 'catalyst_media_stylesheet':
+      $build = array();
+      $map = array(
+        'field__media_stylesheets__page' => CATALYST_CSS_PAGE,
+        'field__media_stylesheets__layout' => CATALYST_CSS_LAYOUT,
+      );
+      $field_name = $field['field_name'];
+      foreach ($items AS $delta => $item) {
+        $group = CATALYST_CSS_OTHER;
+        if (isset($map[$field_name])) {
+          $group = $map[$field_name];
+        }
+        $item = entity_load_single('catalyst', $item['target_id']);
+        catalyst_media_attach_stylesheet($build, $item, $group, $delta);
+        //catalyst_media_add_stylesheet($item, $group, $delta);
+      }
+      return $build;
+    case 'catalyst_media_javascript':
+      $build = array();
+      $map = array(
+        'field__media_javascripts__page' => CATALYST_JS_PAGE,
+        'field__media_javascripts__layout' => CATALYST_JS_LAYOUT,
+      );
+      $field_name = $field['field_name'];
+      foreach ($items AS $delta => $item) {
+        $group = CATALYST_JS_OTHER;
+        if (isset($map[$field_name])) {
+          $group = $map[$field_name];
+        }
+        $item = entity_load_single('catalyst', $item['target_id']);
+        catalyst_media_attach_javascript($build, $item, $group, $delta);
+        //catalyst_media_add_stylesheet($item, $group, $delta);
+      }
+      return $build;
+  }
+}
+
+/**
+ * Attaches stylesheet css to a render array.
+ *
+ * @code
+ * catalyst_media_attach_stylesheet($render_array, $entity);
+ * @endcode
+ *
+ * @param $render_array
+ *   The render array reference to attach the stylesheet to.
+ * @param $stylesheet
+ *   The CatalystEntity $stylesheet to attach.
+ * @param $group
+ *   The group to attach to.
+ * @param $delta
+ *   The field item delta; used to determine the weight.
+ */
+function catalyst_media_attach_stylesheet(&$render_array, CatalystEntity $stylesheet, $group = CATALYST_CSS_OTHER, $delta = 0) {
+  if (empty($render_array['#attached'])) $render_array['#attached'] = array();
+  if (empty($render_array['#attached']['css'])) $render_array['#attached']['css'] = array();
+  catalyst_include('entity');
+  $weight = ($delta+1) * 0.1;
+  if (!empty($stylesheet->inline)) {
+    $render_array['#attached']['css'][$stylesheet->machine] = array(
+      'type' => 'inline',
+      'data' => $stylesheet->view('template'),
+      'group' => $group,
+      'weight' => $weight,
+    );
+  }
+  else {
+    $type = 'file';
+    switch ($stylesheet->wrapper()->field__media_type->value()) {
+      case 'custom': $path = catalyst_media_stylesheet_path($stylesheet); break;
+      case 'remote':
+        $type = 'external';
+      default: $path = $stylesheet->wrapper()->field__media_path->value();
+    }
+    $render_array['#attached']['css'][$path] = array(
+      'type' => $type,
+      'data' => $path,
+      'group' => $group,
+      'weight' => $weight,
+    );
+  }
+}
+
+/**
+ * Add a stylesheet to the page.
+ *
+ * @param $stylesheet
+ *   The CatalystEntity stylesheet to attach.
+ * @param $group
+ *   The group to attach to.
+ * @param $delta
+ *   The field item delta; used to determine the weight.
+ */
+function catalyst_media_add_stylesheet(CatalystEntity $stylesheet, $group = CATALYST_MEDIA_GROUP_OTHER, $delta = 0) {
+  $options = array(
+    'type' => 'file',
+    'group' => $group,
+    'media' => $stylesheet->wrapper()->field__media_stylesheet_media->value(),
+    'weight' => ($delta+1) * 0.1,
+  );
+
+  $options['basename'] = $stylesheet->wrapper()->field__machine->machine->value();
+  switch ($stylesheet->wrapper()->field__media_type->value()) {
+    case 'custom':
+      catalyst_include('twig');
+      if ($stylesheet->inline) {
+        $data = $stylesheet->view();
+        $options['type'] = 'inline';
+      }
+      else {
+        $options['type'] = 'external';
+        $data = file_create_url(catalyst_media_stylesheet_path($stylesheet));
+        //$data = url(catalyst_media_stylesheet_path($stylesheet));
+      }
+      break;
+    case 'local':
+      $data = $stylesheet->wrapper()->field__media_path->value();
+      break;
+    case 'remote':
+      $data = $stylesheet->wrapper()->field__media_path->value();
+      $options['type'] = 'external';
+      break;
+  }
+
+  // @todo Add browsers option handling
+  if ($group == CATALYST_MEDIA_GROUP_LAYOUT) {
+    $options['every_page'] = TRUE;
+  }
+  drupal_add_css($data, $options);
+}
+
+/**
+ * Attaches javascript js to a render array.
+ *
+ * @code
+ * catalyst_media_attach_javascript($render_array, $entity);
+ * @endcode
+ *
+ * @param $render_array
+ *   The render array reference to attach the javascript to.
+ * @param $javascript
+ *   The CatalystEntity $javascript to attach.
+ * @param $group
+ *   The group to attach to.
+ * @param $delta
+ *   The field item delta; used to determine the weight.
+ */
+function catalyst_media_attach_javascript(&$render_array, CatalystEntity $javascript, $group = CATALYST_JS_OTHER, $delta = 0) {
+  if (empty($render_array['#attached'])) $render_array['#attached'] = array();
+  if (empty($render_array['#attached']['js'])) $render_array['#attached']['js'] = array();
+  catalyst_include('entity');
+  $weight = ($delta+1) * 0.1;
+  if (!empty($javascript->inline)) {
+    $render_array['#attached']['js'][$javascript->machine] = array(
+      'type' => 'inline',
+      'data' => $javascript->view('template'),
+      'group' => $group,
+      'weight' => $weight,
+    );
+  }
+  else {
+    $type = 'file';
+    switch ($javascript->wrapper()->field__media_type->value()) {
+      case 'custom': $path = file_create_url(catalyst_media_javascript_path($javascript)); break;
+      case 'remote':
+        $type = 'external';
+      default: $path = $javascript->wrapper()->field__media_path->value();
+    }
+    $render_array['#attached']['js'][$path] = array(
+      'type' => $type,
+      'data' => $path,
+      'group' => $group,
+      'weight' => $weight,
+    );
+  }
+}
+
+/**
+ * Fetch the path for a stylesheet.
+ */
+function catalyst_media_stylesheet_path(CatalystEntity $stylesheet) {
+  return sprintf('%s/%s.css',
+    variable_get('catalyst_media_stylesheet_path', 'public://catalyst/css/media'),
+    $stylesheet->machine
+  );
+}
+
+/**
+ * Fetch the path for javascript.
+ */
+function catalyst_media_javascript_path(CatalystEntity $javascript) {
+  return sprintf('%s/%s.js',
+    variable_get('catalyst_media_javascript_path', 'public://catalyst/js/media'),
+    $javascript->machine
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function catalyst_media_menu() {
+  $stylesheet_path = variable_get('catalyst_media_stylesheet_path', 'catalyst/css/media');
+  $stylesheet_menu = $stylesheet_path . '/%catalyst_media_stylesheet';
+  $parts = explode('/', $stylesheet_menu);
+  $idx = count($parts)-1;
+  $items[$stylesheet_menu] = array(
+    'page callback' => 'catalyst_media_page',
+    'page arguments' => array($idx),
+    'access callback' => 'catalyst_media_page_access',
+    'access arguments' => array($idx),
+  );
+  $stylesheet_path = variable_get('catalyst_media_stylesheet_path', 'catalyst/js/media');
+  $stylesheet_menu = $stylesheet_path . '/%catalyst_media_javascript';
+  $parts = explode('/', $stylesheet_menu);
+  $idx = count($parts)-1;
+  $items[$stylesheet_menu] = array(
+    'page callback' => 'catalyst_media_page',
+    'page arguments' => array($idx),
+    'access callback' => 'catalyst_media_page_access',
+    'access arguments' => array($idx),
+  );
+  return $items;
+}
+
+
+function catalyst_media_page(CatalystEntity $entity) {
+  $build = $entity->view('template');
+  $GLOBALS['devel_shutdown'] = FALSE;
+  drupal_send_headers();
+  print drupal_render($build);
+  drupal_exit();
+}
+
+function catalyst_media_page_access(CatalystEntity $entity) {
+  switch ($entity->wrapper()->field__media_type->value()) {
+    case 'custom': return TRUE;
+    default: return FALSE;
+  }
+}
+
+/**
+ * Stylesheet Menu loader.
+ *
+ * @see catalyst_media_menu().
+ */
+function catalyst_media_stylesheet_load($machine) {
+  $stylesheet = catalyst_load_single('stylesheet', $machine);
+  return $stylesheet ? $stylesheet->entity : FALSE;
+}
+
+/**
+ * Javascript Menu loader.
+ *
+ * @see catalyst_media_menu().
+ */
+function catalyst_media_javascript_load($machine) {
+  $javascript = catalyst_load_single('javascript', $machine);
+  return $javascript ? $javascript->entity : FALSE;
 }
 
 /**
@@ -39,9 +346,9 @@ function catalyst_media_catalyst_twig_render_alter(&$twig, &$extensions, &$varia
 }
 
 function catalyst_media_customfilepath($basename, $format = 'path') {
-  $entity = drupal_static('twig_render_entity_wrapper', FALSE);
-  if ($entity && $entity->field__files) {
-    foreach ($entity->field__files->value() AS $file) {
+  $entity = drupal_static('twig_render_entity', FALSE);
+  if (!empty($entity->field__files)) {
+    foreach ($entity->wrapper()->field__files->value() AS $file) {
       if ($file['filename'] == $basename) {
         if ($format == 'url') {
           return $file['uri'];
@@ -49,8 +356,7 @@ function catalyst_media_customfilepath($basename, $format = 'path') {
         elseif ($format == 'url') {
           return file_create_url($file['uri']);
         }
-        else
-        {
+        else {
           $url = parse_url(file_create_url($file['uri']));
           return $url['path'];
         }
@@ -140,56 +446,15 @@ function catalyst_media_admin_form_after_build($form, &$form_state) {
 /**
  * Implements hook_entity_view().
  */
-function catalyst_media_entity_view($entity, $type, $view_mode, $langcode) {
-  $collection = array(
-    'css' => array(
-      'field__media_stylesheets__layout' => CATALYST_CSS_LAYOUT,
-      'field__media_stylesheets__page' => CATALYST_CSS_PAGE,
-      'field__media_stylesheets' => CATALYST_CSS_OTHER,
-    ),
-    'js' => array(
-      'field__media_javascripts__layout' => CATALYST_JS_LAYOUT,
-      'field__media_javascripts__page' => CATALYST_JS_PAGE,
-      'field__media_javascripts' => CATALYST_JS_OTHER,
-    ),
-  );
-  $wrapper = entity_metadata_wrapper($type, $entity);
-  foreach ($collection AS $type => $fields) {
-    $callback = 'catalyst_add_' . $type;
-    foreach ($fields AS $field => $group) {
-      if (isset($entity->$field)) {
-        foreach ($wrapper->$field->value() AS $delta => $include) {
-          $include = entity_metadata_wrapper('catalyst', $include);
-          // Ensure the include exists before attempting to add it
-          if ($include->value()) {
-            $callback($include, $group, $delta);
-          }
-        }
-      }
-    }
-  }
-  // This needs to move to catalyst_core
-  // Process custom fields
-  $collection = array(
-    'css' => array(
-      'field__css__layout' => CATALYST_CSS_LAYOUT,
-      'field__css__page' => CATALYST_CSS_PAGE,
-      'field__css' => CATALYST_CSS_OTHER,
-    ),
-    'js' => array(
-      'field__js__layout' => CATALYST_JS_LAYOUT,
-      'field__js__page' => CATALYST_JS_PAGE,
-      'field__js' => CATALYST_JS_OTHER,
-    ),
-  );
-  foreach ($collection AS $type => $fields) {
-    $callback = 'catalyst_add_custom_' . $type;
-    foreach ($fields AS $field => $group) {
-      if (!empty($entity->$field)) {
-        foreach ($wrapper->$field->value() AS $data) {
-          $callback($data, $group, $field, $wrapper->getIdentifier());
-        }
-      }
+function catalyst_media_entity_view($entity, $entity_type, $view_mode, $langcode) {
+  if ($view_mode == 'template' && $entity_type == 'catalyst') {
+    if (in_array($entity->type, array('stylesheet', 'javascript'))) {
+      $entity->content['field__body']['#theme'] = NULL;
+      return;
+      drupal_add_http_header('Content-type', implode(';', array(
+        'text/css',
+        'charset=utf-8',
+      )));
     }
   }
 }

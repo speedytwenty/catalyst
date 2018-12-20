@@ -226,7 +226,7 @@ function catalyst_block_catalyst_registry_alter(&$registry) {
     if ($rb_field = catalyst_resolve_field('blocks_related', $bundle)) {
       $fn = $rb_field['field_name'];
       foreach ($entries AS $machine => &$entry) {
-        if (isset($entry->wrapper->field__blocks_related) && $entry->wrapper->field__blocks_related->value()) {
+        if (!empty($entry->wrapper->field__blocks_related) && $blocks_related = $entry->wrapper->field__blocks_related) {
           $entry->blocks_related = array();
           foreach ($blocks_related AS $br) {
             $entry->blocks_related[] = $br->field__machine->machine->value();

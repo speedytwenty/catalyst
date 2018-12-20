@@ -25,23 +25,35 @@
         assert.ok(document.title, 'Test doctype head_title exists', 'Doctype head_title is set properly.');
         assert.equal('{{ http_content_type }}', 'text/html', 'Document content type is set properly to {{ http_content_type }}.');
         assert.equal('{{ http_charset }}', 'utf-8', 'Document charset is set properly to {{ http_charset }}.');
-        assert.ok('{{ doctype.machine }}', 'The doctype object is available to twig.');
         assert.ok($('#page-top').html(), 'The page_top variable has value as expected.');
-        assert.ok($('#page').html(), 'The page variable has value as expected.');
+        assert.ok($('#page div').length, 'The page variable has value as expected.');
+        assert.equal($('#layout-test').length, 1, 'The test layout is embedded exactly once.')
         assert.ok($('#page-bottom').html(), 'The page_bottom variable has value as expected.');
-        assert.ok($('#doctype-admin-notes').html(), 'The doctype admin notes are set and output correctly.');
-        assert.equal('{{ doctype.package }}', 'catalyst_test', 'This doctype is apart of the catalyst_test package.');
+        assert.ok($('#doctype-admin-notes div').html(), 'The doctype admin notes are set and output correctly.');
+        assert.equal('{{ doctype.package.machine }}', 'catalyst_test_1x', 'This doctype is apart of the catalyst_test_1x package.');
         assert.equal('{{ doctype.internal }}', '1', 'This doctype is set to internal.');
         assert.equal('{{ doctype.drupal_processing|default('0') }}', '0', 'Drupal processing is disabled for this doctype.');
-        //assert.equal('{{ attribute(page, "#doctype").machine }}', '{{ component.machine }}', 'Doctype component is passed on through the page variable.');
+        var messages = $('#messages li').filter(function () {
+          return $(this).text() == 'Message from doctype preprocessing.';
+        });
+        assert.ok(messages.length, 'Messages from doctype preprocessing are output to the layout.');
+        {% for res in preprocessing_results %}
+        assert.pushResult({
+          result: {% if res.result %}true{% else %}false{% endif %},
+          actual: '{{ res.actual }}',
+          expected: '{{ res.expected }}',
+          message: '{{ res.message }}',
+        });
+        {% endfor %}
       });
     </script>
     <hr />
     <div id="doctype-info">
       <h3>Doctype tests:</h3>
       <div id="doctype-label"><label>Label:</label><span>{{ l(doctype.title, 'admin/catalyst/doctype/' ~ doctype.id, { query: drupal_get_destination() } ) }} ({{ doctype.id }})</span></div>
-      <div id="doctype-machine"><label>Label:</label><span>{{ doctype.machine }}</span></div>
-      <div id="doctype-admin-notes">{{ doctype.wrapper().field__admin_notes|entity_valval }}</div>
+      <div id="doctype-machine"><label>Machine:</label><span>{{ doctype.machine }}</span></div>
+      <div id="doctype-admin-notes"><label>Readme:</label><div>{{ doctype.admin_notes }}</div></div>
+    </div>
     <hr />
     <div id="page-top">{{ page_top }}</div>
     <div id="page">{{ page }}</div>

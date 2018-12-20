@@ -1,0 +1,1 @@
+var block_embed_shared_js_var = 'defined';

@@ -1,0 +1,9 @@
+{
+    "internal": false,
+    "label": "Layout Shared JS Test",
+    "machine": "layout_shared_js_test",
+    "media_javascript_scope": "header",
+    "media_type": "custom",
+    "package": "catalyst_test_1x",
+    "type": "javascript"
+}

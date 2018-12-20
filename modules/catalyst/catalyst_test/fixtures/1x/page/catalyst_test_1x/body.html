@@ -6,6 +6,8 @@
     assert.equal('{{ test_page_var }}', 'preprocess var val', 'Page Preprocessing Test');
     assert.ok(jQuery('head meta#page-custom-head-test').length, 'Page Custom HTML Head Test');
     assert.ok('{{ title }}', 'Page {{ title }} title variable test');
+    assert.equal($('#template-test').length, 1, 'Template tests loaded.');
+    assert.equal($('#page-test-region #page-advanced-block').length, 1, 'Advanced block placements is functioning.');
   });
   QUnit.test("Page JS Tests", function (assert) {
     assert.notEqual(typeof page_custom_js_var, 'undefined', 'Page Custom Javascript Test');
@@ -80,13 +82,18 @@ QUnit.test("Page Files Tests", function (assert) {
 
 //--><!]]>
 </script>
-
+<hr />
+<div id="page-content">
+  {{ content|render }}
+</div>
+<hr />
 <div id="json-test" class="block">
   <h3>JSON Test</h3>
   <h4 id="json-test-title"></h4>
   <p id="json-test-description"></p>
   <blockquote id="json-test-response"></blockquote>
 </div>
+{#
 <script>
   QUnit.test("JSON tests", function (assert) {
     var done = assert.async();
@@ -102,6 +109,4 @@ QUnit.test("Page Files Tests", function (assert) {
     });
   });
 </script>
-<div id="page-content">
-  {{ content|render }}
-</div>
+#}

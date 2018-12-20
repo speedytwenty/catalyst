@@ -1,20 +1,20 @@
 <div id="messages">
-{{ messages }}
+
 </div>
 <div id="layout-test">
   <h2>Layout Tests</h2>
   <script>
     QUnit.test("Layout Basics Tests", function (assert) {
-      assert.equal('{{ test_layout_var }}', 'preprocess var val', 'Layout preprocessing is functioning properly.');
+      assert.equal('', 'preprocess var val', 'Layout preprocessing is functioning properly.');
       assert.ok(jQuery('head meta#layout-custom-head-test').length, 'Layout custom HTML Head is being added properly.');
-      assert.ok('{{ title }}', 'Layout title variable exists');
-      assert.ok('{{ layout.id }}', 'Layout object is available to twig.');
+      assert.ok('', 'Layout title variable exists');
+      assert.ok('', 'Layout object is available to twig.');
       assert.ok($('#layout-content').html(), 'Layout content is populated.');
-      assert.equal($('head title').text(), '{{ expected_page_title }}', 'Page title is being formatted properly.');
+      assert.equal($('head title').text(), '', 'Page title is being formatted properly.');
       assert.ok($('#layout-admin-notes div').html(), 'The layout admin notes are set and output correctly.');
-      assert.equal('{{ layout.package.machine }}', 'catalyst_test_1x', 'This layout is apart of the catalyst_test_1x package.');
-      assert.equal('{{ layout.internal }}', '1', 'This layout is set to internal.');
-      assert.equal('{{ layout.drupal_processing|default('0') }}', '0', 'Drupal processing is disabled for this layout.');
+      assert.equal('', 'catalyst_test_1x', 'This layout is apart of the catalyst_test_1x package.');
+      assert.equal('', '1', 'This layout is set to internal.');
+      assert.equal('0', '0', 'Drupal processing is disabled for this layout.');
     });
     QUnit.test("Layout JS Tests", function (assert) {
       assert.notEqual(typeof layout_custom_js_var, 'undefined', 'Layout Custom Javascript Test');
@@ -42,27 +42,27 @@
   <h3>Layout Files Tests</h3>
   <strong>Custom file test:</strong>
   <ul>
-    <li>Test <em>custom</em> file PATH: <strong>{{ customfilepath('layout-custom-test.png') }}</strong></li>
-    <li>Test <em>custom</em> file URL: <strong>{{ customfileurl('layout-custom-test.png') }}</strong></li>
-    <li>Test <em>custom</em> file as image:<br /><img id="layout-custom-file-test" src="{{ customfilepath('layout-custom-test.png') }}" /></li>
+    <li>Test <em>custom</em> file PATH: <strong>/sites/dev-catalyst.dd/files/media/layout/catalyst_test_layout_1/layout-custom-test.png</strong></li>
+    <li>Test <em>custom</em> file URL: <strong>public://media/layout/catalyst_test_layout_1/layout-custom-test.png</strong></li>
+    <li>Test <em>custom</em> file as image:<br /><img id="layout-custom-file-test" src="/sites/dev-catalyst.dd/files/media/layout/catalyst_test_layout_1/layout-custom-test.png" /></li>
   </ul>
   <strong>Shared file test:</strong>
   <ul>
-    <li>Test <em>shared</em> file PATH: <strong>{{ filepath('layout_shared_test') }}</strong></li>
-    <li>Test <em>shared</em> file URL: <strong>{{ fileurl('layout_shared_test') }}</strong></li>
-    <li>Test <em>shared</em> file as image:<br /><img id="layout-shared-file-test" src="{{ filepath('layout_shared_test') }}" /></li>
+    <li>Test <em>shared</em> file PATH: <strong></strong></li>
+    <li>Test <em>shared</em> file URL: <strong></strong></li>
+    <li>Test <em>shared</em> file as image:<br /><img id="layout-shared-file-test" src="" /></li>
   </ul>
   <strong>Local file test:</strong>
   <ul>
-    <li>Test <em>local</em> file PATH: <strong>{{ filepath('layout_local_test') }}</strong></li>
-    <li>Test <em>local</em> file URL: <strong>{{ fileurl('layout_local_test') }}</strong></li>
-    <li>Test <em>local</em> file as image:<br /><img id="layout-local-file-test" src="{{ filepath('layout_local_test') }}" /></li>
+    <li>Test <em>local</em> file PATH: <strong></strong></li>
+    <li>Test <em>local</em> file URL: <strong></strong></li>
+    <li>Test <em>local</em> file as image:<br /><img id="layout-local-file-test" src="" /></li>
   </ul>
   <strong>Remote file test:</strong>
   <ul>
-    <li>Test <em>remote</em> file PATH: <strong>{{ filepath('layout_remote_test') }}</strong></li>
-    <li>Test <em>remote</em> file URL: <strong>{{ fileurl('layout_remote_test') }}</strong></li>
-    <li>Test <em>remote</em> file as image:<br /><img id="layout-remote-file-test" src="{{ filepath('layout_remote_test') }}" /></li>
+    <li>Test <em>remote</em> file PATH: <strong></strong></li>
+    <li>Test <em>remote</em> file URL: <strong></strong></li>
+    <li>Test <em>remote</em> file as image:<br /><img id="layout-remote-file-test" src="" /></li>
   </ul>
   <script>
   QUnit.test("Layout Files Tests", function (assert) {
@@ -81,32 +81,17 @@
   });
   </script>
   <h3>Layout Block Tests</h3>
-  {{ showblock('layout_embedded_block_test') }}
-  {% if region.layout_test_region %}
-  <div id="layout-test-region" class="layout-region">{{ region.layout_test_region }}</div>
-  {% endif %}
-  <script>
+  
+    <script>
   QUnit.test("Layout Block Tests", function (assert) {
     assert.ok(jQuery('#layout-embedded-block').length, 'Layout Embedded Block Embedded Test');
     assert.ok(jQuery('#layout-test-region #layout-region-block').length, 'Layout Region Block Embedded Test');
   });
   </script>
-  <div id="layout-content">{{ content }}</div>
-  {% if region.page_test_region %}
-    <div id="page-test-region" class="region-container">
-      <h4>Page Test Region</h4>
-      {{ region.page_test_region }}
-    </div>
-  {% endif %}
-  <h2>Leaf Block Tests</h2>
-  {{ showblock('block_embed_test') }}
-  {% if region.block_test_region %}
-    <div id="block-test-region" class="region-container">
-      <h4>Block Test Region</h4>
-      {{ region.block_test_region }}
-    </div>
-  {% endif %}
-  <script>
+  <div id="layout-content"></div>
+    <h2>Leaf Block Tests</h2>
+  
+    <script>
   QUnit.test("Leaf Block Tests", function (assert) {
     assert.ok(jQuery('#embedded-block').length, 'Leaf Embedded Block Embedded Test');
     assert.ok(jQuery('#block-test-region #region-block').length, 'Leaf Region Block Embedded Test');
@@ -115,8 +100,8 @@
 </div>
 <hr />
 <div id="layout-info">
-  <div id="layout-label"><label>Label:</label><span>{{ l(layout.title, 'admin/catalyst/layout/' ~ layout.id, { query: drupal_get_destination() } ) }} ({{ layout.id }})</span></div>
-  <div id="layout-machine"><label>Machine:</label><span>{{ layout.machine }}</span></div>
-  <div id="layout-admin-notes"><label>Readme:</label><div>{{ layout.admin_notes }}</div></div>
+  <div id="layout-label"><label>Label:</label><span><a href="/admin/catalyst/layout/?destination=devel/php"></a> ()</span></div>
+  <div id="layout-machine"><label>Machine:</label><span></span></div>
+  <div id="layout-admin-notes"><label>Readme:</label><div></div></div>
 </div>
 <hr />

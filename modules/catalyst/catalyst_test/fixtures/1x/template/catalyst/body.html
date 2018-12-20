@@ -1,0 +1,10 @@
+{% if 0 %}
+<div class="contextual-editing">
+  <ul class="contextual-editing-controls">
+    <li><a href="">edit</a></li>
+  </ul>
+  {{ content|render }}
+</div>
+{% else %}
+  {{ content|render }}
+{% endif %}

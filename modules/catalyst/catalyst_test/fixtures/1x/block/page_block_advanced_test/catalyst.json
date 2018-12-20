@@ -1,0 +1,7 @@
+{
+                        "internal": true,
+                        "label": "Page Block Advanced Test",
+                        "machine": "page_block_advanced_test",
+                        "package": "catalyst_test_1x",
+                        "type": "block"
+                    }

@@ -1,0 +1,56 @@
+{
+                        "blockplacements": [
+                            {
+                                "region": "layout_test_region",
+                                "weight": "-50",
+                                "visibility": "0",
+                                "pages": "",
+                                "cache": "0",
+                                "block": "layout_region_block_test"
+                            }
+                        ],
+                        "blocks_related": [
+                            "block_embed_test",
+                            "layout_embedded_block_test"
+                        ],
+                        "debug": true,
+                        "doctype": "catalyst_test_1x",
+                        "drupal_processing": false,
+                        "internal": true,
+                        "label": "Catalyst Test Layout #1",
+                        "layout_page_title_pattern": "{{ title }} <> TEST <> {{ name }}",
+                        "layout_regions": [
+                            {
+                                "machine": "layout_test_region",
+                                "text": "Layout Test Region"
+                            },
+                            {
+                                "machine": "page_test_region",
+                                "text": "Page Test Region"
+                            },
+                            {
+                                "machine": "block_test_region",
+                                "text": "Block Test Region"
+                            }
+                        ],
+                        "layout_show_messages": true,
+                        "machine": "catalyst_test_1",
+                        "media_files": [
+                            "layout_shared_test",
+                            "layout_local_test",
+                            "layout_remote_test"
+                        ],
+                        "media_javascripts_layout": [
+                            "layout_shared_js_test",
+                            "layout_local_js_test",
+                            "layout_remote_js_test",
+                            "layout_footer_js_test"
+                        ],
+                        "media_stylesheets_layout": [
+                            "layout_test_shared",
+                            "layout_test_local_",
+                            "layout_test_remote"
+                        ],
+                        "package": "catalyst_test_1x",
+                        "type": "layout"
+                    }

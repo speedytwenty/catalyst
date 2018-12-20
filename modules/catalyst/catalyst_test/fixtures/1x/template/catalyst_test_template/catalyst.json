@@ -1,0 +1,21 @@
+{
+    "debug": false,
+    "internal": false,
+    "label": "Catalyst Test Template",
+    "machine": "catalyst_test_template",
+    "package": "catalyst_test_1x",
+    "template": {
+        "entity_type": "user",
+        "bundles": {
+            "user": "user"
+        },
+        "view_modes": {
+            "catalyst_test": "catalyst_test"
+        },
+        "weight": "0",
+        "bundle": {
+            "user": 0
+        }
+    },
+    "type": "template"
+}

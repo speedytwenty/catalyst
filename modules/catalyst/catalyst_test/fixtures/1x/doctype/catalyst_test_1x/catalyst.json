@@ -1,7 +1,7 @@
 {
     "doctype_charset": "utf-8",
     "doctype_content_type": "text\/html",
-    "drupal_processing": false,
+    "drupal_processing": true,
     "internal": true,
     "label": "Catalyst Test Doctype 1x",
     "machine": "catalyst_test_1x",

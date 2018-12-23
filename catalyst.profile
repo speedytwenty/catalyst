@@ -3,8 +3,6 @@
  * @file
  * Enables modules and site configuration for a catalyst site installation.
  */
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 
 /**
  * Implements hook_form_FORM_ID_alter() for install_configure_form().

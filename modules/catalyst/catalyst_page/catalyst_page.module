@@ -7,6 +7,13 @@
 include_once 'catalyst_page.features.inc';
 
 /**
+ * Implements hook_ctools_plugin_directory().
+ */
+function catalyst_page_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'catalyst_core') return 'plugins/' . $plugin_type;
+}
+
+/**
  * Implements hook_entity_view().
  */
 function catalyst_page_entity_view($entity, $entity_type, $view_mode, $page = FALSE) {

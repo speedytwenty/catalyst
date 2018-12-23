@@ -40,4 +40,3 @@ foreach ($testvars AS $testvar => $expected) {
   );
 }
 drupal_set_message('Message from doctype preprocessing.');
-dsm($variables);

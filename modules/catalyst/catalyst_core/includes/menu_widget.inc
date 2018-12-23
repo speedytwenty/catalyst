@@ -42,7 +42,7 @@ function catalyst_menu_widget($field_instance, $values = array()) {
     '#suffix' => '</div>',
     '#validate' => array('catalyst_menu_widget_validate'),
     '#attached' => array(
-      'css' => array(catalyst_get_path() . '/css/catalyst-menu-widget.css'),
+      'css' => array(catalyst_get_path('css/catalyst-menu-widget.css')),
     ),
   );
   $ajax = array(
@@ -184,7 +184,7 @@ function catalyst_menu_widget_menu_alter(&$menu_items) {
       'access arguments' => array($entity->type(), $entity->getIdentifier()),
       'title callback' => 'catalyst_menu_title_callback',
       'title arguments' => array($entity->type(), $entity->getIdentifier()),
-      'file path' => catalyst_get_path() . '/includes',
+      'file path' => catalyst_get_path('includes'),
       'file' => 'menu_widget.inc',
       'weight' => $menu_options['weight'] != "" ? $menu_options['weight'] : 0,
       'menu_name' => empty($menu_options['name']) ? 'navigation' : $menu_options['name'],

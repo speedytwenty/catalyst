@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * 
+ */
+
+abstract class CatalystWebTestCase extends DrupalWebTestCase {
+  protected $profile = 'catalyst';
+  public function setupDefaultInstall() {
+    parent::setUp(
+      'catalyst_core',
+      'catalyst_media',
+      'catalyst_page',
+      'catalyst_template',
+      'catalyst_navbar',
+      'catalyst_admin'
+    );
+  }
+}
+
+class CatalystDefaultInstallTestCase extends CatalystWebTestCase {
+  protected $profile = 'catalyst';
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Catalyst Installation Test',
+      'description' => 'Tests the installation of all the modules installed by default (kind of).',
+      'group' => 'Catalyst',
+    );
+  }
+  public function setUp() {
+    parent::setupDefaultInstall();
+  }
+  public function testDefaultInstall() {
+    $this->assertTrue(module_exists('catalyst_core'), 'The catalyst_core module exists.');
+    $this->assertTrue(module_exists('catalyst_media'), 'The catalyst_media module exists.');
+    $this->assertTrue(module_exists('catalyst_block'), 'The catalyst_block module exists.');
+    $this->assertTrue(module_exists('catalyst_doctype'), 'The catalyst_doctype module exists.');
+    $this->assertTrue(module_exists('catalyst_layout'), 'The catalyst_layout module exists.');
+    $this->assertTrue(module_exists('catalyst_page'), 'The catalyst_page module exists.');
+    $this->assertTrue(module_exists('catalyst_template'), 'The catalyst_template module exists.');
+    $this->assertTrue(module_exists('catalyst_navbar'), 'The catalyst_navbar module exists.');
+    $this->assertTrue(module_exists('catalyst_admin'), 'The catalyst_admin module exists.');
+  }
+}
+
+class CatalystEntityTestCase extends CatalystWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Catalyst Entity CRUD',
+      'description' => 'Tests basic CRUD for catalyst_core.',
+      'group' => 'Catalyst',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('catalyst_core', 'catalyst_test');
+  }
+
+  public function testCRUD() {
+    $entity = entity_create('catalyst', array('title' => 'test', 'type' => 'core_test'));
+    $entity->save();
+    $entity = entity_create('catalyst', array('title' => 'test2', 'type' => 'core_test'));
+    $entity->save();
+    $entity = entity_create('catalyst', array('title' => 'test', 'type' => 'core_test', 'internal' => 1));
+    $entity->save();
+
+    $entities = array_values(catalyst_test_load_multiple(FALSE, array('title' => 'test')));
+
+    $this->assertEqual($entities[0]->title, 'test', 'Created and loaded entity.');
+    $this->assertEqual($entities[1]->title, 'test', 'Created and loaded entity.');
+
+    $results = catalyst_test_load_multiple(array($entity->id));
+    $loaded = array_pop($results);
+    $this->assertTrue($loaded, 'Loaded the internal entity.');
+
+    $entities = array_values(catalyst_test_load_multiple(FALSE, array('title' => 'test2')));
+    $entities[0]->delete();
+    $entities = array_values(catalyst_test_load_multiple(FALSE, array('title' => 'test2')));
+    $this->assertEqual($entities, array(), 'Entity successfully deleted.');
+
+    $entity->save();
+    $this->assertEqual($entity->id, $loaded->id, 'Entity successfully updated.');
+
+    // Try deleting multiple test entities by deleting all.
+    $ids = array_keys(catalyst_test_load_multiple(FALSE));
+    catalyst_test_delete_multiple($ids);
+  }
+}

@@ -9,13 +9,21 @@
 $plugin = array(
   'label' => 'Layout field',
   'description' => 'Associate with a layout.',
-  'entity build' => 'catalyst_layout_field_plugin_entity_build',
+  'entity display' => 'catalyst_layout_field_plugin_entity_display',
 );
 
-function catalyst_layout_field_plugin_entity_build(&$build, $settings = array()) {
-  if (!empty($build['#entity']->field__layout) && $build['#page']) {
-    catalyst_set_layout($build['#entity']->wrapper()->field__layout->value());
+function catalyst_layout_field_plugin_entity_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
+  if (catalyst_theme_active() && !empty($entity->field__layout) && $page) {
+    $layout = $entity->wrapper()->field__layout->value();
+    catalyst_set_layout($layout);
+    $entity->content['#post_render'][] = 'catalyst_layout_plugin_post_render';
+    $entity->content['#layout'] = $layout;
   }
 }
 
-
+function catalyst_layout_plugin_post_render($content, $context) {
+  $layout = $context['#layout'];
+  $layout->setVariable('content', $content);
+  $build = $layout->display(TRUE);
+  return drupal_render($build);
+}

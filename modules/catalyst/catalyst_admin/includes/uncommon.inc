@@ -27,7 +27,7 @@ function catalyst_admin_views_form_after_build($form, &$form_state) {
  * @see catalyst_admin_form_alter().
  */
 function catalyst_admin_views_exposed_form_after_build($form, &$form_state) {
-  $form['#attached']['js'][] = catalyst_get_path('admin') . '/js/views.js';
+  $form['#attached']['js'][] = catalyst_get_path('js/views.js', 'admin');
 
   $form['#attributes']['class'][] = 'container-inline';
   if (isset($form['secondary'])) {

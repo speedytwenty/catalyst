@@ -10,6 +10,17 @@ define('CATALYST_BLOCK_VISIBILITY_PHP', 3);
 
 include_once 'catalyst_block.features.inc';
 
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function catalyst_block_ctools_plugin_directory($owner, $type) {
+  if ($owner == 'catalyst_core') {
+    return $type == 'plugin' ? 'plugins/catalyst' : 'plugins/' . $type;
+  }
+}
+
+
+
 function catalyst_load_blocks() {
   $block_info = module_invoke_all('block_placements');
   drupal_alter('block_placements', $block_info);
@@ -22,7 +33,7 @@ function catalyst_load_blocks() {
         if (!(boolean)catalyst_eval($accessphp, $variables)) continue;
       }
       $blocks[$placement->region][$block->machine] = array(
-        'content' => $block->view('template'),
+        'content' => $block->display(TRUE),
         '#weight' => $placement->weight,
       );
     }
@@ -185,9 +196,9 @@ function catalyst_block_block_placements_alter(&$placements) {
 }
 
 /**
- * Implements hook_catalyst_twig_render_alter().
+ * Implements hook_catalyst_twig_alter().
  */
-function catalyst_block_catalyst_twig_render_alter(&$twig, &$variables, $key = NULL) {
+function catalyst_block_catalyst_twig_alter(&$twig) {
   $twig->addFunction(new Twig_SimpleFunction('showblock', 'catalyst_block_showblock'));
 }
 
@@ -206,7 +217,7 @@ function catalyst_block_showblock($machine_name, $variables = array()) {
       if (!(boolean)catalyst_eval($accessphp, $variables)) return;
     }
     //$build = entity_view('catalyst', array($block->entity));
-    $build = $block->view('template');
+    $build = $block->display(TRUE);
     return drupal_render($build);
   }
   return;

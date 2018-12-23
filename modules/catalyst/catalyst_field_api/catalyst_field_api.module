@@ -160,7 +160,7 @@ function catalyst_field_api_field_is_empty($item, $field) {
  * Implements hook_theme().
  */
 function catalyst_field_api_theme() {
-  $module_path = catalyst_get_path('field_api');
+  $module_path = catalyst_get_path(NULL, 'field_api');
   return array(
     'block_placement_block_widget' => array(
       'render element' => 'element',

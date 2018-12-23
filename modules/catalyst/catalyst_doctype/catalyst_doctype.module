@@ -48,7 +48,7 @@ function catalyst_doctype_entity_export_alter(&$vars, $entity, $entity_type) {
  */
 function catalyst_doctype_form_eck__entity__form_alter(&$form, &$form_state, $form_id) {
   // Set the default value for the doctype content
-  if (isset($form['field__body']) && catalyst_entity_is_new($form['#entity'])
+  if (isset($form['field__body']) && isset($form['#entity']->is_new)
     && $form['#entity']->type == 'doctype') {
     $form['field__body'][LANGUAGE_NONE][0]['#after_build'][] = 'field__body_set_default_value';
   }

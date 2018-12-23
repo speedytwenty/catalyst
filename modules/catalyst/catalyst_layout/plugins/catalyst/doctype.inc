@@ -9,13 +9,14 @@
 $plugin = array(
   'label' => 'Doctype field',
   'description' => 'Associate with a doctype.',
-  'entity build' => 'catalyst_doctype_plugin_entity_build',
+  'entity display' => 'catalyst_doctype_field_plugin_entity_display',
 );
 
-function catalyst_doctype_plugin_entity_build(&$build, $settings = array()) {
-  if (!empty($build['#entity']->field__doctype)) {
-    $build['#pre_render'][] = 'catalyst_doctype_plugin_layout_pre_render';
-    $build['#post_render'][] = 'catalyst_doctype_plugin_layout_post_render';
+function catalyst_doctype_field_plugin_entity_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
+  //if (!empty($entity->field__doctype) && $page) {
+  if (!empty($entity->field__doctype) && $page) {
+    $entity->content['#pre_render'][] = 'catalyst_doctype_plugin_layout_pre_render';
+    $entity->content['#post_render'][] = 'catalyst_doctype_plugin_layout_post_render';
   }
 }
 
@@ -52,7 +53,7 @@ function catalyst_doctype_plugin_layout_pre_render($build) {
 
   ctools_include('plugins');
   $preprocess = ctools_get_plugins('catalyst', 'plugin', 'preprocess');
-  catalyst_preprocess_plugin_preprocess('catalyst', $doctype);
+  //catalyst_preprocess_plugin_preprocess('catalyst', $doctype);
   return $build;
 }
 
@@ -68,7 +69,7 @@ function catalyst_doctype_plugin_layout_post_render($content, $context) {
   $doctype->setVariable('head', drupal_get_html_head());
   $doctype->setVariable('styles', catalyst_get_css());
   $doctype->setVariable('scripts', catalyst_get_js());
-  $build = $doctype->view('template', LANGUAGE_NONE, TRUE);
+  $build = $doctype->display(TRUE);
   return drupal_render($build);
 }
 

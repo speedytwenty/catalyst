@@ -16,12 +16,3 @@ function catalyst_form_install_configure_form_alter(&$form, $form_state) {
   _catalyst_form_install_configure_form_alter($form, $form_state);
 }
 
-/**
- * Implements hook_ctools_plugin_type().
- */
-function catalyst_ctools_plugin_type() {
-  return array(
-    'plugin' => array(),
-    'bundle' => array(),
-  );
-}

@@ -8,6 +8,7 @@ class CatalystEntity extends Entity {
   protected $dependencies = array();
   protected $access;
   protected $variables = array();
+  public $internal;
 
   public function dependencies() {
   }
@@ -60,5 +61,17 @@ class CatalystEntity extends Entity {
     $data['value'][$key] = $value;
     $this->wrapper()->field__data->set($data);
     return $this;
+  }
+
+  public function handler() {
+    return entity_get_controller($this->entityType)->bundleHandler($this->wrapper()->getBundle());
+  }
+
+  public function plugins() {
+    return entity_get_controller($this->entityType)->bundlePlugins($this->wrapper()->getBundle());
+  }
+
+  public function display($page = NULL) {
+    return entity_get_controller($this->entityType)->display($this, $page);
   }
 }

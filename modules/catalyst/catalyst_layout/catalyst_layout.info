@@ -7,7 +7,6 @@ dependencies[] = catalyst_block
 dependencies[] = catalyst_doctype
 dependencies[] = catalyst_field_api
 dependencies[] = ctools
-dependencies[] = devel
 dependencies[] = eck
 dependencies[] = entityreference
 dependencies[] = features

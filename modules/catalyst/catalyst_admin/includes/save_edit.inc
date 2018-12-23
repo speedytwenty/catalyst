@@ -23,33 +23,14 @@ function catalyst_admin_save_edit_form_alter(&$form, &$form_state) {
   if (!isset($form_state['build_info']['base_form_id']) || !isset($form['actions'])) {
     return;
   }
-  $save_edit_forms = array(
-    // base form id => forms submit callback function
-    'eck__entity__form' => array(
-      'submit callback' => 'eck__entity__form_submit',
-      'redirect callback' => 'eck__entity_form__redirect',
-    ),
-    'node_form' => array(
-      'submit callback' => 'node_form_submit',
-      'redirect callback' => 'node_form_save_edit_redirect',
-    ),
-  );
-  $base_form_id = $form_state['build_info']['base_form_id'];
-  if (array_key_exists($base_form_id, $save_edit_forms)) {
+  if ($form_state['build_info']['base_form_id'] == 'eck__entity__form') {
     array_unshift($form['#submit'], 'catalyst_admin_save_edit_submit');
     $form['actions']['save_edit'] = array(
       '#weight' => 99999,
       '#type' => 'checkbox',
       '#title' => t('Continue editing'),
       '#default_value' => variable_get('catalyst_save_edit', 1),
-      '#save_edit' => $save_edit_forms[$base_form_id],
     );
-    //$form['actions']['catatalyst_save_edit'] = array(
-    //  '#type' => 'submit',
-    //  '#value' => t('Save & Edit'),
-    //  '#submit' => array('catalyst_admin_save_edit_submit'),
-    //  '#save_edit' => $save_edit_forms[$base_form_id],
-    //);
   }
 }
 
@@ -58,9 +39,7 @@ function catalyst_admin_save_edit_form_alter(&$form, &$form_state) {
  */
 function catalyst_admin_save_edit_submit($form, &$form_state) {
   if ($form_state['values']['save_edit']) {
-    $save_edit = $form['actions']['save_edit']['#save_edit'];
-    $save_edit['submit callback']($form, $form_state);
-    if ($redirect = $save_edit['redirect callback']($form, $form_state)) {
+    if ($redirect = catalyst_admin_save_edit_redirect($form, $form_state)) {
       if (isset($_REQUEST['destination'])) {
         $form_state['redirect'] = url($redirect, array(
           'query' => array(
@@ -80,18 +59,9 @@ function catalyst_admin_save_edit_submit($form, &$form_state) {
 }
 
 /**
- * Save & Edit redirect handler for node forms.
- */
-function node_form_save_edit_redirect($form, $form_state) {
-  if ($form_state['nid']) {
-    return 'node/' . $form_state['nid'] . '/edit';
-  }
-}
-
-/**
  * Save & Edit redirect handler for eck entities.
  */
-function eck__entity_form__redirect($form, $form_state) {
+function catalyst_admin_save_edit_redirect($form, $form_state) {
   if (isset($form['#entity_type'], $form['#entity']->type, $form['#entity']->id)) {
     $crud_info = get_bundle_crud_info($form['#entity_type'], $form['#entity']->type);
     return str_replace('%eckentity', $form['#entity']->id, $crud_info['edit']['path']);

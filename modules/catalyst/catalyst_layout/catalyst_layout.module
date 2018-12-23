@@ -119,7 +119,9 @@ function catalyst_get_js($scope = 'header') {
  * Implements hook_ctools_plugin_directory().
  */
 function catalyst_layout_ctools_plugin_directory($owner, $type) {
-  if ($owner == 'catalyst' && $type == 'plugin') return 'plugins/catalyst';
+  if ($owner == 'catalyst_core') {
+    return $type == 'plugin' ? 'plugins/catalyst' : 'plugins/' . $type;
+  }
 }
 
 /**
@@ -129,7 +131,7 @@ function catalyst_layout_page_build(&$page) {
   if (catalyst_theme_active()) {
     $page['#theme_wrappers'] = array();
     $page['#theme'] = 'page';
-    $page['#post_render'][] = 'catalyst_page_post_render';
+    //$page['#post_render'][] = 'catalyst_page_post_render';
   }
 }
 
@@ -146,7 +148,7 @@ function catalyst_page_post_render($content, $elements) {
     $variables['page'][$i] = $elements[$i];
   }
   $doctype->setVariables($variables);
-  $build = $layout->view('template', LANGUAGE_NONE, TRUE);
+  $build = $layout->display(TRUE);
   return drupal_render($build);
 }
 
@@ -192,7 +194,7 @@ function catalyst_layout_menu() {
     'admin/catalyst/layout/settings' => array(
       'title' => t('Settings'),
       'page callback' => 'catalyst_layout_admin_settings_page',
-      'file path' => catalyst_get_path('layout') . '/includes',
+      'file path' => catalyst_get_path('includes', 'layout'),
       'file' => 'admin.inc',
       'type' => MENU_LOCAL_TASK,
       'access arguments' => array('do cool stuff'),

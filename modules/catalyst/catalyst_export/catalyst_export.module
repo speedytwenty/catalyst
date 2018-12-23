@@ -24,7 +24,7 @@ function catalyst_export_menu() {
       'page callback' => 'drupal_get_form',
       'page arguments' => array('catalyst_import_form'),
       'access arguments' => array('use catalyst export'),
-      'file path' => catalyst_get_path('export') . '/includes',
+      'file path' => catalyst_get_path('includes', 'export'),
       'file' => 'import.inc',
       'weight' => 105,
     ),

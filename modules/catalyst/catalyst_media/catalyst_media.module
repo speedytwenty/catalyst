@@ -12,6 +12,15 @@ define('CATALYST_MEDIA_GROUP_PAGE', 303);
 define('CATALYST_MEDIA_GROUP_OTHER', 404);
 
 /**
+ * Implements hook_ctools_plugin_directory().
+ */
+function catalyst_media_ctools_plugin_directory($owner, $type) {
+  if ($owner == 'catalyst_core') {
+    return $type == 'plugin' ? 'plugins/catalyst' : 'plugins/' . $type;
+  }
+}
+
+/**
  * Implements hook_entity_insert().
  */
 function catalyst_media_insert($entity, $entity_type) {
@@ -46,7 +55,7 @@ function catalyst_media_save_file(CatalystEntity $entity) {
     $filepath = catalyst_media_stylesheet_path($entity);
   }
   drupal_mkdir(dirname($filepath), NULL, TRUE);
-  $build = $entity->view('template');
+  $build = $entity->display(TRUE);
   $data = drupal_render($build);
   if (file_exists(drupal_realpath($filepath))) drupal_unlink($filepath);
   file_unmanaged_save_data($data, $filepath, FILE_EXISTS_REPLACE);
@@ -129,12 +138,12 @@ function catalyst_media_field_formatter_view($entity_type, $entity, $field, $ins
 function catalyst_media_attach_stylesheet(&$render_array, CatalystEntity $stylesheet, $group = CATALYST_CSS_OTHER, $delta = 0) {
   if (empty($render_array['#attached'])) $render_array['#attached'] = array();
   if (empty($render_array['#attached']['css'])) $render_array['#attached']['css'] = array();
-  catalyst_include('entity');
+  catalyst_include('code');
   $weight = ($delta+1) * 0.1;
   if (!empty($stylesheet->inline)) {
     $render_array['#attached']['css'][$stylesheet->machine] = array(
       'type' => 'inline',
-      'data' => $stylesheet->view('template'),
+      'data' => $stylesheet->display(FALSE),
       'group' => $group,
       'weight' => $weight,
     );
@@ -179,7 +188,7 @@ function catalyst_media_add_stylesheet(CatalystEntity $stylesheet, $group = CATA
     case 'custom':
       catalyst_include('twig');
       if ($stylesheet->inline) {
-        $data = $stylesheet->view();
+        $data = $stylesheet->display(FALSE);
         $options['type'] = 'inline';
       }
       else {
@@ -223,12 +232,12 @@ function catalyst_media_add_stylesheet(CatalystEntity $stylesheet, $group = CATA
 function catalyst_media_attach_javascript(&$render_array, CatalystEntity $javascript, $group = CATALYST_JS_OTHER, $delta = 0) {
   if (empty($render_array['#attached'])) $render_array['#attached'] = array();
   if (empty($render_array['#attached']['js'])) $render_array['#attached']['js'] = array();
-  catalyst_include('entity');
+  catalyst_include('code');
   $weight = ($delta+1) * 0.1;
   if (!empty($javascript->inline)) {
     $render_array['#attached']['js'][$javascript->machine] = array(
       'type' => 'inline',
-      'data' => $javascript->view('template'),
+      'data' => $javascript->display(FALSE),
       'group' => $group,
       'weight' => $weight,
     );
@@ -299,7 +308,7 @@ function catalyst_media_menu() {
 
 
 function catalyst_media_page(CatalystEntity $entity) {
-  $build = $entity->view('template');
+  $build = $entity->display(TRUE);
   $GLOBALS['devel_shutdown'] = FALSE;
   drupal_send_headers();
   print drupal_render($build);
@@ -334,19 +343,19 @@ function catalyst_media_javascript_load($machine) {
 }
 
 /**
- * Implements hook_catalyst_twig_render_alter().
+ * Implements hook_catalyst_twig_alter().
  */
-function catalyst_media_catalyst_twig_render_alter(&$twig, &$extensions, &$variables, $key = NULL) {
-  $extensions['addFunction']['filepath'] = new Twig_SimpleFunction('filepath', 'catalyst_media_filepath');
-  $extensions['addFunction']['fileurl'] = new Twig_SimpleFunction('fileurl', 'catalyst_media_fileurl');
-  $extensions['addFunction']['fileuri'] = new Twig_SimpleFunction('fileuri', 'catalyst_media_fileuri');
-  $extensions['addFunction']['customfilepath'] = new Twig_SimpleFunction('customfilepath', 'catalyst_media_customfilepath');
-  $extensions['addFunction']['customfileurl'] = new Twig_SimpleFunction('customfileurl', 'catalyst_media_customfileurl');
-  $extensions['addFunction']['customfileuri'] = new Twig_SimpleFunction('customfileuri', 'catalyst_media_customfileuri');
+function catalyst_media_catalyst_twig_alter(&$twig) {
+  $twig->addFunction(new Twig_SimpleFunction('filepath', 'catalyst_media_filepath'));
+  $twig->addFunction(new Twig_SimpleFunction('fileurl', 'catalyst_media_fileurl'));
+  $twig->addFunction(new Twig_SimpleFunction('fileuri', 'catalyst_media_fileuri'));
+  $twig->addFunction(new Twig_SimpleFunction('customfilepath', 'catalyst_media_customfilepath'));
+  $twig->addFunction(new Twig_SimpleFunction('customfileurl', 'catalyst_media_customfileurl'));
+  $twig->addFunction(new Twig_SimpleFunction('customfileuri', 'catalyst_media_customfileuri'));
 }
 
 function catalyst_media_customfilepath($basename, $format = 'path') {
-  $entity = drupal_static('twig_render_entity', FALSE);
+  $entity = drupal_static('catalyst_twig_entity', FALSE);
   if (!empty($entity->field__files)) {
     foreach ($entity->wrapper()->field__files->value() AS $file) {
       if ($file['filename'] == $basename) {

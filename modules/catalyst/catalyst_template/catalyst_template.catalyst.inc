@@ -29,7 +29,7 @@ function catalyst_template_catalyst_plugin_info() {
           //'menu_item' => array(
           //  'title' => 'Templates',
           //  'page callback' => 'catalyst_template_admin_list',
-          //  'file path' => catalyst_get_path('template') . '/includes',
+          //  'file path' => catalyst_get_path('includes', 'template'),
           //  'file' => 'admin.inc',
           //  'access callback' => 'eck__multiple_access_check',
           //  'weight' => 20,
@@ -45,7 +45,7 @@ function catalyst_template_catalyst_plugin_info() {
           //'menu_item' => array(
           //  'page callback' => 'catalyst_template_admin_add',
           //  'page arguments' => array(4,5),
-          //  'file path' => catalyst_get_path('template') . '/includes',
+          //  'file path' => catalyst_get_path('includes', 'template'),
           //  'file' => 'admin.inc',
           //),
         ),

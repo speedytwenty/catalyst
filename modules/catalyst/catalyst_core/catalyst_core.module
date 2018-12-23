@@ -19,10 +19,28 @@ define('CATALYST_JS_PAGE', 201);
 define('CATALYST_JS_OTHER', 301);
 
 /**
+ * Implements hook_ctools_plugin_type().
+ */
+function catalyst_core_ctools_plugin_type() {
+  return array(
+    'plugin' => array(
+      'child plugins' => TRUE,
+    ),
+    'bundle' => array(
+      'process' => array(
+        'function' => 'catalyst_process_bundle_plugin',
+        'file' => 'plugins.inc',
+        'path' => catalyst_get_path('includes'),
+      ),
+    )
+  );
+}
+
+/**
  * Implements hook_ctools_plugin_directory().
  */
 function catalyst_core_ctools_plugin_directory($owner, $plugin_type) {
-  if ($owner == 'catalyst') {
+  if ($owner == 'catalyst_core') {
     if ($plugin_type == 'plugin') return 'plugins/catalyst';
     return 'plugins/'. $plugin_type;
   }
@@ -34,34 +52,8 @@ function catalyst_core_ctools_plugin_directory($owner, $plugin_type) {
 function catalyst_core_theme() {
   catalyst_include('plugins');
   $return = catalyst_invoke_all('theme');
-  $return['catalyst_menu_widget_menu_options'] = array(
-    'render element' => 'element',
-    'template' => 'catalyst-menu-widget-menu-options',
-    'path' => catalyst_get_path() . '/theme',
-  );
   return $return;
 }
-
-/**
- * Implements hook_catalyst_twig_render_alter().
- */
-function catalyst_core_catalyst_twig_render_alter(&$twig, &$variables, $key = NULL) {
-  $twig->addFunction(new Twig_SimpleFunction('coreblock', 'catalyst_coreblock'));
-  $twig->addFunction(new Twig_SimpleFunction('form', 'catalyst_twigform'));
-  $twig->addFunction(new Twig_SimpleFunction('entity_uri', 'entity_uri'));
-  $twig->addFilter(new Twig_SimpleFilter('entity_valval', 'catalyst_twig_entity_valval'));
-}
-
-function catalyst_twig_entity_valval($data) {
-  if ($data) return entity_valval($data);
-}
-
-function catalyst_twigform($callback) {
-  $args = func_get_args();
-  $form = call_user_func_array('drupal_get_form', $args);
-  return render($form);
-}
-
 
 /**
  * Implements hook_action_info().
@@ -93,24 +85,28 @@ function catalyst_core_action_info() {
  * Implements hook_entity_info_alter().
  */
 function catalyst_entity_info_alter(&$entity_info) {
-  $entity_info['catalyst']['entity keys'] += array(
-    'name' => 'name',
-    'module' => 'module',
-  );
+  // eck or entity not installed yet
+  if (!isset($entity_info['catalyst']['bundles']['package'])) return;
+
   $entity_info['catalyst']['access callback'] = 'catalyst_entity_access_strict';
   $entity_info['catalyst']['entity class'] = 'CatalystEntity';
-  // Restrict view modes on catalyst entities and add the "template" view
-  // mode for the rendering of (some) templates
-  $entity_info['catalyst']['view modes'] = array(
-    'full' => array(
-      'label' => 'Full',
-      'custom settings' => FALSE,
-    ),
-    'template' => array(
-      'label' => 'Template',
-      'custom settings' => TRUE,
-    ),
-  );
+  $entity_info['catalyst']['view modes'] = array();
+  $entity_info['catalyst']['view callback'] = 'catalyst_entity_view';
+  //$entity_info['catalyst']['entity keys'] += array(
+  //  //'name' => 'name',
+  //  'module' => 'module',
+  //);
+  unset($entity_info['catalyst']['translation']);
+  //unset($entity_info['catalyst']['view callback']);
+
+  catalyst_include('bundles');
+  $bundles = catalyst_get_bundles();
+  foreach ($bundles AS $bundle => $bundle_plugin) {
+    $entity_info['catalyst']['bundles'][$bundle] = array_merge(
+      $entity_info['catalyst']['bundles'][$bundle],
+      $bundle_plugin
+    );
+  }
 }
 
 /**
@@ -140,8 +136,6 @@ function catalyst_get_plugin_info($plugin = NULL, $reset = NULL) {
  */
 function catalyst_core_hook_info() {
   $group = array('group' => 'catalyst');
-  // Layout hooks
-  $hooks['catalyst_layout_alter'] = $group;
   // Plugin hooks
   $hooks['catalyst_plugin_info'] = $group;
   $hooks['catalyst_plugin_info_alter'] = $group;
@@ -154,9 +148,8 @@ function catalyst_core_hook_info() {
   $hooks['catalyst_ignore_menus'] = $group;
   $hooks['catalyst_ignore_menus_alter'] = $group;
   // Twig
-  $hooks['catalyst_twig_render_alter'] = $group;
+  $hooks['catalyst_twig_alter'] = $group;
   // Fields, entities, and node related hooks
-  $hooks['catalyst_node_types'] = $group;
   $hooks['catalyst_safe_fields'] = $group;
   $hooks['catalyst_import_alter'] = $group;
   $hooks['catalyst_export_metadata'] = $group;
@@ -173,7 +166,7 @@ function catalyst_core_menu_alter(&$menu_items) {
   if (isset($menu_items[$path])) {
     $menu_items[$path] = array_merge($menu_items[$path], array(
       'page callback' => 'catalyst_field_ui_clean_field_list',
-      'file path' => catalyst_get_path() . '/includes',
+      'file path' => catalyst_get_path('includes'),
       'module' => 'catalyst_core',
       'file' => 'fields.inc',
     ));
@@ -182,10 +175,9 @@ function catalyst_core_menu_alter(&$menu_items) {
   catalyst_eck__entity_menu_alter($menu_items);
   catalyst_eck__bundle_menu_alter($menu_items);
   catalyst_eck__entity_type_menu_alter($menu_items);
+
   catalyst_include('menu_widget');
-  if (variable_get('install_task', 'done') != 'install_system_module') {
-    catalyst_menu_widget_menu_alter($menu_items);
-  }
+  catalyst_menu_widget_menu_alter($menu_items);
 }
 
 /**
@@ -226,17 +218,6 @@ function catalyst_core_form_filter_admin_overview_alter(&$form, &$form_state) {
   }
 }
 
-function catalyst_form($form, $bundle, $machine, $vars = array()) {
-  $form['#catalyst_form'] = array(
-    'vars' => $vars,
-    'source' => array(
-      'type' => $bundle,
-      'machine' => $machine,
-    ),
-  );
-  return $form;
-}
-
 /**
  * Implements hook_form_alter().
  */
@@ -269,6 +250,17 @@ function catalyst_core_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 
+function catalyst_form($form, $bundle, $machine, $vars = array()) {
+  $form['#catalyst_form'] = array(
+    'vars' => $vars,
+    'source' => array(
+      'type' => $bundle,
+      'machine' => $machine,
+    ),
+  );
+  return $form;
+}
+
 /**
  *
  */
@@ -286,34 +278,17 @@ function catalyst_form_process($form, &$form_state) {
  * Shortcut function to include common catalyst files.
  */
 function catalyst_include($name, $module = 'core') {
-  require_once drupal_get_path('module', 'catalyst_' . $module) . '/includes/' . $name . '.inc';
+  require_once catalyst_get_path(sprintf('includes/%s.inc', $name), $module);
 }
 
 function catalyst_form_load_include(&$form_state, $name, $module = 'core') {
   return form_load_include($form_state, 'inc', 'catalyst_' . $module, 'includes/'. $name);
 }
 
-function catalyst_get_path($module = 'core') {
-  return drupal_get_path('module', 'catalyst_'. $module);
-}
-
-function catalyst_node_types() {
-  return array();
-}
-
-function catalyst_entity_is_a($bundle, $entity, $entity_type = 'catalyst', $bundle_key = 'type') {
-  switch (true) {
-    // Compare the entity type if one is provided
-    case isset($entity->entity_type) && $entity->entity_type != $entity_type:
-    // Compare the bundle
-    case !isset($entity->{$bundle_key}) || $entity->{$bundle_key} != $bundle:
-      return FALSE;
-  }
-  return TRUE;
-}
-
-function catalyst_entity_is_new($entity) {
-  return isset($entity->is_new) && $entity->is_new;
+function catalyst_get_path($subpath = NULL, $module = 'core') {
+  $path = drupal_get_path('module', 'catalyst_'. $module);
+  if ($subpath) $path = sprintf('%s/%s', $path, $subpath);
+  return $path;
 }
 
 /**
@@ -383,13 +358,11 @@ function catalyst_menu_item_restore(&$menu_item) {
 }
 
 function catalyst_set_realm_site_action($entity, $context) {
-  $wrapper = entity_metadata_wrapper('catalyst', $entity);
-  $wrapper->field__internal->set(FALSE);
+  $entity->wrapper()->field__internal->set(FALSE);
 }
 
 function catalyst_set_realm_system_action($entity, $context) {
-  $wrapper = entity_metadata_wrapper('catalyst', $entity);
-  $wrapper->field__internal->set(TRUE);
+  $entity->wrapper()->field__internal->set(TRUE);
 }
 
 function catalyst_update_package_action_form($context) {
@@ -406,17 +379,10 @@ function catalyst_update_package_action($entity, $context) {
   catalyst_update_package($entity, $context);
 }
 
-function catalyst_render_block($module, $delta = '') {
-  $block = block_load($module, $delta);
-  $build = _block_get_renderable_array(_block_render_blocks(array($block)));
-  return render($build);
-}
-
 function catalyst_menu_access_callback($entity_type, $entity_id) {
   if ($entity = entity_load_single($entity_type, $entity_id)) {
-    $wrapper = entity_metadata_wrapper($entity_type, $entity);
-    $menu = entity_valval($wrapper->field__menu);
-    if ($accessphp = entity_valval($wrapper->field__access)) {
+    $menu = entity_valval($entity->wrapper()->field__menu);
+    if ($accessphp = entity_valval($entity->wrapper()->field__access)) {
       $variables = array();
       $exportvars = catalyst_menu_parse_path($menu['path']);
       return (boolean) catalyst_eval($accessphp, $variables, $exportvars);
@@ -427,13 +393,12 @@ function catalyst_menu_access_callback($entity_type, $entity_id) {
 
 function catalyst_menu_title_callback($entity_type, $entity_id) {
   $entity = entity_load_single($entity_type, $entity_id);
-  $wrapper = entity_metadata_wrapper($entity_type, $entity);
-  $menu_options = entity_valval($wrapper->field__menu);
+  $menu_options = entity_valval($entity->wrapper()->field__menu);
   $variables = catalyst_menu_parse_path($menu_options['path']);
   $key = implode(':', array(
-    $wrapper->type(),
-    $wrapper->getBundle(),
-    $wrapper->getIdentifier(),
+    $entity->wrapper()->type(),
+    $entity->wrapper()->getBundle(),
+    $entity->wrapper()->getIdentifier(),
     'menu_title',
   ));
   catalyst_include('twig');
@@ -442,13 +407,12 @@ function catalyst_menu_title_callback($entity_type, $entity_id) {
 
 function catalyst_menu_parent_title_callback($entity_type, $entity_id) {
   $entity = entity_load_single($entity_type, $entity_id);
-  $wrapper = entity_metadata_wrapper($entity_type, $entity);
-  $menu_options = entity_valval($wrapper->field__menu);
+  $menu_options = entity_valval($entity->wrapper()->field__menu);
   $variables = catalyst_menu_parse_path($menu_options['path']);
   $key = implode(':', array(
-    $wrapper->type(),
-    $wrapper->getBundle(),
-    $wrapper->getIdentifier(),
+    $entity->wrapper()->type(),
+    $entity->wrapper()->getBundle(),
+    $entity->wrapper()->getIdentifier(),
     'parent_menu_title',
   ));
   catalyst_include('twig');
@@ -457,9 +421,7 @@ function catalyst_menu_parent_title_callback($entity_type, $entity_id) {
 
 function catalyst_menu_page_callback($entity_type, $entity_id) {
   $entity = entity_load_single($entity_type, $entity_id);
-  return $entity->view('template', LANGUAGE_NONE, TRUE);
-  module_load_include('entity.inc', 'eck');
-  return eck__entity__view_callback(array($entity), 'template', $entity->wrapper()->language());
+  return $entity->display(TRUE);
 }
 
 function catalyst_menu_parse_path($path) {
@@ -482,19 +444,6 @@ function catalyst_menu_parse_path($path) {
     }
   }
   return $return;
-}
-
-function catalyst_coreblock($module, $delta = 0, $render = true) {
-  if ($block = block_load($module, $delta)) {
-    if (!isset($block->title)) $block->title = null;
-    if (!isset($block->region)) $block->region = null;
-    $build = _block_get_renderable_array(_block_render_blocks(array($block)));
-    return $render ? drupal_render($build) : $build;
-  }
-  throw new Exception(t('Missing block %delta in %module', array(
-    '%module' => $module,
-    '%delta' => $delta,
-  )));
 }
 
 function catalyst_lookup_entity($type, $machine, $refresh = FALSE) {
@@ -645,22 +594,6 @@ function _catalyst_entity_change($entity, $entity_type) {
     if ($field = catalyst_resolve_field('menu', $entity->type)) {
       variable_set('menu_rebuild_needed', TRUE);
     }
-    catalyst_include('entity');
-    foreach (array('js', 'css') AS $ext) {
-      if ($field = catalyst_resolve_field('js', $entity->type)) {
-        $fn = $field['field_name'];
-        if (!empty($entity->{$fn}) && $value = entity_valval($entity->wrapper()->{$fn})) {
-          $scope = str_replace(array('field__'.$ext,'__'), '', $fn);
-          $fname = empty($scope) ? 'custom' : $scope;
-          $filepath = catalyst_entity_get_public_filepath('catalyst', $entity, $fname.'.'.$ext);
-          if (file_exists(drupal_realpath($filepath))) {
-            drupal_unlink($filepath);
-          }
-          $build = field_view_field('catalyst', $entity, 'field__body', array('type' => 'catalyst_twig_formatter'));
-          file_unmanaged_save_data(drupal_render($build), $filepath, FILE_EXISTS_REPLACE);
-        }
-      }
-    }
   }
 }
 
@@ -719,114 +652,6 @@ function catalyst_resolve_field($field_name_abbr, $bundle, $entity_type = 'catal
     $cache[$entity_type][$bundle][$field_name_abbr] = $result;
   }
   return $cache[$entity_type][$bundle][$field_name_abbr];
-}
-
-/**
- * Implements hook_field_formatter_info().
- */
-function catalyst_core_field_formatter_info() {
-  return array(
-    'catalyst_twig_formatter' => array(
-      'field types' => array('text_long'),
-      'label' => t('Catalyst Twig Parser'),
-    ),
-    'catalyst_php_preprocess' => array(
-      'field types' => array('text_long'),
-      'label' => t('Catalyst PHP Preprocessing'),
-    ),
-    'catalyst_js_formatter' => array(
-      'field types' => array('text_long'),
-      'label' => t('Catalyst JS'),
-    ),
-    'catalyst_css_formatter' => array(
-      'field types' => array('text_long'),
-      'label' => t('Catalyst CSS'),
-    ),
-  );
-}
-
-/**
- * Implements hook_field_formatter_view().
- */
-function catalyst_core_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  switch ($display['type']) {
-    case 'catalyst_php_include':
-      catalyst_include('entity');
-      $item = array_shift($items);
-      catalyst_entity_preprocess_php($entity_type, $entity, $item['value']);
-      return array();
-    case 'catalyst_php_preprocess':
-      catalyst_include('entity');
-      $item = array_shift($items);
-      catalyst_entity_preprocess_php($entity_type, $entity, $item['value']);
-      return array();
-    case 'catalyst_twig_formatter':
-    case 'catalyst_twig_wrapper':
-      $item = array_shift($items);
-      return array(array(
-        '#post_render' => array(sprintf('%s_post_render', $display['type'])),
-        '#entity_type' => $entity_type,
-        '#entity' => $entity,
-        '#value' => $item['value'],
-      ));
-    case 'catalyst_js_formatter':
-      catalyst_include('entity');
-      $fn = $field['field_name'];
-      $scope = str_replace(array('field__js','__'), '', $fn);
-      $fname = empty($scope) ? 'custom' : $scope;
-      $filepath = catalyst_entity_get_public_filepath('catalyst', $entity, $fname.'.js');
-      if (empty($scope)) {
-        $group = CATALYST_JS_OTHER;
-      }
-      elseif ($scope == 'layout') {
-        $group = CATALYST_JS_LAYOUT;
-      }
-      elseif ($scope == 'page') {
-        $group = CATALYST_JS_PAGE;
-      }
-      drupal_add_js($filepath, array(
-        'group' => $group,
-      ));
-      break;
-    case 'catalyst_css_formatter':
-      catalyst_include('entity');
-      $fn = $field['field_name'];
-      $scope = str_replace(array('field__css','__'), '', $fn);
-      $fname = empty($scope) ? 'custom' : $scope;
-      $filepath = catalyst_entity_get_public_filepath('catalyst', $entity, $fname.'.css');
-      if (empty($scope)) {
-        $group = CATALYST_CSS_OTHER;
-      }
-      elseif ($scope == 'layout') {
-        $group = CATALYST_CSS_LAYOUT;
-      }
-      elseif ($scope == 'page') {
-        $group = CATALYST_CSS_PAGE;
-      }
-      drupal_add_css($filepath, array(
-        'group' => $group,
-      ));
-      break;
-  }
-}
-
-function catalyst_twig_formatter_post_render($content, $context) {
-  $entity = &drupal_static('twig_render_entity', NULL);
-  $entity = $context['#entity'];
-  catalyst_include('entity');
-  $template_filepath = catalyst_entity_twig_template_filepath($context['#entity_type'], $entity);
-  catalyst_ensure_file_exists($template_filepath, $context['#value']);
-  //$variables = array($entity->type => $entity->normalize()) + $entity->variables();
-  $variables = $entity->variables();
-  $result =  array('#markup' => catalyst_twig_render_template($template_filepath, $variables));
-  $output = drupal_render($result);
-  drupal_static_reset('twig_render_entity');
-  return $output;
-}
-
-function catalyst_twig_wrapper_post_render($content, $context) {
-  $context['#variables']['content'] = $content;
-  return catalyst_twig_render_template($context['#template_filepath'], $context['#variables']);
 }
 
 /**

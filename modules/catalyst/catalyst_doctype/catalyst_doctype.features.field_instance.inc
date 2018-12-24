@@ -21,7 +21,7 @@ function catalyst_doctype_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 13,
+        'weight' => 6,
       ),
       'template' => array(
         'label' => 'above',
@@ -91,11 +91,11 @@ function catalyst_doctype_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 7,
+        'weight' => 1,
       ),
       'template' => array(
         'label' => 'above',
@@ -158,6 +158,38 @@ function catalyst_doctype_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'catalyst-doctype-field__data'.
+  $field_instances['catalyst-doctype-field__data'] = array(
+    'bundle' => 'doctype',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 10,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__data',
+    'label' => 'Data',
+    'required' => 0,
+    'settings' => array(
+      'namespace' => 1,
+      'serialization' => 'json_encode',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'serialized_field',
+      'settings' => array(),
+      'type' => 'serialized_hidden',
+      'weight' => 1,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-doctype-field__doctype_charset'.
   $field_instances['catalyst-doctype-field__doctype_charset'] = array(
     'bundle' => 'doctype',
@@ -173,7 +205,7 @@ function catalyst_doctype_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 12,
+        'weight' => 5,
       ),
       'template' => array(
         'label' => 'above',
@@ -224,7 +256,7 @@ function catalyst_doctype_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 10,
+        'weight' => 3,
       ),
       'template' => array(
         'label' => 'above',
@@ -277,7 +309,7 @@ text/html|text/html',
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 11,
+        'weight' => 4,
       ),
       'template' => array(
         'label' => 'above',
@@ -319,7 +351,7 @@ text/html|text/html',
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 14,
+        'weight' => 7,
       ),
       'template' => array(
         'label' => 'above',
@@ -356,7 +388,7 @@ text/html|text/html',
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 16,
+        'weight' => 9,
       ),
       'template' => array(
         'label' => 'above',
@@ -398,7 +430,7 @@ text/html|text/html',
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 15,
+        'weight' => 8,
       ),
       'template' => array(
         'label' => 'above',
@@ -441,10 +473,10 @@ text/html|text/html',
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 6,
+        'weight' => 0,
       ),
       'template' => array(
         'label' => 'above',
@@ -511,6 +543,7 @@ text/html|text/html',
   t('<p><em>For a complete list of content types goto <a href="http://www.freeformatter.com/mime-types-list.html" target="_blank">http://www.freeformatter.com/mime-types-list.html</a>.</em></p>');
   t('Character Set');
   t('Content');
+  t('Data');
   t('Enable Drupal processing');
   t('HTTP Content-Type');
   t('Help/Instructions');

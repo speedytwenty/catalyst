@@ -320,7 +320,7 @@ function catalyst_layout_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Tabs',
-    'weight' => '3',
+    'weight' => '0',
     'children' => array(
       0 => 'group_layout_advanced',
       1 => 'group_layout_blocks',

@@ -169,10 +169,10 @@ function catalyst_doctype_field_group_info() {
     'label' => 'Tabs',
     'weight' => '0',
     'children' => array(
-      0 => 'group_doctype_processing',
-      1 => 'group_doctype_advanced',
-      2 => 'group_doctype_content',
-      3 => 'group_doctype_help',
+      0 => 'group_doctype_advanced',
+      1 => 'group_doctype_content',
+      2 => 'group_doctype_help',
+      3 => 'group_doctype_processing',
     ),
     'format_type' => 'tabs',
     'format_settings' => array(

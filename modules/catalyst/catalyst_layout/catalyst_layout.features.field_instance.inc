@@ -21,7 +21,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 28,
+        'weight' => 22,
       ),
       'template' => array(
         'label' => 'above',
@@ -94,7 +94,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 1,
+        'weight' => 6,
       ),
       'template' => array(
         'label' => 'above',
@@ -129,7 +129,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 23,
+        'weight' => 17,
       ),
       'template' => array(
         'label' => 'above',
@@ -178,7 +178,7 @@ function catalyst_layout_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 0,
+        'weight' => 5,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -255,10 +255,11 @@ function catalyst_layout_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 12,
+        'type' => 'text_default',
+        'weight' => 1,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -326,6 +327,38 @@ function catalyst_layout_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'catalyst-layout-field__data'.
+  $field_instances['catalyst-layout-field__data'] = array(
+    'bundle' => 'layout',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 24,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__data',
+    'label' => 'Data',
+    'required' => 0,
+    'settings' => array(
+      'namespace' => 1,
+      'serialization' => 'json_encode',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'serialized_field',
+      'settings' => array(),
+      'type' => 'serialized_hidden',
+      'weight' => 1,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-layout-field__debug'.
   $field_instances['catalyst-layout-field__debug'] = array(
     'bundle' => 'layout',
@@ -341,7 +374,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 19,
+        'weight' => 13,
       ),
       'template' => array(
         'label' => 'above',
@@ -379,7 +412,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 17,
+        'weight' => 11,
       ),
       'template' => array(
         'label' => 'above',
@@ -419,7 +452,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 18,
+        'weight' => 12,
       ),
       'template' => array(
         'label' => 'above',
@@ -456,7 +489,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 21,
+        'weight' => 15,
       ),
       'template' => array(
         'label' => 'above',
@@ -520,7 +553,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 20,
+        'weight' => 14,
       ),
       'template' => array(
         'label' => 'above',
@@ -597,7 +630,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 26,
+        'weight' => 20,
       ),
       'template' => array(
         'label' => 'above',
@@ -632,10 +665,11 @@ function catalyst_layout_field_default_field_instances() {
     'description' => 'Custom javascript specific to this layout.',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 11,
+        'type' => 'text_default',
+        'weight' => 0,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -714,7 +748,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 25,
+        'weight' => 19,
       ),
       'template' => array(
         'label' => 'above',
@@ -750,7 +784,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 2,
+        'weight' => 7,
       ),
       'template' => array(
         'label' => 'above',
@@ -791,7 +825,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 6,
+        'weight' => 8,
       ),
       'template' => array(
         'label' => 'above',
@@ -829,7 +863,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 24,
+        'weight' => 18,
       ),
       'template' => array(
         'label' => 'above',
@@ -876,7 +910,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 7,
+        'weight' => 9,
       ),
       'template' => array(
         'label' => 'above',
@@ -913,7 +947,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 29,
+        'weight' => 23,
       ),
       'template' => array(
         'label' => 'above',
@@ -954,7 +988,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 22,
+        'weight' => 16,
       ),
       'template' => array(
         'label' => 'above',
@@ -999,10 +1033,11 @@ function catalyst_layout_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'catalyst_media',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 9,
+        'type' => 'catalyst_media_javascript',
+        'weight' => 3,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -1054,10 +1089,11 @@ function catalyst_layout_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'catalyst_media',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 10,
+        'type' => 'catalyst_media_stylesheet',
+        'weight' => 2,
       ),
       'teaser' => array(
         'label' => 'above',
@@ -1111,7 +1147,7 @@ function catalyst_layout_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 27,
+        'weight' => 21,
       ),
       'template' => array(
         'label' => 'above',
@@ -1154,10 +1190,11 @@ function catalyst_layout_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 15,
+        'type' => 'text_default',
+        'weight' => 4,
       ),
       'template' => array(
         'label' => 'above',
@@ -1230,6 +1267,7 @@ function catalyst_layout_field_default_field_instances() {
   t('Custom HTML Head');
   t('Custom Javascript');
   t('Custom javascript specific to this layout.');
+  t('Data');
   t('Doctype');
   t('Drupal Javascript');
   t('Drupal Stylesheets');

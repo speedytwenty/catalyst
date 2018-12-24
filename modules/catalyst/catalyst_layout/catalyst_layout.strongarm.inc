@@ -41,7 +41,7 @@ function catalyst_layout_strongarm() {
       'display' => array(
         'title' => array(
           'default' => array(
-            'weight' => '8',
+            'weight' => '10',
             'visible' => FALSE,
           ),
           'template' => array(

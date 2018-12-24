@@ -41,7 +41,7 @@ function catalyst_doctype_strongarm() {
       'display' => array(
         'title' => array(
           'default' => array(
-            'weight' => '0',
+            'weight' => '2',
             'visible' => FALSE,
           ),
           'template' => array(

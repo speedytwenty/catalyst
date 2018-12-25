@@ -47,6 +47,39 @@ function catalyst_layout_catalyst_plugin_info() {
         ),
       ),
     ),
+    'doctype' => array(
+      'title' => t('Document types'),
+      'entity_type' => 'catalyst',
+      'bundle' => 'doctype',
+      'exportables' => TRUE,
+      'migration' => array(
+        'class_name' => 'CatalystDoctypeMigration',
+      ),
+      'migration sources' => array('package'),
+      'crud' => array(
+        'admin' => array(
+          'path' => 'admin/catalyst/doctype',
+          'menu_item' => array(
+            'title' => 'Document Types',
+            'weight' => 80,
+          ),
+        ),
+        'add' => array('path' => 'admin/catalyst/doctype/add'),
+        'edit' => array(
+          'path' => 'admin/catalyst/doctype/%eckentity',
+          'entity_id' => 3,
+        ),
+        'delete' => array(
+          'path' => 'admin/catalyst/doctype/%eckentity/delete',
+          'entity_id' => 3,
+        ),
+        'view' => array(
+          'path' => 'admin/catalyst/doctype/%eckentity/view',
+          'entity_id' => 3,
+          'menu_item' => FALSE,
+        ),
+      ),
+    ),
   );
 }
 
@@ -55,6 +88,9 @@ function catalyst_layout_catalyst_plugin_info() {
  */
 function catalyst_layout_catalyst_export_candidates($group) {
   if ($group['type'] == 'layout') {
+    return catalyst_export_entity_candidates($group['type']);
+  }
+  if ($group['type'] == 'doctype') {
     return catalyst_export_entity_candidates($group['type']);
   }
 }
@@ -68,9 +104,13 @@ function catalyst_layout_catalyst_export_dependencies($export, $group) {
 
     // Determine dependencies for entities that rely on layouts
     if (!empty($export->field__layout)) {
-      $wrapper = entity_metadata_wrapper($group['entity_type'], $export);
-      $layout = $wrapper->field__layout;
+      $layout = $export->wrapper()->field__layout;
       catalyst_add_export($dependencies, 'layout', catalyst_export_entity_id($layout));
+    }
+    // Determine dependencies for items that rely on doctypes
+    if (isset($export->field__doctype)) {
+      $doctype = $expor->wrapper()->field__doctype;
+      catalyst_add_export($dependencies, 'doctype', catalyst_export_entity_id($doctype));
     }
     return $dependencies;
   }
@@ -79,8 +119,14 @@ function catalyst_layout_catalyst_export_dependencies($export, $group) {
 /**
  * Implements hook_catalyst_prepare_export().
  */
-function catalyst_layout_catalyst_prepare_export($export, $group, $exports) {
-  $wrapper = entity_metadata_wrapper($group['entity_type'], $export);
+function catalyst_layout_catalyst_prepare_export($entity, $group, $exports) {
+  $wrapper = $export->wrapper();
+  if ($export->type == 'doctype') {
+    return (object) array(
+      'charset' => $wrapper->field__doctype_charset->value(),
+      'http_content_type' => $wrapper->field__doctype_content_type->value(),
+    );
+  }
   return (object) array(
     'regions' => $wrapper->field__layout_regions->value(),
     'drupal_css_options' => $wrapper->field__layout_drupal_css->value(),
@@ -95,9 +141,12 @@ function catalyst_layout_catalyst_prepare_export($export, $group, $exports) {
  */
 function catalyst_layout_catalyst_export_alter(&$export, $original, $group, $exports) {
   if (isset($group['entity_type'])) {
-    $wrapper = entity_metadata_wrapper($group['entity_type'], $original);
+    $wrapper = $export->wrapper();
     if (!isset($export->layout) && isset($wrapper->field__layout)) {
       $export->layout = catalyst_export_helper_filter_references($wrapper->field__layout, 'layout', $exports);
+    }
+    if (!isset($export->doctype) && isset($wrapper->field__doctype)) {
+      $export->doctype = catalyst_export_helper_filter_references($wrapper->field__doctype, 'doctype', $exports);
     }
   }
 }
@@ -114,18 +163,25 @@ function catalyst_layout_catalyst_ignore_menus_alter(&$ignore_menus) {
  */
 function catalyst_layout_catalyst_export_metadata($component) {
   $metadata = array();
-  if (isset($component->wrapper->field__layout_show_messages)) {
-    $metadata['layout_show_messages'] = (bool)$component->wrapper->field__layout_show_messages->value();
+  if (isset($component->wrapper()->field__layout_show_messages)) {
+    $metadata['layout_show_messages'] = (bool)$component->wrapper()->field__layout_show_messages->value();
   }
   foreach (array('drupal_css', 'drupal_js', 'page_title_pattern', 'regions') AS $suffix) {
     $fn = 'field__layout_' . $suffix;
-    if (isset($component->wrapper->{$fn}) && $val = $component->wrapper->{$fn}->value()) {
+    if (isset($component->wrapper()->{$fn}) && $val = $component->wrapper->{$fn}->value()) {
       $metadata['layout_'.$suffix] = $val;
     }
   }
   if (!empty($component->layout) && $layout_field = catalyst_resolve_field('layout', $component->type)) {
     $metadata['layout'] = $component->layout;
   }
+  foreach (array('_charset', '_content_type') AS $suffix) {
+    $fn = 'field__doctype' . $suffix;
+    if (isset($component->wrapper->{$fn}) && $val = $component->wrapper->{$fn}->value()) {
+      $metadata['doctype'.$suffix] = $val;
+    }
+  }
+  if (!empty($component->doctype)) $metadata['doctype'] = $component->doctype;
   return $metadata;
 }
 
@@ -147,6 +203,16 @@ function catalyst_layout_catalyst_import_alter(&$wrapper, $metadata, $path) {
       $wrapper->{$fn}->set($metadata[$key]);
     }
   }
+  if (!empty($metadata['doctype'])) {
+    catalyst_import_set_reference($wrapper, 'field__doctype', 'doctype', $metadata['doctype']);
+  }
+  foreach (array('chartset', 'content_type') AS $suf) {
+    $key = 'doctype_'.$suf;
+    if (isset($metadata[$key])) {
+      $fn = 'field__'.$key;
+      $wrapper->{$fn}->set($metadata[$key]);
+    }
+  }
 }
 
 /**
@@ -158,6 +224,11 @@ function catalyst_layout_catalyst_registry_alter(&$registry) {
       foreach ($entries AS $machine => &$entry) {
         if (isset($entry->wrapper) && isset($entry->wrapper->field__layout) && $entry->wrapper->field__layout->value()) {
           $entry->layout = $entry->wrapper->field__layout->field__machine->machine->value();
+        }
+        if (isset($entry->wrapper) && $doctype_field = catalyst_resolve_field('doctype', $bundle)) {
+          if ($entry->wrapper->field__doctype->value()) {
+            $entry->doctype = $entry->wrapper->field__doctype->field__machine->machine->value();
+          }
         }
       }
     }

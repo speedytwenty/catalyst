@@ -381,7 +381,6 @@ function catalyst_export_components($components, $extract_to = '') {
     $implements = module_implements('catalyst_export_component');
     $dirs = array();
     foreach ($components AS $component) {
-      if (!is_object($component)) { dsm('not obj'); dsm($component); }
       if (!in_array($component->type, $dirs)) {
         $archive->addEmptyDir($component->type);
         $dirs[] = $component->type;
@@ -444,7 +443,7 @@ function catalyst_export_components($components, $extract_to = '') {
     }
     $archive->close();
     if (!empty($extract_to)) {
-      dsm('Extracted to: '. $extract_to);
+      drupal_set_message('Extracted to: '. $extract_to);
       $archive = new ZipArchive;
       $archive->open($path);
       $archive->extractTo($extract_to);

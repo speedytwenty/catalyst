@@ -26,8 +26,8 @@ class CatalystEntityAPIController extends EntityAPIControllerExportable {
     $entities = parent::load($ids, $conditions);
     foreach ($entities AS &$entity) {
       $entity->machine = $entity->wrapper()->field__machine->machine->value();
-      $entity->internal = (bool)$entity->wrapper()->field__internal->value();
-      $entity->admin_notes = entity_valval($entity->wrapper()->field__admin_notes);
+      //$entity->internal = (bool)$entity->wrapper()->field__internal->value();
+      //$entity->admin_notes = entity_valval($entity->wrapper()->field__admin_notes);
       //$entity->component = catalyst_registry_entry($entity->type, $entity->machine);
       if (!empty($entity->field__package)) {
         $entity->package = $entity->wrapper()->field__package->value();
@@ -55,8 +55,8 @@ class CatalystEntityAPIController extends EntityAPIControllerExportable {
         $entity->wrapper()->field__machine->set(array('machine' => $entity->machine));
       }
     }
-    $entity->internal = isset($values['internal']) && $values['internal'];
-    $entity->wrapper()->field__internal->set($entity->internal);
+    //$entity->internal = isset($values['internal']) && $values['internal'];
+    //$entity->wrapper()->field__internal->set($entity->internal);
     return $entity;
   }
 
@@ -111,7 +111,6 @@ class CatalystEntityAPIController extends EntityAPIControllerExportable {
   public function display(CatalystEntity $entity, $page = NULL) {
     catalyst_include('plugins');
     $this->catalyst_invoke('prepare display', $entity, $page);
-    //$entity->setVariable('entity_type', $this->entityType);
     $entity->setVariable('entity', $entity);
     $entity->content = array(
       '#entity_type' => $this->entityType,
@@ -131,31 +130,26 @@ class CatalystEntityAPIController extends EntityAPIControllerExportable {
     $args[0] = $this->entityType;
     $args[1] = $entity;
     $result = array();
-    if ($func = ctools_plugin_get_function($entity->handler(), $hook)) {
+    $handler = $entity->handler();
+    if ($func = ctools_plugin_get_function($handler, $hook)) {
       $call_args = $args;
-      $call_args[] = $entity->handler();
+      $call_args[] = $handler;
       $result = call_user_func_array($func, $call_args);
     }
-    foreach ($entity->handler()['plugins'] AS $plugin_name => $plugin) {
-      if ($func = ctools_plugin_get_function($plugin, $hook)) {
-        $call_args = $args;
-        $call_args[] = $plugin;
-        $call_args[] = $this->bundleHandlerPluginSettings($entity->wrapper()->getBundle(), $plugin_name);
-        if ($merge = call_user_func_array($func, $call_args)) {
-          $result = array_merge_recursive($result, $merge);
+    if (!empty($handler['plugins'])) {
+      foreach ($handler['plugins'] AS $plugin_name => $plugin) {
+        if ($func = ctools_plugin_get_function($plugin, $hook)) {
+          $call_args = $args;
+          $call_args[] = $plugin;
+          $call_args[] = $handler;
+          $call_args[] = $this->bundleHandlerPluginSettings($entity->wrapper()->getBundle(), $plugin_name);
+          if ($merge = call_user_func_array($func, $call_args)) {
+            $result = array_merge_recursive($result, $merge);
+          }
         }
       }
     }
     return $result;
-  }
-
-  public function catalyst_invoke_single($plugin, $hook, $entity) {
-  }
-
-
-  public function catalyst_alter($hook, &$data, &$context1 = NULL, &$context2 = NULl, &$context3 = NULL) {
-    catalyst_include('plugins');
-    catalyst_invoke_alter(array(array($entity->handler()), $entity->plugins()), $hook, $data, $context1, $context2, $context3);
   }
 
   /**

@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * Tests for catalyst_layout.
+ */
+
+abstract class CatalystLayoutWebTestCase extends CatalystWebTestCase {
+}
+
+class CatalystLayoutTestCase extends CatalystLayoutWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Catalyst Layout Tests',
+      'description' => 'Basic tests for Catalyst Layouts',
+      'group' => 'Catalyst Layout',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('catalyst_core', 'catalyst_test');
+    //$this->user = $this->drupalCreateUser(array('access catalyst tests'));
+  }
+
+  public function testBasicOutput() {
+    module_enable(array('catalyst_layout'));
+    $doctype = entity_create('catalyst', array('type' => 'doctype', 'machine' => 'testd'));
+    $doctype->wrapper()->field__body->set(array(
+      'value' => '<doctype>{{ page }}</doctype>',
+      'format' => 'catalyst_html',
+    ));
+    $doctype->save();
+    $layout = entity_create('catalyst', array('type' => 'layout', 'machine' => 'testl'));
+    $layout->wrapper()->field__body->set(array(
+      'value' => '<layout>{{ content }}</layout>',
+      'format' => 'catalyst_html',
+    ));
+    $layout->wrapper()->field__doctype->set($doctype);
+    $layout->save();
+
+    $layout = entity_load_single('catalyst', $layout->id);
+    $layout->setVariable('content', '<content>');
+    catalyst_set_layout($layout);
+    $build = $layout->display(TRUE);
+    $result = drupal_render($build);
+    $expected = "<doctype><layout><content></layout></doctype>";
+    $this->assertEqual(preg_replace("/\s+/", '', $result), $expected, 'Rendered layout is wrapped by the doctype.');
+  }
+
+  //public function testCatalystIsActive() {}
+  //public function testCatalystGetLayout() {}
+  //public function testSystemLayout() {
+  //  $this->drupalLogin($this->user);
+  //  $this->drupalGet('admin/catalyst/layout-test/bundle/system');
+  //}
+}
+

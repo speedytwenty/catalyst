@@ -16,6 +16,7 @@ function catalyst_layout_field_plugin_entity_display($entity_type, CatalystEntit
   if (catalyst_theme_active() && !empty($entity->field__layout) && $page) {
     $layout = $entity->wrapper()->field__layout->value();
     catalyst_set_layout($layout);
+    return;
     $entity->content['#post_render'][] = 'catalyst_layout_plugin_post_render';
     $entity->content['#layout'] = $layout;
   }

@@ -55,10 +55,15 @@ function catalyst_invoke(array $nested_plugins, $hook, array $args = array()) {
   return $result;
 }
 
-function catalyst_invoke_alter(array $nested_plugins, $hook, &$data, &$context1 = NULL, &$context2 = NUUl, $context3 = NULL) {
+function catalyst_invoke_alter(array $nested_plugins, $hook, &$data, &$context1 = NULL, &$context2 = NULL, $context3 = NULL) {
   foreach ($nested_plugins AS $plugins) {
     catalyst_plugins_invoke($plugins, $hook, $data, $context1, $context2, $context3);
   }
+}
+
+function catalyst_invoke_alter_all($hook, &$data, &$context1 = NULL, &$context2 = NULL, &$context3 = NULL) {
+  catalyst_plugins_invoke_alter(catalyst_get_plugins('bundle'), $hook, $data, $context1, $context2, $context3);
+  catalyst_plugins_invoke_alter(catalyst_get_plugins(), $hook, $data, $context1, $context2, $context3);
 }
 
 /**

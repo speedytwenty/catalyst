@@ -17,7 +17,7 @@ function catalyst_page_strongarm() {
   $strongarm->value = array(
     'view_modes' => array(
       'template' => array(
-        'custom_settings' => TRUE,
+        'custom_settings' => FALSE,
       ),
       'full' => array(
         'custom_settings' => FALSE,
@@ -36,7 +36,7 @@ function catalyst_page_strongarm() {
             'visible' => FALSE,
           ),
           'default' => array(
-            'weight' => '0',
+            'weight' => '16',
             'visible' => FALSE,
           ),
         ),

@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Tests for catalyst_media.
+ */
+
+abstract class CatalystMediaWebTestCase extends CatalystWebTestCase {
+}
+
+class CatalystMediaTestCase extends CatalystMediaWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Catalyst Media Tests',
+      'description' => 'Basic tests for Catalyst Medias',
+      'group' => 'Catalyst Media',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('catalyst_core', 'catalyst_test');
+    //$this->user = $this->drupalCreateUser(array('access catalyst tests'));
+  }
+}
+

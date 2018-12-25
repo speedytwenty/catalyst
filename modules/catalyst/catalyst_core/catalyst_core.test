@@ -1,48 +1,9 @@
 <?php
 
 /**
- * 
+ * @file
+ * Tests for catalyst_core module.
  */
-
-abstract class CatalystWebTestCase extends DrupalWebTestCase {
-  protected $profile = 'catalyst';
-  public function setupDefaultInstall() {
-    parent::setUp(
-      'catalyst_core',
-      'catalyst_media',
-      'catalyst_page',
-      'catalyst_template',
-      'catalyst_navbar',
-      'catalyst_admin'
-    );
-  }
-}
-
-class CatalystDefaultInstallTestCase extends CatalystWebTestCase {
-  protected $profile = 'catalyst';
-
-  public static function getInfo() {
-    return array(
-      'name' => 'Catalyst Installation Test',
-      'description' => 'Tests the installation of all the modules installed by default (kind of).',
-      'group' => 'Catalyst',
-    );
-  }
-  public function setUp() {
-    parent::setupDefaultInstall();
-  }
-  public function testDefaultInstall() {
-    $this->assertTrue(module_exists('catalyst_core'), 'The catalyst_core module exists.');
-    $this->assertTrue(module_exists('catalyst_media'), 'The catalyst_media module exists.');
-    $this->assertTrue(module_exists('catalyst_block'), 'The catalyst_block module exists.');
-    $this->assertTrue(module_exists('catalyst_doctype'), 'The catalyst_doctype module exists.');
-    $this->assertTrue(module_exists('catalyst_layout'), 'The catalyst_layout module exists.');
-    $this->assertTrue(module_exists('catalyst_page'), 'The catalyst_page module exists.');
-    $this->assertTrue(module_exists('catalyst_template'), 'The catalyst_template module exists.');
-    $this->assertTrue(module_exists('catalyst_navbar'), 'The catalyst_navbar module exists.');
-    $this->assertTrue(module_exists('catalyst_admin'), 'The catalyst_admin module exists.');
-  }
-}
 
 class CatalystEntityTestCase extends CatalystWebTestCase {
   public static function getInfo() {
@@ -58,11 +19,11 @@ class CatalystEntityTestCase extends CatalystWebTestCase {
   }
 
   public function testCRUD() {
-    $entity = entity_create('catalyst', array('title' => 'test', 'type' => 'core_test'));
+    $entity = entity_create('catalyst', array('title' => 'test', 'type' => 'core_test', 'machine' => 'test'));
     $entity->save();
-    $entity = entity_create('catalyst', array('title' => 'test2', 'type' => 'core_test'));
+    $entity = entity_create('catalyst', array('title' => 'test2', 'type' => 'core_test', 'machine' => 'test2'));
     $entity->save();
-    $entity = entity_create('catalyst', array('title' => 'test', 'type' => 'core_test', 'internal' => 1));
+    $entity = entity_create('catalyst', array('title' => 'test', 'type' => 'core_test', 'internal' => 1, 'machine' => 'test3'));
     $entity->save();
 
     $entities = array_values(catalyst_test_load_multiple(FALSE, array('title' => 'test')));
@@ -85,5 +46,80 @@ class CatalystEntityTestCase extends CatalystWebTestCase {
     // Try deleting multiple test entities by deleting all.
     $ids = array_keys(catalyst_test_load_multiple(FALSE));
     catalyst_test_delete_multiple($ids);
+  }
+
+  public function testDisplay() {
+    $entity = entity_create('catalyst', array('title' => 'test', 'type' => 'core_test', 'machine' => 'test'));
+    $entity->wrapper()->field__body->set(array(
+      'value' => '<content>',
+      'format' => 'catalyst_html',
+    ));
+    $result = $entity->display(TRUE);
+    $this->assertEqual(drupal_render($result), '<content>', 'Rending is outputing.');
+  }
+}
+
+class CatalystEntityCodeTestCase extends CatalystWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Catalyst Entity Code',
+      'description' => 'Tests saving and rendering entity code.',
+      'group' => 'Catalyst',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('catalyst_core', 'catalyst_test');
+  }
+
+  public function testRenderEntityCode() {
+    catalyst_include('code');
+    $entity = entity_create('catalyst', array('type' => 'core_test', 'machine' => 'test'));
+    $entity->wrapper()->field__body->set(array(
+      'value' => '{{ content }}',
+      'format' => 'catalyst_html',
+    ));
+    $entity->setVariable('content', '<content>');
+    catalyst_include('plugins');
+    $plugin = catalyst_get_plugins('plugin', 'twig:content');
+    $result = catalyst_code_render_entity_twig($entity, 'field__body');
+    $this->assertEqual($result, '<content>', 'Rendered twig code for new entity.');
+    $entity->wrapper()->save();
+    $file_info = catalyst_code_entity_file_info($entity, 'field__body');
+    $expected_filepath = catalyst_code_entity_filepath($entity, 'content.html');
+    $this->assertEqual($file_info['filepath'], $expected_filepath, 'Code file data was saved properly.');
+    $exists = $this->assertTrue(file_exists($file_info['filepath']), 'Code file was written to disk.');
+    $entity = entity_load_single($entity->wrapper()->type(), $entity->id, TRUE);
+    $entity->setVariable('content', '<content2>');
+    $result = catalyst_code_render_entity_twig($entity, 'field__body');
+    $this->assertEqual(preg_replace("/\s+/", '', $result), '<content2>', 'Rendered twig code for saved entity.');
+    $entity->delete();
+    if ($exists) {
+      $this->assertFalse(file_exists($file_info['filepath']), 'Code file was removed from disk.');
+    }
+    else {
+      $this->fail('Skip: Code file was removed from disk.');
+    }
+    $entity = entity_create('catalyst', array('type' => 'core_test', 'machine' => 'test2'));
+    $entity->wrapper()->field__css->set(array(
+      'value' => '{% if 1 %}<content>{% endif %}',
+      'format' => 'catalyst_css',
+    ));
+    $entity->save();
+    $file_info = catalyst_code_entity_file_info($entity, 'field__css');
+    $expected_filepath = catalyst_code_entity_filepath($entity, 'custom.css');
+    $this->assertEqual($file_info['filepath'], $expected_filepath, 'Code file data was saved properly.');
+    $exists = $this->assertTrue(file_exists($file_info['filepath']), 'Code file was written to disk.');
+    $expected_filepath = catalyst_code_entity_public_filepath($entity, 'catalyst--core_test--test2--custom.css');
+    $this->assertEqual($file_info['public_filepath'], $expected_filepath, 'Code public file data was saved properly.');
+    $exists = $this->assertTrue(file_exists($file_info['public_filepath']), 'Code public file was written to disk.');
+    $this->assertEqual(file_get_contents($file_info['public_filepath']), '<content>', 'Code public file was written as rendered twig.');
+
+    // Test resave
+    $entity->save();
+
+    $entity->delete();
+    $this->assertFalse(file_exists($file_info['filepath']), 'Code file was removed from disk.');
+    $this->assertFalse(file_exists($file_info['public_filepath']), 'Code public file was removed from disk.');
   }
 }

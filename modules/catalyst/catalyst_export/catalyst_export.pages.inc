@@ -251,7 +251,6 @@ function catalyst_export_form_preview_ajax($form, $form_state) {
     'title' => $form_state['values']['export_name'],
     'group' => $form_state['values']['export_filename'],
   ));
-  dsm($data);
   return $form['preview'];
 }
 

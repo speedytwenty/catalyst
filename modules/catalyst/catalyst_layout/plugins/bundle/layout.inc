@@ -13,15 +13,17 @@ $plugin = array(
   'prepare display' => 'catalyst_layout_plugin_prepare_display',
   'plugins' => array(
     'cssjs:css__layout',
+    'shared_media:css__layout',
     'cssjs:js__layout',
-    'twig:wrapper',
+    'shared_media:js__layout',
     'twig:html_head',
+    'php:preprocess_custom',
+    'twig:wrapper',
     'doctype',
   ),
 );
 
 function catalyst_layout_plugin_prepare_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
-  $entity->content['#pre_render'][] = 'catalyst_layout_plugin_pre_render';
   $entity->setVariable('show_messages', $entity->wrapper()->field__layout_show_messages->value());
   $entity->setVariable('debug', $entity->wrapper()->field__debug->value());
   $entity->setVariable('drupal_processing', $entity->wrapper()->field__drupal_processing->value());
@@ -35,12 +37,20 @@ function catalyst_layout_plugin_prepare_display($entity_type, CatalystEntity $en
   $entity->setVariable('region', $regions);
 }
 
-function catalyst_layout_plugin_pre_render($build) {
-  $build['#entity']->setVariable('messages', theme('status_messages'));
+function catalyst_layout_plugin_pre_render(&$build) {
+  //$build['#entity']->setVariable('messages', theme('status_messages'));
   return $build;
 }
 
+function catalyst_layout_post_render($content, &$context) {
+  $context['#entity']->setVariable('messages', theme('status_messages'));
+  return $content;
+}
+
 function catalyst_layout_plugin_entity_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
+  //$entity->content['#pre_render'][] = 'catalyst_layout_plugin_pre_render';
+  $entity->content['#post_render'][] =  'catalyst_layout_post_render';
+  //$entity->content['#doctype'] = catalyst_layout_get_doctype($entity);
   $entity->setVariable('title', drupal_get_title());
   $regions = $entity->getVariable('region');
   foreach (array_keys($regions) AS $region) {
@@ -51,10 +61,10 @@ function catalyst_layout_plugin_entity_display($entity_type, CatalystEntity $ent
     catalyst_layout_plugin_preprocess_drupal($entity);
   }
   ctools_include('plugins');
-  $preprocess = ctools_get_plugins('catalyst', 'plugin', 'preprocess');
+  //$preprocess = ctools_get_plugins('catalyst', 'plugin', 'preprocess');
   //catalyst_preprocess_plugin_preprocess('catalyst', $entity);
   if ($entity->getVariable('show_messages')) {
-//    $entity->setVariable('messages', theme('status_messages'));
+    //$entity->setVariable('messages', theme('status_messages'));
   }
 }
 

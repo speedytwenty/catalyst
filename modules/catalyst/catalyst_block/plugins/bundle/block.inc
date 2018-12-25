@@ -21,7 +21,8 @@ $plugin = array(
   'description' => 'Provides handling for the block bundle.',
   'plugins' => array(
     'cssjs:css',
-    'cssjs:js',
+    'shared_media:css',
+    'shared_media:js',
     'twig:content',
     'twig:html_head',
   ),

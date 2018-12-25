@@ -51,10 +51,20 @@ function catalyst_core_eck_entity_type_info() {
           'type' => 'integer',
           'behavior' => 'changed',
         ),
+        'name' => array(
+          'label' => 'Name',
+          'type' => 'text',
+          'behavior' => 'title',
+        ),
         'language' => array(
           'label' => 'Entity language',
           'type' => 'language',
           'behavior' => 'language',
+        ),
+        'status' => array(
+          'label' => 'Status',
+          'type' => 'integer',
+          'behavior' => 'title',
         ),
       ),
     ),

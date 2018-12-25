@@ -26,10 +26,8 @@ function catalyst_access_entity_has_access($entity_type, $entity) {
   return $store[$entity_type][$bundle];
 }
 
-function catalyst_access_entity_build(&$build) {
-}
-
-function catalyst_access_entity_form(&$form, &$form_state) {
+function catalyst_access_entity_form(&$form, &$form_state, $entity) {
+  return;
   form_load_include($form_state, 'inc', 'catalyst', 'plugins/catalyst/access');
   $plugins = array_filter(ctools_get_plugins('ctools', 'access'), function ($v) {
     return empty($v['required context']);

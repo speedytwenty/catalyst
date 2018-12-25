@@ -5,14 +5,12 @@
  */
 
 class Twig_Loader_Catalyst_Entity implements Twig_LoaderInterface {
-  protected $entity_type;
   protected $entity;
   public function __construct($entity_type = NULL, CatalystEntity $entity = NULL) {
     $this->setEntity($entity_type, $entity);
   }
 
-  public function setEntity($entity_type = NULL, CatalystEntity $entity = NULL) {
-    $this->entity_type = $entity_type;
+  public function setEntity(CatalystEntity $entity = NULL) {
     $this->entity = $entity;
   }
 
@@ -23,9 +21,9 @@ class Twig_Loader_Catalyst_Entity implements Twig_LoaderInterface {
       return $file_info;
     }
     else {
-      trigger_error(t('Missing twig template file information for:@filename (@entity_type:@bundle:@machine)', array(
-        '@filename' => $name,
-        '@entity_type' => $this->entity_type,
+      trigger_error(t('Missing twig template file information for: @name (@entity_type:@bundle:@machine)', array(
+        '@name' => $name,
+        '@entity_type' => $this->entity->wrapper()->type(),
         '@bundle' => $this->entity->wrapper()->getBundle(),
         '@machine' => $this->entity->machine,
       )));
@@ -39,7 +37,7 @@ class Twig_Loader_Catalyst_Entity implements Twig_LoaderInterface {
   public function getCacheKey($name) {
     $this->checkEntity();
     return format_string('@entity_type:@bundle:@machine:@name', array(
-      '@entity_type' => $this->entity_type,
+      '@entity_type' => $this->entity->wrapper()->type(),
       '@bundle' => $this->entity->wrapper()->getBundle(),
       '@machine' => $this->entity->machine,
       '@name' => $name,
@@ -56,6 +54,7 @@ class Twig_Loader_Catalyst_Entity implements Twig_LoaderInterface {
     $file_info = $this->getEntityFileInfo($name);
     return filemtime($file_info['filepath']) <= $time;
   }
+
   protected function checkEntity() {
     if (!isset($this->entity)) {
       throw new Exception('Attempting to load catalyst entity twig template before setting an entity.');

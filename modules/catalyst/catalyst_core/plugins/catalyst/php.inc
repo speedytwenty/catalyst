@@ -9,7 +9,7 @@
 $plugin = array(
   'label' => t('PHP: Include'),
   'entity save' => 'catalyst_php_plugin_entity_save',
-  'entity display' => 'catalyst_php_plugin_entity_display',
+  'prepare display' => 'catalyst_php_plugin_prepare_display',
   'default settings' => array(
     'filename' => 'include.php',
     'field_name' => 'field__php',
@@ -25,64 +25,69 @@ function catalyst_php_plugin_get_child($plugin, $parent, $child) {
 }
 
 function catalyst_php_plugin_get_children($plugin, $parent) {
-  $plugins = array('php:include' => $plugin);
-  $plugin['label'] = t('PHP: Preprocess');
+  $plugin['label'] = t('PHP: Preprocess Custom');
   $plugin['default settings']['filename'] = 'preprocess.php';
   $plugin['default settings']['field_name'] = 'field__preprocess';
-  $plugin['default settings']['display_callback'] = 'catalyst_php_plugin_preprocess_display_callback';
+  $plugins['php:preprocess_custom'] = $plugin;
+  $plugin['label'] = t('PHP: Preprocess');
   $plugin['prepare display'] = 'catalyst_php_plugin_preprocess_prepare_display';
   $plugins['php:preprocess'] = $plugin;
-  $plugin['label'] = t('PHP: Preprocess Custom');
-  $plugin['default settings']['display_callback'] = FALSE;
-  $plugin['prepare display'] = FALSE;
-  $plugins['php:preprocess_custom'] = $plugin;
   return $plugins;
 }
 
-function catalyst_php_plugin_entity_display($entity_type, CatalystEntity $entity, $page, $plugin) {
-  if (!$plugin['settings']['display_callback']) return;
-  $settings = $plugin['settings'];
-  catalyst_include('code');
-  if ($file_info = catalyst_code_entity_file_info($entity, $settings['filename'])) {
-    return $settings['display_callback']($entity_type, $entity, $page, $plugin, $file_info);
-  }
-}
 
 function catalyst_php_plugin_entity_save($entity_type, CatalystEntity $entity, $transaction, $plugin) {
   catalyst_include('code');
   $settings = $plugin['settings'];
-  catalyst_code_upsert_entity_code_file($entity_type, $entity, $settings['field_name'], $settings['filename']);
+  catalyst_code_upsert_entity_code_file($entity, $settings['field_name'], $settings['filename']);
 }
 
-function catalyst_php_plugin_preprocess_display_callback($entity_type, CatalystEntity $entity, $page = NULL,$plugin, $file_info) {
-  $entity->content['#pre_render'][] = 'catalyst_php_plugin_preprocess_pre_render';
-  $entity->content['#preprocess'] = array('file_info' => $file_info);
-}
 function catalyst_php_plugin_preprocess_prepare_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
-  return;
-  catalyst_include('code');
-  if ($file_info = catalyst_code_entity_file_info($entity, $plugin['settings']['filename'])) {
-    catalyst_php_plugin_preprocess($entity_type, $entity, $file_info);
-  }
+  catalyst_php_plugin_preprocess($entity, $plugin['settings']['field_name']);
 }
 
-function catalyst_php_plugin_preprocess_pre_render(&$build) {
-  catalyst_php_plugin_preprocess($build['#entity_type'], $build['#entity'], $build['#preprocess']['file_info']);
+/**
+ * Unused. For implementors of php:preprocess_custom plugin.
+ */
+function catalyst_php_plugin_preprocess_entity_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
+  $entity->content['#pre_render'][] = 'catalyst_php_plugin_preprocess_pre_render';
+  $entity->content['#preprocess_fields'][] = $plugin['settings']['field_name'];
+}
+
+/**
+ * Unused. For implementors of php:preprocess_custom plugin.
+ */
+function catalyst_php_plugin_preprocess_pre_render($build) {
+  $field_name = array_shift($build['#preprocess_fields']);
+  catalyst_php_plugin_preprocess($build['#entity'], $field_name);
   return $build;
 }
 
-function catalyst_php_plugin_preprocess($entity_type, CatalystEntity $entity, $file_info) {
+function catalyst_php_plugin_preprocess(CatalystEntity $entity, $field_name) {
   if (isset($entity->preprocessed)) return;
-  $filepath =& drupal_static(__FUNCTION__);
-  $filepath = $file_info['filepath'];
-  $variables = _catalyst_php_plugin_preprocess($entity->variables());
-  $entity->setVariables($variables);
+  catalyst_include('code');
+  $value = $entity->wrapper()->{$field_name}->value();
+  if ($file_info = catalyst_code_entity_file_is_fresh($entity, $field_name, $value['value'])) {
+    $filepath =& drupal_static(__FUNCTION__);
+    $filepath = $file_info['filepath'];
+    $variables = catalyst_php_plugin_preprocess_entity_file($entity, $entity->variables());
+    $entity->setVariables($variables);
+    $entity->preprocessed = TRUE;
+    return $variables;
+  }
+  $variables = catalyst_eval($value['value'], $variables, array('entity' => $entity));
   $entity->preprocessed = TRUE;
+  return $variables;
 }
 
-function _catalyst_php_plugin_preprocess($variables) {
+function catalyst_php_plugin_preprocess_entity_file(CatalystEntity $entity, array $variables) {
   include drupal_static('catalyst_php_plugin_preprocess');
   drupal_static_reset('catalyst_php_plugin_preprocess');
+  return $variables;
+}
+
+function catalyst_php_plugin_preprocess_entity_eval(CatalystEntity $entity, array $variables) {
+  drupal_static_reset('catalyst_php_plugin_preprocess_eval');
   return $variables;
 }
 

@@ -2,22 +2,44 @@
 
 /**
  * @file
- * Page related functionality. Currently implemented via field__menu which is
- * a serialized field for unstructured storage.
- *
- * Using a specific field (field__menu) to quickly find items which define
- * menu items.
- *
- * @see catalyst_core_form_alter()
+ * Menu functionality for catalyst bundles.
  */
 
-function catalyst_menu_widget_form_alter(&$form, &$form_state) {
+$plugin = array(
+  'label' => 'Menu',
+  'hook theme' => 'catalyst_menu_plugin_theme',
+  'hook menu alter' => 'catalyst_menu_plugin_menu_alter',
+  'entity form' => 'catalyst_menu_plugin_entity_form',
+  'entity save' => 'catalyst_menu_plugin_entity_save',
+);
+
+/**
+ * Implements hook_theme().
+ *
+ * @see catalyst_core_theme().
+ */
+function catalyst_menu_plugin_theme() {
+  return array(
+    'catalyst_menu_widget_menu_options' => array(
+      'render element' => 'element',
+      'template' => 'catalyst-menu-widget-menu-options',
+      'path' => catalyst_get_path('theme'),
+    ),
+  );
+}
+
+function catalyst_menu_plugin_entity_save($entity_type, CatalystEntity $entity, $plugin) {
+  variable_set('menu_rebuild_needed', TRUE);
+}
+
+function catalyst_menu_plugin_entity_form(&$form, &$form_state, $plugin, $handler) {
+  form_load_include($form_state, 'inc', 'catalyst_core', 'plugins/catalyst/menu');
+
   $html_id = drupal_html_id(__FUNCTION__);
 
-  $entity = $form['#entity'];
   $entity_type = $form['#entity_type'];
   $bundle = $form['#bundle'];
-  $wrapper = entity_metadata_wrapper($entity_type, $entity);
+  $wrapper = $form['#entity']->wrapper();
   $field_instance = field_info_instance($entity_type, 'field__menu', $bundle);
   if (isset($form_state['values']['field__menu'][LANGUAGE_NONE][0]['value'])) {
     $values = $form_state['values']['field__menu'][LANGUAGE_NONE][0]['value'];
@@ -27,7 +49,7 @@ function catalyst_menu_widget_form_alter(&$form, &$form_state) {
   }
 
   $form['field__menu'][LANGUAGE_NONE][0]['value'] = catalyst_menu_widget($field_instance, $values);
-  $form['#submit'][] = 'catalyst_menu_widget_submit';
+  //$form['#submit'][] = 'catalyst_menu_widget_submit';
 }
 
 function catalyst_menu_widget_submit($form, &$form_state) {
@@ -157,9 +179,12 @@ function catalyst_menu_widget($field_instance, $values = array()) {
 }
 
 function catalyst_menu_widget_ajax($form, &$form_state) {
+  if (empty($form['field__menu'][LANGUAGE_NONE][0]['value'])) {
+    throw new Exception('Form processing error occurred in menu plugin ajax handling.');
+  }
   $entity = $form['#entity'];
-  $type = $form_state['values']['field__menu'][LANGUAGE_NONE][0]['value']['menu']['type'];
-  if ($type != 'none') {
+  $values = $form_state['values']['menu_plugin']['value'];
+  if ($values['type'] != 'none') {
     $widget = &$form['field__menu'][LANGUAGE_NONE][0]['value'];
     $widget['menu']['#collapsed'] = FALSE;
     if ($idx = array_search('collapsed', $widget['menu']['#attributes']['class'])) {
@@ -167,74 +192,6 @@ function catalyst_menu_widget_ajax($form, &$form_state) {
     }
   }
   return $form['field__menu'][LANGUAGE_NONE][0]['value'];
-}
-
-function catalyst_menu_widget_menu_alter(&$menu_items) {
-  foreach (catalyst_menu_widget_get_entities() AS $entity) {
-    $value = entity_valval($entity->field__menu);
-    $path = preg_replace('/(\@[a-z\_]+)/i', '%', $value['path']);
-    $menu_options = $value['menu'];
-    $parent_options = $value['menu']['parent'];
-
-    $base_item = array(
-      'title' => $menu_options['title'],
-      'page callback' => 'catalyst_menu_page_callback',
-      'page arguments' => array($entity->type(), $entity->getIdentifier()),
-      'access callback' => 'catalyst_menu_access_callback',
-      'access arguments' => array($entity->type(), $entity->getIdentifier()),
-      'title callback' => 'catalyst_menu_title_callback',
-      'title arguments' => array($entity->type(), $entity->getIdentifier()),
-      'file path' => catalyst_get_path('includes'),
-      'file' => 'menu_widget.inc',
-      'weight' => $menu_options['weight'] != "" ? $menu_options['weight'] : 0,
-      'menu_name' => empty($menu_options['name']) ? 'navigation' : $menu_options['name'],
-    );
-    switch ($menu_options['type']) {
-      case 'none':
-        $menu_items[$path] = array(
-          'type' => MENU_CALLBACK,
-          'menu_name' => NULL,
-        ) + $base_item;
-        break;
-      case 'normal':
-        $menu_items[$path] = array(
-          'type' => MENU_NORMAL_ITEM,
-        ) + $base_item;
-        break;
-      case 'tab':
-        $menu_items[$path] = array(
-          'type' => MENU_LOCAL_TASK,
-        ) + $base_item;
-        break;
-      case 'default tab':
-        switch ($menu_options['parent']['type']) {
-          case 'none':
-            $menu_items[$path] = array(
-              'type' => MENU_DEFAULT_LOCAL_TASK,
-            ) + $base_item;
-            break;
-          case 'tab':
-          case 'normal':
-            $parent_weight = $parent_options['weight'] != "" ? $parent_options['weight'] : 0;
-            $parent_path = dirname($path);
-            $menu_items[$parent_path] = array(
-              'title' => $menu_options['parent']['title'],
-              'title callback' => 'catalyst_menu_parent_title_callback',
-              'type' => $menu_options['parent']['type'] == 'tab' ? MENU_LOCAL_TASK : MENU_NORMAL_ITEM,
-              'weight' => $parent_weight,
-            ) + $base_item;
-            $menu_items[$path] = array(
-              'title' => $menu_options['title'],
-              'title callback' => 'catalyst_menu_title_callback',
-              'title arguments' => array($entity->type(), $entity->getIdentifier()),
-              'type' => MENU_DEFAULT_LOCAL_TASK,
-              'weight' => $base_item['weight'],
-            );
-            break;
-        }
-        break;
-    }
-  }
 }
 
 function catalyst_menu_widget_get_entities() {
@@ -249,4 +206,75 @@ function catalyst_menu_widget_get_entities() {
     }
   }
   return $entities;
+}
+
+function catalyst_menu_plugin_menu_alter(&$menu_items) {
+  // No core bundles use field__menu, so ensure it exists
+  if (field_info_field('field__menu')) {
+    foreach (catalyst_menu_widget_get_entities() AS $entity) {
+      $value = entity_valval($entity->field__menu);
+      $path = preg_replace('/(\@[a-z\_]+)/i', '%', $value['path']);
+      $menu_options = $value['menu'];
+      $parent_options = $value['menu']['parent'];
+
+      $base_item = array(
+        'title' => $menu_options['title'],
+        'page callback' => 'catalyst_menu_page_callback',
+        'page arguments' => array($entity->type(), $entity->getIdentifier()),
+        'access callback' => 'catalyst_menu_access_callback',
+        'access arguments' => array($entity->type(), $entity->getIdentifier()),
+        'title callback' => 'catalyst_menu_title_callback',
+        'title arguments' => array($entity->type(), $entity->getIdentifier()),
+        'file path' => catalyst_get_path('plugins/catalyst'),
+        'file' => 'menu.inc',
+        'weight' => $menu_options['weight'] != "" ? $menu_options['weight'] : 0,
+        'menu_name' => empty($menu_options['name']) ? 'navigation' : $menu_options['name'],
+      );
+      switch ($menu_options['type']) {
+        case 'none':
+          $menu_items[$path] = array(
+            'type' => MENU_CALLBACK,
+            'menu_name' => NULL,
+          ) + $base_item;
+          break;
+        case 'normal':
+          $menu_items[$path] = array(
+            'type' => MENU_NORMAL_ITEM,
+          ) + $base_item;
+          break;
+        case 'tab':
+          $menu_items[$path] = array(
+            'type' => MENU_LOCAL_TASK,
+          ) + $base_item;
+          break;
+        case 'default tab':
+          switch ($menu_options['parent']['type']) {
+            case 'none':
+              $menu_items[$path] = array(
+                'type' => MENU_DEFAULT_LOCAL_TASK,
+              ) + $base_item;
+              break;
+            case 'tab':
+            case 'normal':
+              $parent_weight = $parent_options['weight'] != "" ? $parent_options['weight'] : 0;
+              $parent_path = dirname($path);
+              $menu_items[$parent_path] = array(
+                'title' => $menu_options['parent']['title'],
+                'title callback' => 'catalyst_menu_parent_title_callback',
+                'type' => $menu_options['parent']['type'] == 'tab' ? MENU_LOCAL_TASK : MENU_NORMAL_ITEM,
+                'weight' => $parent_weight,
+              ) + $base_item;
+              $menu_items[$path] = array(
+                'title' => $menu_options['title'],
+                'title callback' => 'catalyst_menu_title_callback',
+                'title arguments' => array($entity->type(), $entity->getIdentifier()),
+                'type' => MENU_DEFAULT_LOCAL_TASK,
+                'weight' => $base_item['weight'],
+              );
+              break;
+          }
+          break;
+      }
+    }
+  }
 }

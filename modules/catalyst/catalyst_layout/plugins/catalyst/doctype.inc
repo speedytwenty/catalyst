@@ -13,16 +13,18 @@ $plugin = array(
 );
 
 function catalyst_doctype_field_plugin_entity_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
+  if (!catalyst_set_layout()) return;
   //if (!empty($entity->field__doctype) && $page) {
-  if (!empty($entity->field__doctype) && $page) {
+  if ($entity->type == 'layout' && $page) {
     $entity->content['#pre_render'][] = 'catalyst_doctype_plugin_layout_pre_render';
+    //array_unshift($entity->content['#pre_render'], 'catalyst_doctype_plugin_layout_pre_render');
     $entity->content['#post_render'][] = 'catalyst_doctype_plugin_layout_post_render';
   }
 }
 
 function catalyst_doctype_plugin_layout_pre_render($build) {
   $layout = $build['#entity'];
-  $doctype = catalyst_get_doctype();
+  $doctype = catalyst_layout_get_doctype($layout);
   $doctype->setVariable('layout', $layout->normalize());
   if (empty($content_type)) $content_type = 'text/html';
   if (empty($charset)) $charset = 'utf-8';
@@ -45,20 +47,19 @@ function catalyst_doctype_plugin_layout_pre_render($build) {
   }
   $doctype->setVariable('head_title_array', $head_title);
   if (!empty($layout->field__layout_page_title_pattern)) {
+    catalyst_include('twig');
     $key = sprintf('layout:%s', $build['#entity']->machine);
     $pattern = $layout->wrapper()->field__layout_page_title_pattern->value();
     $doctype->setVariable('head_title', catalyst_twig_render($pattern, $head_title));
   }
   else $doctype->setVariable('head_title', implode(' | ', $head_title));
 
-  ctools_include('plugins');
-  $preprocess = ctools_get_plugins('catalyst', 'plugin', 'preprocess');
-  //catalyst_preprocess_plugin_preprocess('catalyst', $doctype);
   return $build;
 }
 
 function catalyst_doctype_plugin_layout_post_render($content, $context) {
-  $doctype = catalyst_get_doctype();
+  $doctype = catalyst_layout_get_doctype($context['#entity']);
+
   if ($doctype->getVariable('drupal_processing')) {
     drupal_doctype_plugin_process_drupal($doctype);
   }

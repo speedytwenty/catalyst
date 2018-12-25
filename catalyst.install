@@ -90,7 +90,6 @@ function catalyst_extensions_enable($form_id, &$form_state) {
   $module_enable['catalyst_core'] = TRUE;
   $module_enable['catalyst_media'] = TRUE;
   $module_enable['catalyst_block'] = TRUE;
-  $module_enable['catalyst_doctype'] = TRUE;
   $module_enable['catalyst_layout'] = TRUE;
   $module_enable['catalyst_page'] = TRUE;
   $module_enable['catalyst_template'] = TRUE;

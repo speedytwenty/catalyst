@@ -11,7 +11,6 @@
  * This is closely modeled after the save_edit module which only supports
  * nodes.
  *
- * @see catalyst_admin_form_eck__entity__form_alter().
  * @see catalyst_admin_form_node_form_alter().
  */
 
@@ -23,7 +22,7 @@ function catalyst_admin_save_edit_form_alter(&$form, &$form_state) {
   if (!isset($form_state['build_info']['base_form_id']) || !isset($form['actions'])) {
     return;
   }
-  if ($form_state['build_info']['base_form_id'] == 'eck__entity__form') {
+  if ($form_state['build_info']['base_form_id'] == 'catalyst_entity_form') {
     array_unshift($form['#submit'], 'catalyst_admin_save_edit_submit');
     $form['actions']['save_edit'] = array(
       '#weight' => 99999,

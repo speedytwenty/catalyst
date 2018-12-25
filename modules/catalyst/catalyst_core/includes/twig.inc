@@ -16,66 +16,59 @@ function &catalyst_twig($options = array()) {
     require_once DRUPAL_ROOT . '/' . $path . '/lib/Twig/Autoloader.php';
     Twig_Autoloader::register();
     $twig = new Twig_Environment(new Twig_Loader_Catalyst_Entity(), $options);
-    $twig->addFilter(new Twig_SimpleFilter('t', 't'));
-    $twig->addFunction(new Twig_SimpleFunction('t', 't'));
-    $twig->addFunction(new Twig_SimpleFunction('plural', 'format_plural'));
-    $twig->addFilter(new Twig_SimpleFilter('plural', 'format_plural'));
-    $twig->addFilter(new Twig_SimpleFilter('url', 'url'));
-    $twig->addFunction(new Twig_SimpleFunction('url', 'url'));
-    $twig->addFilter(new Twig_SimpleFilter('l', 'l'));
-    $twig->addFunction(new Twig_SimpleFunction('l', 'l'));
-    $twig->addFunction(new Twig_SimpleFunction('drupal_get_destination', 'drupal_get_destination'));
-    $twig->addFunction(new Twig_SimpleFunction('coreblock', 'catalyst_coreblock'));
-    $twig->addFilter(new Twig_SimpleFilter('coreblock', 'catalyst_coreblock'));
-    $twig->addFunction(new Twig_SimpleFunction('current_path', 'current_path'));
-    $twig->addFunction(new Twig_SimpleFunction('show', 'catalyst_show'));
-    $twig->addFunction(new Twig_SimpleFunction('hide', 'catalyst_hide'));
-
-    $twig->addFunction(new Twig_SimpleFunction('render', 'catalyst_render'));
-    $twig->addFunction(new Twig_SimpleFunction('entity_uri', 'entity_uri'));
-    $twig->addFilter(new Twig_SimpleFilter('render', 'catalyst_render'));
-    $twig->addFilter(new Twig_SimpleFilter('entity_valval', 'catalyst_twig_entity_valval'));
-    $twig->addFunction(new Twig_SimpleFunction('form', 'catalyst_twigform'));
-
-    drupal_alter('catalyst_twig', $twig);
+    _catalyst_twig_init($twig);
   }
   return $twig;
 }
 
-function catalyst_show($element) {
-  show($element);
-  return drupal_render($element);
-}
+function _catalyst_twig_init(Twig_Environment $twig) {
+  $twig->addFilter(new Twig_SimpleFilter('t', 't'));
+  $twig->addFunction(new Twig_SimpleFunction('t', 't'));
+  $twig->addFunction(new Twig_SimpleFunction('plural', 'format_plural'));
+  $twig->addFilter(new Twig_SimpleFilter('plural', 'format_plural'));
+  $twig->addFilter(new Twig_SimpleFilter('url', 'url'));
+  $twig->addFunction(new Twig_SimpleFunction('url', 'url'));
+  $twig->addFilter(new Twig_SimpleFilter('l', 'l'));
+  $twig->addFunction(new Twig_SimpleFunction('l', 'l'));
+  $twig->addFunction(new Twig_SimpleFunction('drupal_get_destination', 'drupal_get_destination'));
+  $twig->addFunction(new Twig_SimpleFunction('coreblock', 'catalyst_coreblock'));
+  $twig->addFilter(new Twig_SimpleFilter('coreblock', 'catalyst_coreblock'));
+  $twig->addFunction(new Twig_SimpleFunction('current_path', 'current_path'));
 
-function catalyst_hide($element) {
-  hide($element);
+  $twig->addFunction(new Twig_SimpleFunction('render', 'catalyst_render'));
+  $twig->addFunction(new Twig_SimpleFunction('entity_uri', 'entity_uri'));
+  $twig->addFilter(new Twig_SimpleFilter('render', 'catalyst_render'));
+  $twig->addFilter(new Twig_SimpleFilter('entity_valval', 'catalyst_twig_entity_valval'));
+  $twig->addFunction(new Twig_SimpleFunction('form', 'catalyst_twigform'));
+
+  drupal_alter('catalyst_twig', $twig);
 }
 
 function catalyst_twig_render_entity_file($entity_type, CatalystEntity $entity, $filename, array $variables = array()) {
   $store = &drupal_static('catalyst_twig_entity');
   $store = $entity;
-  catalyst_twig()->getLoader()->setEntity($entity_type, $entity);
-  $variables += array('entity' => $entity);
-  $result = catalyst_twig()->render($filename, $variables);
+  catalyst_twig()->getLoader()->setEntity($entity_type, $store);
+  $variables += array('entity' => $store);
+  $result = catalyst_twig()->render($field_name, $filename, $variables);
+  $entity->setVariables($variables);
   return $result;
 }
 
-function catalyst_twig_render_template($filepath, $variables = array()) {
+function catalyst_twig_render_template($filename, array &$variables = array()) {
   return catalyst_twig()->render($filepath, $variables);
 }
 
-function catalyst_coreblock($module, $delta = 0, $render = true) {
+function catalyst_coreblock($module, $delta = 0, $render = TRUE) {
   if ($block = block_load($module, $delta)) {
     if (!isset($block->title)) $block->title = null;
     if (!isset($block->region)) $block->region = null;
     $build = _block_get_renderable_array(_block_render_blocks(array($block)));
-    return drupal_render($build);
     return $render ? drupal_render($build) : $build;
   }
-  throw new Exception(t('Missing block %delta in %module', array(
+  trigger_error(t('Unknown block for the %module module: %delta', array(
     '%module' => $module,
     '%delta' => $delta,
-  )));
+  )), E_USER_WARNING);
 }
 
 function catalyst_twig_entity_valval($data) {

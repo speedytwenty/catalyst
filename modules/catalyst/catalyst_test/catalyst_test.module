@@ -23,6 +23,26 @@ function catalyst_test_menu() {
       'type' => MENU_DEFAULT_LOCAL_TASK,
       'title' => 'Basic',
     ),
+    'admin/catalyst/catalyst-test/bundle' => array(
+      'title' => 'Bundle Tests',
+      'page callback' => 'system_admin_menu_block_page',
+      'access arguments' => array('access catalyst tests'),
+      'file path' => drupal_get_path('module', 'system'),
+      'file' => 'system.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+    ),
+    'admin/catalyst/catalyst-test/bundle/list' => array(
+      'title' => 'List',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => -10,
+    ),
+    'admin/catalyst/catalyst-test/bundle/package' => array(
+      'title' => 'Package Test',
+      'page callback' => 'package_test_page',
+      'access arguments' => array('access catalyst tests'),
+      'file' => 'catalyst_test.pages.inc',
+      'type' => MENU_LOCAL_TASK,
+    ),
   );
 }
 
@@ -51,8 +71,10 @@ function catalyst_test_permission() {
 /**
  * Implements hook_ctools_plugin_directory().
  */
-function catalyst_test_plugin_directory($module, $plugin_type) {
-  if ($module == 'catalyst_core') return 'plugins';
+function catalyst_test_ctools_plugin_directory($module, $plugin_type) {
+  if ($module == 'catalyst_core') {
+    return $plugin_type == 'plugin' ? 'plugins/catalyst' : 'plugins/' . $plugin_type;
+  }
 }
 
 /**

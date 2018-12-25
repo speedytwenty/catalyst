@@ -7,7 +7,15 @@
 
 include_once 'catalyst_layout.features.inc';
 
+function catalyst_layout_is_active() {
+  return _catalyst_theme_active() || catalyst_set_layout();
+}
+
 function catalyst_theme_active() {
+  return catalyst_layout_is_active();
+}
+
+function _catalyst_theme_active() {
   global $theme, $base_theme_info;
   if ($theme == 'notheme') {
     return TRUE;
@@ -30,28 +38,50 @@ function catalyst_get_layout() {
   if (!empty($default_layout) && $layout = catalyst_load_single('layout', $default_layout)) {
     return catalyst_set_layout($layout->entity);
   }
-  return catalyst_set_layout(catalyst_layout_fallback());
+  $layout = catalyst_layout_fallback();
+  return catalyst_set_layout($layout);
 }
 
-function catalyst_layout_fallback() {
-  $layout = entity_create('catalyst', array(
-    'type' => 'layout',
-    'machine' => 'undefined',
-  ));
-  $layout->wrapper()->field__body->set(array(
-    'value' => '<div id="layout">{{ content|render }}</div>',
-    'format' => 'catalyst_twig',
-  ));
+function catalyst_layout_doctype_fallback() {
   $doctype = entity_create('catalyst', array(
     'type' => 'doctype',
     'machine' => 'undefined',
   ));
+  $doctype->id = 0;
   $doctype->wrapper()->field__body->set(array(
-    'value' => field__body_default_value(),
-    'format' => 'catalyst_twig',
+    'value' => implode("\n", array(
+      '<html>',
+      '  <head>',
+      '    {{ head }}',
+      '    <title>{{ head_title }}</title>',
+      '    {{ styles }}',
+      '    {{ scripts }}',
+      '  </head>',
+      '  <body>',
+      '    {{ page_top }}',
+      '    {{ page }}',
+      '    {{ page_bottom }}',
+      '  </body>',
+      '</html>',
+    )),
+    'format' => 'catalyst_html',
   ));
-  $layout->wrapper()->field__doctype->set($doctype);
-  return $layout;
+  return $doctype;
+}
+
+function catalyst_layout_fallback() {
+  $doctype = catalyst_layout_doctype_fallback();
+  $layout = entity_create('catalyst', array(
+    'type' => 'layout',
+    'machine' => 'undefined',
+  ));
+  $layout->id = 0;
+  $layout->wrapper()->field__body->set(array(
+    'value' => '<div id="layout">{{ content|render }}</div>',
+    'format' => 'catalyst_html',
+  ));
+  $layout->wrapper()->field__doctype->set($doctype->wrapper()->value());
+  return $layout->wrapper()->value();
 }
 
 function catalyst_set_layout(CatalystEntity $layout = NULL) {
@@ -68,8 +98,24 @@ function catalyst_set_layout(CatalystEntity $layout = NULL) {
  * Get the current doctype (from the layout)
  */
 function catalyst_get_doctype() {
-  $layout = catalyst_get_layout();
-  return $layout->wrapper()->field__doctype->value();
+  $layout = catalyst_set_layout();
+  if ($layout && catalyst_layout_has_doctype($layout)) {
+    return $layout->wrapper()->field__doctype->value();
+  }
+  else return catalyst_layout_doctype_fallback();
+}
+function catalyst_layout_has_doctype(CatalystEntity $layout) {
+  return !empty($layout->field__doctype) && $layout->wrapper()->field__doctype->value();
+}
+
+function catalyst_layout_get_doctype(CatalystEntity $layout = NULL) {
+  if ($layout && catalyst_layout_has_doctype($layout)) {
+    return $layout->wrapper()->field__doctype->value();
+  }
+  elseif (($layout = catalyst_set_layout()) && catalyst_layout_has_doctype($layout)) {
+    return $layout->wrapper()->field__doctype->value();
+  }
+  else return catalyst_layout_doctype_fallback($layout);
 }
 
 /**
@@ -131,22 +177,24 @@ function catalyst_layout_page_build(&$page) {
   if (catalyst_theme_active()) {
     $page['#theme_wrappers'] = array();
     $page['#theme'] = 'page';
-    //$page['#post_render'][] = 'catalyst_page_post_render';
+    $page['#post_render'][] = 'catalyst_page_post_render';
   }
 }
 
 function catalyst_page_post_render($content, $elements) {
   $layout = catalyst_get_layout();
+  catalyst_set_layout($layout);
   $variables = $layout->variables();
   $variables['content'] = $content;
   //catalyst_process_layout($variables);
   $layout->setVariables($variables);
-  $doctype = catalyst_get_doctype();
   //$doctype = catalyst_layout_get_doctype();
+  $variables = array();
   $variables['page'] = array();
   foreach (element_children($elements) AS $i) {
     $variables['page'][$i] = $elements[$i];
   }
+  $doctype = catalyst_layout_get_doctype($layout);
   $doctype->setVariables($variables);
   $build = $layout->display(TRUE);
   return drupal_render($build);

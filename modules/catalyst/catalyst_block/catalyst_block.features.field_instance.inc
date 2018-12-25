@@ -26,7 +26,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 15,
+        'weight' => 14,
       ),
     ),
     'entity_type' => 'catalyst',
@@ -93,7 +93,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 14,
+        'weight' => 13,
       ),
     ),
     'entity_type' => 'catalyst',
@@ -160,7 +160,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 4,
+        'weight' => 8,
       ),
       'template' => array(
         'label' => 'above',
@@ -197,7 +197,7 @@ function catalyst_block_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 0,
+        'weight' => 5,
       ),
       'template' => array(
         'label' => 'above',
@@ -267,10 +267,11 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 8,
+        'type' => 'text_default',
+        'weight' => 2,
       ),
       'template' => array(
         'label' => 'above',
@@ -332,6 +333,38 @@ function catalyst_block_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'catalyst-block-field__data'.
+  $field_instances['catalyst-block-field__data'] = array(
+    'bundle' => 'block',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 15,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__data',
+    'label' => 'Data',
+    'required' => 0,
+    'settings' => array(
+      'namespace' => 1,
+      'serialization' => 'json_encode',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'serialized_field',
+      'settings' => array(),
+      'type' => 'serialized_hidden',
+      'weight' => 1,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-block-field__files'.
   $field_instances['catalyst-block-field__files'] = array(
     'bundle' => 'block',
@@ -342,7 +375,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 1,
+        'weight' => 6,
       ),
       'template' => array(
         'label' => 'above',
@@ -410,7 +443,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 13,
+        'weight' => 12,
       ),
       'template' => array(
         'label' => 'above',
@@ -445,10 +478,11 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 10,
+        'type' => 'text_default',
+        'weight' => 3,
       ),
       'template' => array(
         'label' => 'above',
@@ -520,7 +554,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 11,
+        'weight' => 10,
       ),
       'template' => array(
         'label' => 'above',
@@ -561,7 +595,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 2,
+        'weight' => 7,
       ),
       'template' => array(
         'label' => 'above',
@@ -605,10 +639,11 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'catalyst_media',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 9,
+        'type' => 'catalyst_media_javascript',
+        'weight' => 0,
       ),
       'template' => array(
         'label' => 'above',
@@ -652,10 +687,11 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'catalyst_media',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 7,
+        'type' => 'catalyst_media_stylesheet',
+        'weight' => 1,
       ),
       'template' => array(
         'label' => 'above',
@@ -702,7 +738,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 12,
+        'weight' => 11,
       ),
       'template' => array(
         'label' => 'above',
@@ -745,10 +781,11 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 6,
+        'type' => 'text_default',
+        'weight' => 4,
       ),
       'template' => array(
         'label' => 'above',
@@ -817,6 +854,7 @@ function catalyst_block_field_default_field_instances() {
   t('Custom CSS');
   t('Custom Files');
   t('Custom Javascript');
+  t('Data');
   t('Existing shared files can be used without adding them here but by adding them here, you\'ll track the usage of each file.');
   t('Help/Instructions');
   t('Internal');

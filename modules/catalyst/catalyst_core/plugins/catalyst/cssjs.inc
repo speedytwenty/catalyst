@@ -76,6 +76,12 @@ function catalyst_cssjs_plugin_get_children($plugin, $parent) {
       }
       $plugins[$name] = $plugin;
     }
+    $key = sprintf('cssjs:%s_body', $type);
+    $plugins[$key] = $plugin;
+    $plugins[$key]['default settings']['field_name'] = 'field__body';
+    $plugins[$key]['default settings']['scope'] = 'custom';
+    $plugins[$key]['default settings']['group'] = $type_info['groups']['custom'];
+    unset($plugins[$key]['entity display']);
   }
   return $plugins;
 }
@@ -93,7 +99,7 @@ function catalyst_cssjs_plugin_entity_save($entity_type, $entity, $transaction, 
       '@scope' => $settings['scope'],
     )
   );
-  catalyst_code_upsert_entity_code_file($entity_type, $entity, $settings['field_name'], $filename, $public_filename);
+  catalyst_code_upsert_entity_code_file($entity, $settings['field_name'], $filename, $public_filename);
 }
 
 

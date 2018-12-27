@@ -32,9 +32,9 @@ function catalyst_shared_media_get_children($plugin, $parent) {
   $plugin['label'] = t('Shared Media: @type', array('@type' => 'Stylesheets'));
   $scopes = array('page' => CATALYST_CSS_PAGE, 'layout' => CATALYST_CSS_LAYOUT);
   foreach ($scopes AS $scope => $group) {
-    $plugin['default settings']['field_name'] = sprintf('%s__%s', $plugin['default settings']['field_name'], $scope);
-    $plugin['default settings']['group'] = CATALYST_CSS_OTHER;
-    $plugin['default settings']['scope'] = $group;
+    $plugin['default settings']['field_name'] = sprintf('field__media_stylesheets__%s', $scope);
+    $plugin['default settings']['group'] = $group;
+    $plugin['default settings']['scope'] = $scope;
     $plugin['label'] = t('Shared Media: @scope Stylesheet', array('@scope' => ucfirst($plugin['default settings']['scope'])));
     $plugins['shared_media:css__'.$scope] = $plugin;
   }
@@ -46,7 +46,7 @@ function catalyst_shared_media_get_children($plugin, $parent) {
   $plugins['shared_media:js'] = $plugin;
   $scopes = array('page' => CATALYST_JS_PAGE, 'layout' => CATALYST_JS_LAYOUT);
   foreach ($scopes AS $scope => $group) {
-    $plugin['default settings']['field_name'] = sprintf('%s__%s', $plugin['default settings']['field_name'], $scope);
+    $plugin['default settings']['field_name'] = sprintf('field__media_javascripts__%s', $scope);
     $plugin['default settings']['group'] = $group;
     $plugin['default settings']['scope'] = $scope;
     $plugin['label'] = t('Shared Media: @scope Stylesheet', array('@scope' => ucfirst($plugin['default settings']['scope'])));
@@ -60,7 +60,7 @@ function catalyst_shared_media_prepare_display($entity_type, CatalystEntity $ent
   if (!empty($entity->{$settings['field_name']})) {
     catalyst_include('code');
     foreach ($entity->wrapper()->{$settings['field_name']}->value() AS $media) {
-      $media->setVariable('settings', $settings);
+      $media->setVariable('group', $settings['group']);
       $media->display(TRUE);
     }
   }

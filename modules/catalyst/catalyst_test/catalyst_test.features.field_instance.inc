@@ -497,6 +497,43 @@ function catalyst_test_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'catalyst-core_test-field__debug'.
+  $field_instances['catalyst-core_test-field__debug'] = array(
+    'bundle' => 'core_test',
+    'default_value' => array(
+      0 => array(
+        'value' => 0,
+      ),
+    ),
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 18,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__debug',
+    'label' => 'Enable debugging',
+    'required' => 0,
+    'settings' => array(
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(
+        'display_label' => 0,
+      ),
+      'type' => 'options_onoff',
+      'weight' => 18,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-core_test-field__drupal_processing'.
   $field_instances['catalyst-core_test-field__drupal_processing'] = array(
     'bundle' => 'core_test',
@@ -567,7 +604,7 @@ function catalyst_test_field_default_field_instances() {
     'settings' => array(
       'description_field' => 0,
       'file_directory' => '',
-      'file_extensions' => 'txt pdf doc gif jpg jpeg png',
+      'file_extensions' => 'gif jpg jpeg png svg doc docx rtf txt wpd wps cvs dat pps ppt pptx sdf vcf xml m3u m4a mid mp3 wma wav 3gp avi flv mov mp4 mpg wmv',
       'filefield_paths' => array(
         'active_updating' => 0,
         'file_name' => array(
@@ -582,9 +619,9 @@ function catalyst_test_field_default_field_instances() {
           'options' => array(
             'pathauto' => FALSE,
             'slashes' => 0,
-            'transliterate' => 0,
+            'transliterate' => 1,
           ),
-          'value' => 'catalyst-test',
+          'value' => 'media/core_test/[catalyst:field--machine:machine]',
         ),
         'redirect' => FALSE,
         'retroactive_update' => 0,
@@ -1207,6 +1244,7 @@ function catalyst_test_field_default_field_instances() {
   t('Custom Javascript');
   t('Data');
   t('Enable Drupal processing');
+  t('Enable debugging');
   t('Help/Instructions');
   t('Internal');
   t('Layoug Javascript');

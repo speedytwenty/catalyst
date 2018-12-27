@@ -17,6 +17,7 @@ $plugin = array(
   ),
   'get child' => 'catalyst_php_plugin_get_child',
   'get children' => 'catalyst_php_plugin_get_children',
+  'weight' => -100,
 );
 
 function catalyst_php_plugin_get_child($plugin, $parent, $child) {
@@ -32,6 +33,7 @@ function catalyst_php_plugin_get_children($plugin, $parent) {
   $plugin['label'] = t('PHP: Preprocess');
   $plugin['prepare display'] = 'catalyst_php_plugin_preprocess_prepare_display';
   $plugins['php:preprocess'] = $plugin;
+  $plugin['weight'] = 25;
   return $plugins;
 }
 
@@ -67,6 +69,7 @@ function catalyst_php_plugin_preprocess(CatalystEntity $entity, $field_name) {
   if (isset($entity->preprocessed)) return;
   catalyst_include('code');
   $value = $entity->wrapper()->{$field_name}->value();
+  $variables = $entity->variables();
   if ($file_info = catalyst_code_entity_file_is_fresh($entity, $field_name, $value['value'])) {
     $filepath =& drupal_static(__FUNCTION__);
     $filepath = $file_info['filepath'];
@@ -75,7 +78,8 @@ function catalyst_php_plugin_preprocess(CatalystEntity $entity, $field_name) {
     $entity->preprocessed = TRUE;
     return $variables;
   }
-  $variables = catalyst_eval($value['value'], $variables, array('entity' => $entity));
+  catalyst_eval($value['value'], $variables, array('entity' => $entity));
+  $entity->setVariables($variables);
   $entity->preprocessed = TRUE;
   return $variables;
 }

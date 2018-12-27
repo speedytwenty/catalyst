@@ -78,7 +78,7 @@ function catalyst_block_field_default_field_instances() {
         'rows' => 8,
       ),
       'type' => 'text_textarea',
-      'weight' => 5,
+      'weight' => 6,
     ),
   );
 
@@ -396,7 +396,7 @@ function catalyst_block_field_default_field_instances() {
         'active_updating' => 0,
         'file_name' => array(
           'options' => array(
-            'pathauto' => 1,
+            'pathauto' => FALSE,
             'slashes' => 0,
             'transliterate' => 1,
           ),
@@ -404,11 +404,11 @@ function catalyst_block_field_default_field_instances() {
         ),
         'file_path' => array(
           'options' => array(
-            'pathauto' => 0,
+            'pathauto' => FALSE,
             'slashes' => 0,
-            'transliterate' => 0,
+            'transliterate' => 1,
           ),
-          'value' => 'media/block/[field__machine]',
+          'value' => 'media/block/[catalyst:field--machine:machine]',
         ),
         'redirect' => FALSE,
         'retroactive_update' => 0,
@@ -425,6 +425,74 @@ function catalyst_block_field_default_field_instances() {
       ),
       'type' => 'file_generic',
       'weight' => 16,
+    ),
+  );
+
+  // Exported field_instance: 'catalyst-block-field__html_head'.
+  $field_instances['catalyst-block-field__html_head'] = array(
+    'bundle' => 'block',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 16,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__html_head',
+    'label' => 'Custom HTML Head',
+    'required' => 0,
+    'settings' => array(
+      'better_formats' => array(
+        'allowed_formats' => array(
+          'catalyst_css' => 0,
+          'catalyst_doc' => 0,
+          'catalyst_html' => 'catalyst_html',
+          'catalyst_js' => 0,
+          'catalyst_php' => 0,
+          'plain_text' => 0,
+        ),
+        'allowed_formats_toggle' => 1,
+        'default_order_toggle' => 0,
+        'default_order_wrapper' => array(
+          'formats' => array(
+            'catalyst_css' => array(
+              'weight' => 0,
+            ),
+            'catalyst_doc' => array(
+              'weight' => 0,
+            ),
+            'catalyst_html' => array(
+              'weight' => 0,
+            ),
+            'catalyst_js' => array(
+              'weight' => 0,
+            ),
+            'catalyst_php' => array(
+              'weight' => 0,
+            ),
+            'plain_text' => array(
+              'weight' => 10,
+            ),
+          ),
+        ),
+      ),
+      'text_processing' => 1,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 5,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 5,
     ),
   );
 
@@ -466,7 +534,7 @@ function catalyst_block_field_default_field_instances() {
         'display_label' => 1,
       ),
       'type' => 'options_onoff',
-      'weight' => 7,
+      'weight' => 8,
     ),
   );
 
@@ -640,9 +708,12 @@ function catalyst_block_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'hidden',
-        'module' => 'catalyst_media',
-        'settings' => array(),
-        'type' => 'catalyst_media_javascript',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
         'weight' => 0,
       ),
       'template' => array(
@@ -688,9 +759,12 @@ function catalyst_block_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'hidden',
-        'module' => 'catalyst_media',
-        'settings' => array(),
-        'type' => 'catalyst_media_stylesheet',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
         'weight' => 1,
       ),
       'template' => array(
@@ -769,7 +843,7 @@ function catalyst_block_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'entityreference_autocomplete_tags',
-      'weight' => 6,
+      'weight' => 7,
     ),
   );
 
@@ -853,6 +927,7 @@ function catalyst_block_field_default_field_instances() {
   t('Content');
   t('Custom CSS');
   t('Custom Files');
+  t('Custom HTML Head');
   t('Custom Javascript');
   t('Data');
   t('Existing shared files can be used without adding them here but by adding them here, you\'ll track the usage of each file.');

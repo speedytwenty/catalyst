@@ -20,11 +20,19 @@ $plugin = array(
   'label' => 'Block',
   'description' => 'Provides handling for the block bundle.',
   'plugins' => array(
+    'files:default',
     'cssjs:css',
+    'cssjs:js',
     'shared_media:css',
     'shared_media:js',
-    'twig:content',
+    'php:preprocess',
     'twig:html_head',
+    'twig:content',
   ),
+  'entity display' => 'catalyst_block_entity_display',
 );
+
+function catalyst_block_entity_display($entity_type, CatalystEntity $entity, $page = NULL) {
+  $entity->setVariable('title', $entity->wrapper()->label());
+}
 

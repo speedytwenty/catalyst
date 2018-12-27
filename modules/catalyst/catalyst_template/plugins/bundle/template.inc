@@ -20,10 +20,15 @@ $plugin = array(
   'label' => 'Template',
   'description' => 'Provides handling for the template bundle.',
   'plugins' => array(
+    'layout_field',
+    'files:default',
     'cssjs:css__page',
+    'shared_media:js__page',
     'cssjs:js__page',
-    'twig:content',
+    'shared_media:css__page',
+    'php:preprocess',
     'twig:html_head',
+    'twig:content',
   ),
 );
 

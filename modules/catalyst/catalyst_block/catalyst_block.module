@@ -19,8 +19,6 @@ function catalyst_block_ctools_plugin_directory($owner, $type) {
   }
 }
 
-
-
 function catalyst_load_blocks() {
   $block_info = module_invoke_all('block_placements');
   drupal_alter('block_placements', $block_info);
@@ -50,7 +48,6 @@ function catalyst_blocks_by_region($region) {
   if (!isset($blocks)) {
     $blocks = catalyst_load_blocks();
   }
-
   if (!isset($blocks[$region])) {
     $blocks[$region] = array();
   }
@@ -84,42 +81,15 @@ function catalyst_block_inline_entity_form_entity_form_alter(&$entity_form, &$fo
 }
 
 /**
- * Implements hook_entity_view().
- */
-function catalyst_block_entity_view($entity, $entity_type, $view_mode, $langcode) {
-  if ($entity_type == 'catalyst' && $entity->type == 'block') {
-    $entity->setVariable('title', $entity->wrapper()->label());
-  }
-}
-
-
-/**
- * Implements hook_entity_view_alter().
- */
-function catalyst_block_entity_view_alter(&$build, $type) {
-  // Handle "layout field" block placements statically
-  if (!empty($build['#entity']->field__blockplacements__layfield)) {
-    $wrapper = entity_metadata_wrapper($build['#entity_type'], $build['#entity']);
-    foreach ($wrapper->field__blockplacements__layfield AS $placement) {
-      catalyst_block_add_static_placement($placement->value());
-    }
-  }
-  if (!empty($build['#entity']->field___block_placements_entity)) {
-    foreach ($build['#entity']->wrapper()->field___block_placements_entity AS $placement) {
-      catalyst_block_add_static_placement($placement->value());
-    }
-  }
-}
-
-/**
  * Implements hook_page_build().
  */
 function catalyst_block_page_build(&$page) {
   if (catalyst_theme_active()) {
     $page['region'] = array();
     if ($regions = catalyst_layout_system_regions()) {
-      foreach ($regions AS $region) {
-        $page['region'][$region] = catalyst_blocks_by_region($region);
+      foreach ($regions AS $region_info) {
+        $region = $region_info['machine'];
+        $page['regions'][$region] = catalyst_blocks_by_region($region);
       }
     }
   }
@@ -216,8 +186,7 @@ function catalyst_block_showblock($machine_name, $variables = array()) {
     if ($accessphp = entity_valval($block->wrapper()->field__access)) {
       if (!(boolean)catalyst_eval($accessphp, $variables)) return;
     }
-    //$build = entity_view('catalyst', array($block->entity));
-    $build = $block->display(TRUE);
+    $build = $block->display(FALSE);
     return drupal_render($build);
   }
   return;

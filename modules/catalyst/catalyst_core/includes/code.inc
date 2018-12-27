@@ -247,6 +247,8 @@ function catalyst_code_render_entity_code(CatalystEntity $entity, $plugin) {
 }
 
 function catalyst_code_render_entity_twig(CatalystEntity $entity, $field_name) {
+  $original = isset($GLOBALS['catalyst_twig_entity']) ? $GLOBALS['catalyst_twig_entity'] : NULL;
+  $GLOBALS['catalyst_twig_entity'] = $entity;
   $value = $entity->wrapper()->{$field_name}->value();
   if (empty($value['value'])) return;
   if ($file_info = catalyst_code_entity_file_is_fresh($entity, $field_name, $value['value'])) {
@@ -258,7 +260,13 @@ function catalyst_code_render_entity_twig(CatalystEntity $entity, $field_name) {
   catalyst_include('twig');
   // Fallback to field value
   $variables = $entity->variables() + array('entity' => $entity);
-  return catalyst_twig_render($value['value'], $variables);
+  $result = catalyst_twig_render($value['value'], $variables);
+
+  if ($original) {
+    $GLOBALS['catalyst_twig_entity'] = $original;
+  }
+  else unset($GLOBALS['catalyst_twig_entity']);
+  return $result;
 }
 
 function _catalyst_code_entity_upsert_public_file(CatalystEntity $entity, $field_name, $filepath, $public_filepath) {
@@ -349,5 +357,31 @@ function catalyst_code_entity_public_file_is_fresh(CatalystEntity $entity, $fiel
     }
   }
   return FALSE;
+}
+
+function catalyst_code_render_entity_cssjs(CatalystEntity $entity, $field_name, $type, $options) {
+  if (empty($entity->{$field_name})) return;
+  $options += array(
+    'group' => CATALYST_CSS_OTHER,
+  );
+  $value = $entity->wrapper()->{$field_name}->value();
+  if ($public_filepath = catalyst_code_entity_public_file_is_fresh($entity, $field_name, $value['value'])) {
+    $options['type'] = 'file';
+    $data = $public_filepath;
+  }
+  else {
+    $vars = $entity->variables();
+    catalyst_include('twig');
+    $data = catalyst_twig_render($value['value'], $vars);
+    $options['type'] = 'inline';
+  }
+  if ($type == 'css') {
+    $options += array('media' => 'all');
+    drupal_add_css($data, $options);
+  }
+  else {
+    $options += array('scope' => 'header');
+    drupal_add_js($data, $options);
+  }
 }
 

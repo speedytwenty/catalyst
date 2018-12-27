@@ -19,9 +19,10 @@ function catalyst_layout_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 6,
+        'type' => 'text_default',
+        'weight' => 7,
       ),
       'template' => array(
         'label' => 'above',
@@ -91,11 +92,10 @@ function catalyst_layout_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'hidden',
-        'module' => 'text',
+        'label' => 'above',
         'settings' => array(),
-        'type' => 'text_default',
-        'weight' => 1,
+        'type' => 'hidden',
+        'weight' => 9,
       ),
       'template' => array(
         'label' => 'above',
@@ -202,9 +202,10 @@ function catalyst_layout_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'inline',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
+        'type' => 'text_default',
         'weight' => 5,
       ),
       'template' => array(
@@ -253,10 +254,11 @@ function catalyst_layout_field_default_field_instances() {
     'description' => '<p><em>For a complete list of content types goto <a href="http://www.freeformatter.com/mime-types-list.html" target="_blank">http://www.freeformatter.com/mime-types-list.html</a>.</em></p>',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'inline',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 3,
+        'type' => 'text_default',
+        'weight' => 4,
       ),
       'template' => array(
         'label' => 'above',
@@ -306,10 +308,11 @@ text/html|text/html',
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'inline',
+        'module' => 'list',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 4,
+        'type' => 'list_default',
+        'weight' => 3,
       ),
       'template' => array(
         'label' => 'above',
@@ -348,10 +351,11 @@ text/html|text/html',
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'inline',
+        'module' => 'list',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 7,
+        'type' => 'list_key',
+        'weight' => 6,
       ),
       'template' => array(
         'label' => 'above',
@@ -385,10 +389,11 @@ text/html|text/html',
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'inline',
+        'module' => 'machine',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 9,
+        'type' => 'machine_default',
+        'weight' => 1,
       ),
       'template' => array(
         'label' => 'above',
@@ -427,10 +432,14 @@ text/html|text/html',
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 8,
+        'label' => 'inline',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 2,
       ),
       'template' => array(
         'label' => 'above',
@@ -473,10 +482,10 @@ text/html|text/html',
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'hidden',
+        'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 0,
+        'weight' => 8,
       ),
       'template' => array(
         'label' => 'above',
@@ -767,9 +776,8 @@ text/html|text/html',
     'display' => array(
       'default' => array(
         'label' => 'hidden',
-        'module' => 'text',
         'settings' => array(),
-        'type' => 'text_default',
+        'type' => 'hidden',
         'weight' => 5,
       ),
       'teaser' => array(
@@ -1016,8 +1024,13 @@ text/html|text/html',
     'entity_type' => 'catalyst',
     'field_name' => 'field__doctype',
     'label' => 'Doctype',
-    'required' => 1,
+    'required' => 0,
     'settings' => array(
+      'behaviors' => array(
+        'test_instance_behavior' => array(
+          'status' => 0,
+        ),
+      ),
       'user_register_form' => FALSE,
     ),
     'widget' => array(
@@ -1102,7 +1115,7 @@ text/html|text/html',
         'active_updating' => 0,
         'file_name' => array(
           'options' => array(
-            'pathauto' => 1,
+            'pathauto' => FALSE,
             'slashes' => 0,
             'transliterate' => 1,
           ),
@@ -1110,14 +1123,14 @@ text/html|text/html',
         ),
         'file_path' => array(
           'options' => array(
-            'pathauto' => 1,
+            'pathauto' => FALSE,
             'slashes' => 0,
             'transliterate' => 1,
           ),
-          'value' => 'media/layout/[catalyst:title]',
+          'value' => 'media/layout/[catalyst:field--machine:machine]',
         ),
         'redirect' => FALSE,
-        'retroactive_update' => 1,
+        'retroactive_update' => 0,
       ),
       'filefield_paths_enabled' => 1,
       'max_filesize' => '',
@@ -1626,9 +1639,12 @@ text/html|text/html',
     'display' => array(
       'default' => array(
         'label' => 'hidden',
-        'module' => 'catalyst_media',
-        'settings' => array(),
-        'type' => 'catalyst_media_javascript',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
         'weight' => 3,
       ),
       'teaser' => array(
@@ -1682,9 +1698,12 @@ text/html|text/html',
     'display' => array(
       'default' => array(
         'label' => 'hidden',
-        'module' => 'catalyst_media',
-        'settings' => array(),
-        'type' => 'catalyst_media_stylesheet',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
         'weight' => 2,
       ),
       'teaser' => array(
@@ -1783,9 +1802,8 @@ text/html|text/html',
     'display' => array(
       'default' => array(
         'label' => 'hidden',
-        'module' => 'text',
         'settings' => array(),
-        'type' => 'text_default',
+        'type' => 'hidden',
         'weight' => 4,
       ),
       'template' => array(

@@ -56,13 +56,10 @@ function catalyst_twig_plugin_entity_display_router($entity_type, CatalystEntity
 }
 
 function catalyst_twig_plugin_content_display(CatalystEntity $entity, $page, $settings) {
-  $entity->content['#post_render'][] = 'catalyst_twig_plugin_content_post_render';
-  $entity->content['#post_render_settings'] = $settings;
-}
-
-function catalyst_twig_plugin_content_post_render($content, &$context) {
-  $settings = $context['#post_render_settings'];
-  return catalyst_code_render_entity_twig($context['#entity'], $settings['field_name']);
+  $entity->content['content'] = array(
+    '#markup' => catalyst_code_render_entity_twig($entity, $settings['field_name']),
+  );
+  return;
 }
 
 function catalyst_twig_plugin_html_head_display(CatalystEntity $entity, $page, $settings) {
@@ -78,8 +75,9 @@ function catalyst_twig_plugin_wrapper_display(CatalystEntity $entity, $page, $se
 
 function catalyst_twig_plugin_wrapper_post_render($content, $context) {
   $settings = $context['#post_render_settings'];
-  $var = $settings['content_variable_name'];
-  $settings[$var] = $content;
+//  $var = $settings['content_variable_name'];
+//  $settings[$var] = $content;
+  //$context['#entity']->setVariable('content', $content);
   return catalyst_code_render_entity_twig($context['#entity'], $settings['field_name']);
 }
 

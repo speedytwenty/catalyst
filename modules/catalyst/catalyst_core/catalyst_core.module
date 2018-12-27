@@ -86,18 +86,11 @@ function catalyst_core_action_info() {
  * Implements hook_entity_info_alter().
  */
 function catalyst_core_entity_info_alter(&$entity_info) {
-  // eck or entity not installed yet
   $entity_info['catalyst']['controller class'] = 'CatalystEntityAPIController';
   $entity_info['catalyst']['access callback'] = 'catalyst_entity_access_strict';
   $entity_info['catalyst']['entity class'] = 'CatalystEntity';
   $entity_info['catalyst']['view modes'] = array();
-  $entity_info['catalyst']['view callback'] = 'catalyst_entity_view';
-  //$entity_info['catalyst']['entity keys'] += array(
-  //  //'name' => 'name',
-  //  'module' => 'module',
-  //);
   unset($entity_info['catalyst']['translation']);
-  //unset($entity_info['catalyst']['view callback']);
 
   if (!isset($entity_info['catalyst']['bundles']['package'])) return;
   catalyst_include('bundles');

@@ -40,15 +40,53 @@ function _catalyst_twig_init(Twig_Environment $twig) {
   $twig->addFilter(new Twig_SimpleFilter('render', 'catalyst_render'));
   $twig->addFilter(new Twig_SimpleFilter('entity_valval', 'catalyst_twig_entity_valval'));
   $twig->addFunction(new Twig_SimpleFunction('form', 'catalyst_twigform'));
+  $twig->addFunction(new Twig_SimpleFunction('customfilepath', 'catalyst_media_customfilepath'));
+  $twig->addFunction(new Twig_SimpleFunction('customfileurl', 'catalyst_media_customfileurl'));
+  $twig->addFunction(new Twig_SimpleFunction('customfileuri', 'catalyst_media_customfileuri'));
 
   drupal_alter('catalyst_twig', $twig);
 }
 
+function catalyst_media_customfilepath($basename, $format = 'path') {
+  if (empty($GLOBALS['catalyst_twig_entity'])) {
+    throw new RuntimeException(t('Calling customfilepath(@basename) when no entity is being rendered.', array(
+      '@basename' => $basename,
+    )));
+  }
+  $entity = $GLOBALS['catalyst_twig_entity'];
+  if (!empty($entity->field__files)) {
+    foreach ($entity->wrapper()->field__files->value() AS $file) {
+      if ($file['filename'] == $basename) {
+        if ($format == 'url') {
+          return $file['uri'];
+        }
+        elseif ($format == 'url') {
+          return file_create_url($file['uri']);
+        }
+        else {
+          $url = parse_url(file_create_url($file['uri']));
+          return $url['path'];
+        }
+      }
+    }
+  }
+  trigger_error(t('Unknown customfilepath: @basename. (@entity_type:@bundle:machine)', array(
+    '@basename' => $basename,
+    '@entity_type' => $entity->wrapper()->type(),
+    '@bundle' => $entity->wrapper()->getBundle(),
+    '@machine' => $entity->machine,
+  )));
+}
+function catalyst_media_customfileurl($basename) {
+  return catalyst_media_customfilepath($basename, 'url');
+}
+
+function catalyst_media_customfileuri($basename) {
+  return catalyst_media_customfilepath($basename, 'uri');
+}
+
 function catalyst_twig_render_entity_file($entity_type, CatalystEntity $entity, $filename, array $variables = array()) {
-  $store = &drupal_static('catalyst_twig_entity');
-  $store = $entity;
-  catalyst_twig()->getLoader()->setEntity($entity_type, $store);
-  $variables += array('entity' => $store);
+  catalyst_twig()->getLoader()->setEntity($entity_type, $entity);
   $result = catalyst_twig()->render($field_name, $filename, $variables);
   $entity->setVariables($variables);
   return $result;

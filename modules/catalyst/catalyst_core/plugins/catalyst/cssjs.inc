@@ -12,17 +12,6 @@ $plugin = array(
   ),
 );
 
-function catalyst_cssjs_plugin_display_router($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
-  catalyst_include('code');
-  $settings = $plugin['settings'];
-  $filename = catalyst_cssjs_plugin_entity_filename($entity_type, $entity, $settings, array(
-    '@scope' => $settings['scope'],
-  ));
-  if ($file_info = catalyst_code_entity_file_info($entity, $filename)) {
-    return $settings['display_callback']($entity_type, $entity, $file_info['public_filepath'], $settings);
-  }
-}
-
 function catalyst_cssjs_plugin_get_child($plugin, $parent, $child) {
   $children = catalyst_cssjs_plugin_get_children($plugin, $parent);
   return $children[$parent.':'.$child];
@@ -102,17 +91,14 @@ function catalyst_cssjs_plugin_entity_save($entity_type, $entity, $transaction, 
   catalyst_code_upsert_entity_code_file($entity, $settings['field_name'], $filename, $public_filename);
 }
 
-
-function catalyst_cssjs_plugin_js_add($entity_type, $entity, $filepath, $settings) {
-  drupal_add_js($filepath, array(
+function catalyst_cssjs_plugin_display_router($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
+  $settings = $plugin['settings'];
+  $type = $settings['filename_extension'];
+  $options = array(
     'group' => $settings['group'],
-  ));
-}
-
-function catalyst_cssjs_plugin_css_add($entity_type, $entity, $filepath, $settings) {
-  drupal_add_css($filepath, array(
-    'group' => $settings['group'],
-  ));
+  );
+  catalyst_include('code');
+  return catalyst_code_render_entity_cssjs($entity, $settings['field_name'], $type, $options);
 }
 
 function catalyst_cssjs_plugin_entity_filename($entity_type, CatalystEntity $entity, $settings, $extra_args = array()) {

@@ -23,7 +23,7 @@ function catalyst_admin_save_edit_form_alter(&$form, &$form_state) {
     return;
   }
   if ($form_state['build_info']['base_form_id'] == 'catalyst_entity_form') {
-    array_unshift($form['#submit'], 'catalyst_admin_save_edit_submit');
+    $form['#submit'][] = 'catalyst_admin_save_edit_submit';
     $form['actions']['save_edit'] = array(
       '#weight' => 99999,
       '#type' => 'checkbox',

@@ -120,7 +120,7 @@ function catalyst_admin_form_alter(&$form, &$form_state, $form_id) {
  *
  * Adds a "Save & Edit" button to eck entity forms.
  */
-function catalyst_admin_form_eck__entity__form_alter(&$form, &$form_state) {
+function catalyst_admin_form_catalyst_entity_form_alter(&$form, &$form_state) {
   catalyst_form_load_include($form_state, 'save_export', 'admin');
   catalyst_admin_save_export_form_alter($form, $form_state);
   catalyst_form_load_include($form_state, 'save_edit', 'admin');

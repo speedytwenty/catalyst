@@ -369,6 +369,9 @@ function catalyst_core_field_default_field_bases() {
       'handler' => 'base',
       'handler_settings' => array(
         'behaviors' => array(
+          'test_field_behavior' => array(
+            'status' => 0,
+          ),
           'views-select-list' => array(
             'status' => 1,
           ),

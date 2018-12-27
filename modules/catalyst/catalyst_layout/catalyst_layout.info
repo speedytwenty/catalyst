@@ -9,6 +9,7 @@ dependencies[] = catalyst_media
 dependencies[] = ctools
 dependencies[] = eck
 dependencies[] = entityreference
+dependencies[] = entityreference_autocreate
 dependencies[] = features
 dependencies[] = field_group
 dependencies[] = file

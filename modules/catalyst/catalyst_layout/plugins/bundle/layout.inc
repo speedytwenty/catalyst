@@ -12,12 +12,14 @@ $plugin = array(
   'entity display' => 'catalyst_layout_plugin_entity_display',
   'prepare display' => 'catalyst_layout_plugin_prepare_display',
   'plugins' => array(
+    'files:default',
     'cssjs:css__layout',
     'shared_media:css__layout',
     'cssjs:js__layout',
     'shared_media:js__layout',
     'twig:html_head',
-    'php:preprocess_custom',
+    // The order of these plugins is important
+    'php:preprocess',
     'twig:wrapper',
     'doctype',
   ),
@@ -42,29 +44,48 @@ function catalyst_layout_plugin_pre_render(&$build) {
   return $build;
 }
 
+/**
+ * This needs to occur BEFORE the twig wrapper is rendered and before
+ * doctype preprocessing.
+ */
 function catalyst_layout_post_render($content, &$context) {
-  $context['#entity']->setVariable('messages', theme('status_messages'));
+  //$context['#entity']->setVariable('messages', theme('status_messages'));
+  // Preprocess the doctype
+  $layout = &$context['#entity'];
+  $variables = $layout->variables();
+  $variables['content'] = drupal_render($variables['content']);
+
+  catalyst_get_plugins('bundle', 'doctype');
+  $variables['region'] = array();
+  foreach (array_keys($variables['page']['regions']) AS $r) {
+    $variables['region'][$r] = drupal_render($variables['page']['regions'][$r]);
+  }
+  unset($variables['page']['regions']);
+  $context['#doctype']->setVariable('page', $variables['page']);
+  unset($variables['page']);
+
+  catalyst_doctype_preprocess($context['#doctype'], $layout);
+
+  if ($variables['show_messages']) {
+    $variables['messages'] = theme('status_messages');
+  }
+  $layout->setVariables($variables);
   return $content;
 }
 
 function catalyst_layout_plugin_entity_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
   //$entity->content['#pre_render'][] = 'catalyst_layout_plugin_pre_render';
   $entity->content['#post_render'][] =  'catalyst_layout_post_render';
+  $entity->content['#doctype'] = catalyst_layout_get_doctype($entity);
   //$entity->content['#doctype'] = catalyst_layout_get_doctype($entity);
   $entity->setVariable('title', drupal_get_title());
-  $regions = $entity->getVariable('region');
-  foreach (array_keys($regions) AS $region) {
-    $regions[$region] = drupal_render($regions[$region]);
-  }
-  $entity->setVariable('region', $regions);
+  //$regions = $entity->getVariable('region');
+  //foreach (array_keys($regions) AS $region) {
+  //  $regions[$region] = drupal_render($regions[$region]);
+  //}
+  //$entity->setVariable('region', $regions);
   if ($entity->getVariable('drupal_processing')) {
     catalyst_layout_plugin_preprocess_drupal($entity);
-  }
-  ctools_include('plugins');
-  //$preprocess = ctools_get_plugins('catalyst', 'plugin', 'preprocess');
-  //catalyst_preprocess_plugin_preprocess('catalyst', $entity);
-  if ($entity->getVariable('show_messages')) {
-    //$entity->setVariable('messages', theme('status_messages'));
   }
 }
 

@@ -24,27 +24,27 @@ $plugin = array(
 
 function catalyst_media_javascript_entity_display($entity_type, CatalystEntity $entity, $page = NULL) {
   $media_type = $entity->wrapper()->field__media_type->value();
-  $options = array();
-  if ($media_type == 'remote') {
-    $options['type'] = 'external';
-    $data = $entity->wrapper()->field__media_path->value();
+  catalyst_include('code');
+  if ($media_type == 'local') {
+    $path = $entity->wrapper()->field__media_path->value();
+    drupal_add_js($path, array(
+      'file' => 'file',
+      'group' => $entity->getVariable('group'),
+      'scope' => $entity->wrapper()->field__media_javascript_scope->value(),
+    ));
   }
-  elseif ($media_type == 'local') {
-    $options['type'] = 'file';
-    $data = $entity->wrapper()->field__media_path->value();
+  elseif ($media_type == 'remote') {
+    $path = $entity->wrapper()->field__media_path->value();
+    drupal_add_js($path, array(
+      'group' => $entity->getVariable('group'),
+      'scope' => $entity->wrapper()->field__media_javascript_scope->value(),
+      'type' => 'external',
+    ));
   }
-  elseif ($media_type == 'custom') {
-    $value = $entity->wrapper()->field__body->value();
-    if (empty($value)) return;
-    if ($public_filepath = catalyst_code_entity_public_file_is_fresh($entity, 'field__body', $value['value'])) {
-      $options['type'] = 'file';
-      $data = $public_filepath;
-    }
-    else {
-      $options['type'] = 'inline';
-      catalyst_include('twig');
-      $data = $value['value'];
-    }
+  else {
+    catalyst_code_render_entity_cssjs($entity, 'field__body', 'js', array(
+      'scope' => $entity->wrapper()->field__media_javascript_scope->value(),
+      'group' => $entity->getVariable('group'),
+    ));
   }
-  drupal_add_js($data, $options);
 }

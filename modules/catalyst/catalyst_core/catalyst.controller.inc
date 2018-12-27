@@ -10,8 +10,9 @@ class CatalystEntityAPIController extends EntityAPIControllerExportable {
     return catalyst_get_plugins('bundle', $bundle);
   }
 
-  public function bundlePlugins($bundle) {
-    return $this->bundleHandler($bundle)['plugins'];
+  public function bundlePlugins($bundle, $plugin = NULL) {
+    $plugins = $this->bundleHandler($bundle)['plugins'];
+    return $plugin ? $plugins[$plugin] : $plugins;
   }
 
   public function bundleHandlerPluginSettings($bundle, $plugin_name) {
@@ -55,57 +56,50 @@ class CatalystEntityAPIController extends EntityAPIControllerExportable {
         $entity->wrapper()->field__machine->set(array('machine' => $entity->machine));
       }
     }
+    $this->catalyst_invoke('entity create', $entity, $values);
     //$entity->internal = isset($values['internal']) && $values['internal'];
     //$entity->wrapper()->field__internal->set($entity->internal);
     return $entity;
   }
 
   public function normalize($entity) {
-    $vars = get_object_vars($entity);
-    unset($vars[$this->statusKey], $vars[$this->moduleKey], $vars['is_new']);
+    $normalized = (object)get_object_vars($entity);
+    $unset = array($this->statusKey, $this->moduleKey, 'is_new');
+    foreach ($unset AS $k) {
+      if (isset($normalized->{$k})) unset($normalized->{$k});
+    }
     if ($this->nameKey != $this->idKey) {
-      unset($vars[$this->idKey]);
+      unset($vars->{$this->idKey});
     }
-    if (!empty($vars['field__internal'])) {
-      $vars['internal'] = $entity->wrapper()->field__internal->value();
+    if (!empty($entity->field__internal)) {
+      $normalized->internal = $entity->wrapper()->field__internal->value();
     }
-    unset($vars['field__internal']);
-    if (!empty($vars['field__debug'])) {
-      $vars['debug'] = $entity->wrapper()->field__debug->value();
+    if (!empty($entity->field__debug)) {
+      $normalized->debug = $entity->wrapper()->field__debug->value();
     }
-    unset($vars['field__debug']);
-    if (!empty($vars['field__drupal_processing'])) {
-      $vars['drupal_processing'] = $entity->wrapper()->field__drupal_processing->value();
+    if (!empty($entity->field__drupal_processing)) {
+      $normalized->drupal_processing = (bool)$entity->wrapper()->field__drupal_processing->value();
     }
-    unset($vars['field__drupal_processing']);
-    if (!empty($vars['field__admin_notes'])) {
-      $vars['admin_notes'] = entity_valval($entity->wrapper()->field__admin_notes);
+    if (!empty($entity->field__admin_notes)) {
+      $normalized->admin_notes = entity_valval($entity->wrapper()->field__admin_notes);
     }
-    unset($vars['field__admin_notes']);
-    if (!empty($vars['field__body'])) {
-      $vars['body'] = entity_valval($entity->wrapper()->field__body);
+    if (!empty($entity->field__body)) {
+      $normalized->body = entity_valval($entity->wrapper()->field__body);
     }
-    unset($vars['field__body']);
-    if (!empty($vars['field__html_head'])) {
-      $vars['html_head'] = entity_valval($entity->wrapper()->field__html_head);
+    if (!empty($entity->field__html_head)) {
+      $normalized->html_head = entity_valval($entity->wrapper()->field__html_head);
     }
-    unset($vars['field__html_head']);
-    if (!empty($vars['field__preprocess'])) {
-      $vars['preprocess'] = entity_valval($entity->wrapper()->field__preprocess);
+    if (!empty($entity->field__preprocess)) {
+      $normalized->preprocess = entity_valval($entity->wrapper()->field__preprocess);
     }
-    unset($vars['field__preprocess']);
-    if (!empty($entity->package) && !is_array($entity->package)) {
-      $vars['package'] = $entity->package->normalize();
+    if (!empty($entity->field__package)) {
+      $normalized->package = $entity->package->normalize();
     }
-    unset($vars['field__package']);
-    unset($vars['field__machine']);
-    drupal_alter('entity_export', $vars, $entity, $this->entityType);
-    return $vars;
-  }
-
-  public function export($entity, $prefix = '') {
-    $vars = $this->normalize($entity);
-    return entity_var_json_export($vars, $prefix);
+    $this->catalyst_invoke('entity normalize', $entity, $normalized);
+    foreach (array_keys(get_object_vars($normalized)) AS $k) {
+      if (strpos($k, 'field__') === 0) unset($normalized->{$k});
+    }
+    return $normalized;
   }
 
   public function display(CatalystEntity $entity, $page = NULL) {
@@ -120,6 +114,18 @@ class CatalystEntityAPIController extends EntityAPIControllerExportable {
     );
     $this->catalyst_invoke('entity display', $entity, $page);
     return $entity->content;
+  }
+
+  /**
+   * Implements EntityAPIControllerInterface.
+   *
+   * @return
+   *   A serialized string in JSON format suitable for the import() method.
+   */
+  public function export($entity, $prefix = '') {
+    $vars = get_object_vars($this->normalize($entity));
+    $this->catalyst_invoke('entity export', $entity, $prefix);
+    return entity_var_json_export($vars, $prefix);
   }
 
   /**
@@ -169,8 +175,8 @@ class CatalystEntityAPIController extends EntityAPIControllerExportable {
           $entity->original = entity_load_unchanged($this->entityType, $entity->{$this->idKey});
         }
       }
-      $entity->is_new = !empty($entity->is_new) || empty($entity->{$this->idKey});
       $this->catalyst_invoke('entity save', $entity, $transaction);
+      $entity->is_new = !empty($entity->is_new) || empty($entity->{$this->idKey});
       $return = parent::save($entity, $transaction);
 
       //unset($entity->force_overwrite);

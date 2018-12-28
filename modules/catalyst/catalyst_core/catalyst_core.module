@@ -738,7 +738,7 @@ function catalyst_core_entity_update($entity, $entity_type) {
   catalyst_include('plugins');
   if ($entity instanceof CatalystEntity) {
     catalyst_registry_needs_rebuild();
-    //catalyst_invoke_all('catalyst entity update', $entity, $entity_type);
+    catalyst_invoke_all('catalyst entity update', $entity, $entity_type);
   }
   //catalyst_invoke_all('hook entity update', $entity, $entity_type);
 }
@@ -750,7 +750,7 @@ function catalyst_core_entity_delete($entity, $entity_type) {
   catalyst_include('plugins');
   if ($entity instanceof CatalystEntity) {
     catalyst_registry_needs_rebuild();
-    //catalyst_invoke_all('catalyst entity delete', $entity, $entity_type);
+    catalyst_invoke_all('catalyst entity delete', $entity, $entity_type);
     catalyst_include('code');
     catalyst_code_entity_delete($entity);
   }
@@ -764,7 +764,7 @@ function catalyst_core_entity_insert($entity, $entity_type) {
   catalyst_include('plugins');
   if ($entity instanceof CatalystEntity) {
     catalyst_registry_needs_rebuild();
-    catalyst_invoke_all('catalyst entity insert', $entity, $entity_type);
+    catalyst_invoke_all('catalyst entity insert', $entity);
   }
   catalyst_invoke_all('hook entity insert', $entity, $entity_type);
 }

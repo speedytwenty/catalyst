@@ -50,6 +50,7 @@ class CatalystEntityAPIController extends EntityAPIController {
   public function create(array $values = array()) {
     $entity = parent::create($values);
     if (!empty($values['machine'])) {
+      $entity->machine = $values['machine'];
       $entity->wrapper()->field__machine->set(array('machine' => $values['machine']));
     }
     $internal = isset($values['internal']) ? $values['internal'] : 0;
@@ -66,10 +67,27 @@ class CatalystEntityAPIController extends EntityAPIController {
   public function import($export) {
     if (is_array($export)) {
       $entity = $this->create($export);
+      if (!empty($export['package'])) {
+        $package = $this->ensureStub($entity, 'package', $export['package']);
+        $entity->wrapper()->field__package->set($package);
+      }
       $this->catalyst_invoke('entity import', $entity, $export);
       return $entity;
     }
     return FALSE;
+  }
+
+  public function ensureStub(CatalystEntity $entity, $bundle, $machine) {
+    if ($item = catalyst_load_single($bundle, $machine)) {
+      return $item->entity;
+    }
+    $stub = entity_create($this->entityType, array(
+      'title' => t('Stub for: @title', array('@tite' => $entity->wrapper()->label())),
+      'machine' => $machine,
+      'type' => $bundle,
+    ));
+    $stub->save();
+    return $stub;
   }
 
   public function export($entity, $prefix = '') {

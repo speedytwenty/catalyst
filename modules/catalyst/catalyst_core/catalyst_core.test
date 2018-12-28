@@ -143,14 +143,36 @@ class CatalystExportImportTestCase extends CatalystWebTestCase {
       'title' => 'test1',
       'internal' => TRUE,
       'machine' => 'test',
+      'package' => 'test_package',
     ));
     $this->assertEqual($entity->wrapper()->label(), 'test1', 'Title imported.');
     $this->assertEqual($entity->wrapper()->field__machine->machine->value(), 'test', 'Machine field imported.');
     $this->assertEqual($entity->wrapper()->field__internal->value(), TRUE, 'Internal field imported.');
+    $package = $entity->wrapper()->field__package->value();
+    $this->assertEqual($package->machine, 'test_package', 'Package field imported.');
 
     $export = $entity->export('pre');
     $this->assertEqual($export['title'], 'test1', 'Title exported.');
     $this->assertEqual($export['machine'], 'pretest', 'Machine field exported.');
     $this->assertTrue($export['internal'], 'Internal field exported.');
+    $this->assertEqual($export['package'], 'test_package', 'Package field exported.');
+
+    $entity->save();
+
+    $package1 = $entity->wrapper()->field__package->value();
+    $this->assertEqual($package1->machine, 'test_package', 'Package stub imported.');
+    $this->assertTrue($package1->wrapper()->getIdentifier(), 'Package stub was saved.');
+    $this->assertFalse(isset($package1->is_new), 'Package stub was saved.');
+
+    $entity = entity_import('catalyst', array(
+      'type' => 'core_test',
+      'title' => 'test2',
+      'machine' => 'test2',
+      'package' => 'test_package',
+    ));
+    $entity->save();
+    $package2 = $entity->wrapper()->field__package->value();
+    $this->assertEqual($package1->machine, 'test_package', 'Package stub imported.');
+    $this->assertEqual($package2->wrapper()->getIdentifier(), $package1->wrapper()->getIdentifier(), 'Package reused not replicated.');
   }
 }

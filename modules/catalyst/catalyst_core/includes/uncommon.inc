@@ -16,12 +16,14 @@ function catalyst_field_ui_field_overview_form_after_build($form, &$form_state) 
   // field options leaving safe fields
   catalyst_include('fields');
   $catalyst_fields = array_keys(catalyst_list_fields());
-  $safe_fields = array_keys(module_invoke_all('catalyst_safe_fields'));
+  $safe_fields = catalyst_safe_fields();
   $options = &$form['fields']['_add_existing_field']['field_name']['#options'];
   $catalyst_options = array();
   foreach ($options AS $value => $text) {
+    if (empty($value)) continue;
     if (in_array($value, $safe_fields)) {
       $catalyst_options[$value] = $text;
+      unset($options[$value]);
     }
     elseif (in_array($value, $catalyst_fields)) {
       unset($options[$value]);

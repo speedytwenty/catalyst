@@ -4,8 +4,6 @@
  * Code for the Catalyst Navbar feature.
  */
 
-include_once 'catalyst_navbar.features.inc';
-
 /**
  * @file
  * Integrates the navbar and responsive_preview modules with Catalyst.
@@ -24,20 +22,21 @@ include_once 'catalyst_navbar.features.inc';
 function catalyst_navbar_library_alter(&$libraries, $module) {
   if (catalyst_theme_active() && user_access('access navbar') && in_array($module, array('navbar','responsive_preview'))) {
     $layout = catalyst_get_layout();
-    $add_css = !in_array(CSS_SYSTEM, $layout->getDrupalCSSOptions());
-    $add_js = !in_array(JS_LIBRARY, $layout->getDrupalJSOptions());
+    $add_css = !in_array(CSS_SYSTEM, $layout->wrapper()->field__layout_drupal_css->value());
+    $add_js = !in_array(JS_LIBRARY, $layout->wrapper()->field__layout_drupal_js->value());
 
     if (!$add_css && !$add_js) {
       return;
     }
 
+    $module_path = drupal_get_path('module', 'catalyst_navbar');
     if ($module == 'navbar') {
       if ($add_css) {
-        drupal_add_css('profiles/catalyst/css/clearfix.css', array('group' => -201));
+        drupal_add_css($module_path . 'catalyst_navbar.css', array('group' => -201));
       }
       if ($add_js) {
-        drupal_add_js('profiles/catalyst/js/jquery-1.9.0.min.js', array('group' => -302));
-        drupal_add_js('profiles/catalyst/js/jquery.once-1.2.6.min.js', array('group' => -301));
+        drupal_add_js($module_path . '/js/jquery-1.9.0.min.js', array('group' => -302));
+        drupal_add_js($module_path . '/js/jquery.once-1.2.6.min.js', array('group' => -301));
         drupal_add_js('misc/drupal.js', array('group' => -201));
       }
     }

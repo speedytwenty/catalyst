@@ -1,0 +1,7 @@
+{
+    "internal": false,
+    "label": "Page Region Block Test",
+    "machine": "page_region_block_test",
+    "package": "catalyst_test_1x",
+    "type": "block"
+}

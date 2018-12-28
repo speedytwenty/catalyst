@@ -1,0 +1,9 @@
+{
+    "internal": false,
+    "label": "Layout Test (shared)",
+    "machine": "layout_test_shared",
+    "media_stylesheet_media": "all",
+    "media_type": "custom",
+    "package": "catalyst_test_1x",
+    "type": "stylesheet"
+}

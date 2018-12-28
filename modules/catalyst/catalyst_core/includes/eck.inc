@@ -16,7 +16,7 @@ function catalyst_eck__entity_type_menu_alter(&$items) {
     $items['admin/structure/entity-type'] = array_merge(
       $items['admin/structure/entity-type'], array(
       'page callback' => 'catalyst_eck__entity_type_list',
-      'file path' => catalyst_get_path() . '/includes',
+      'file path' => catalyst_get_path('includes'),
       'file' => 'eck.inc',
     ));
   }

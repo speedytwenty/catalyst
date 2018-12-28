@@ -41,7 +41,7 @@ function catalyst_block_strongarm() {
       'display' => array(
         'title' => array(
           'default' => array(
-            'weight' => '5',
+            'weight' => '9',
             'visible' => FALSE,
           ),
         ),

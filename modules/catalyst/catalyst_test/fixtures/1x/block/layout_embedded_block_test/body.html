@@ -1,0 +1,10 @@
+<h3 id="layout-embedded-block">This is a block manually embedded in the layout.</h3>
+<script>
+<!--//--><![CDATA[// ><!--
+
+QUnit.test("Layout Embedded Block Tests", function (assert) {
+  assert.equal('{{ embedded_block_var }}', 'embedded block var val', 'Layout Embedded Block Processing Test');
+});
+
+//--><!]]>
+</script>

@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ */
+
+/**
+ * Migrate to template fields to field__data.
+ */
+function catalyst_template_update_7000() {
+  $updated = $skipped = 0;
+  if ($templates = catalyst_load('template')) {
+    foreach ($templates AS $component) {
+      $w = $component->wrapper;
+      // Ignore templates with pre-existing data (shouldn't happen)
+      if (isset($w->field__data) && entity_valval($w->field__data)) {
+        drupal_set_message(t('Skipped updating catalyst template with existing field__data:  @label (@id)', array(
+          '@label' => $component->label,
+          '@id' => $component->id,
+        )));
+        $skipped++;
+        continue;
+      }
+      $bundle = $w->field__template_bundle->machine->value();
+      $bundles = $bundle == '__default__' ? array() : array($bundle);
+      $w->field__data->set(array(
+        'serialization' => 'json_encode',
+        'value' => array(
+          'entity_type' => $w->field__template_entity_type->machine->value(),
+          'bundles' => $bundles,
+        ),
+      ));
+      $w->save();
+      $updated++;
+      drupal_set_message(t('Updated catalyst template:  @label (@id)', array(
+        '@label' => $component->label,
+        '@id' => $component->id,
+      )));
+    }
+  }
+  drupal_set_message(t('Updated: @updated catalyst templates. Skipped: @skipped', array(
+    '@updated' => $updated,
+    '@skipped' => $skipped,
+  )));
+}

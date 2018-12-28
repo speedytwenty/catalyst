@@ -1,0 +1,10 @@
+.layout-custom-css-test,
+.layout-custom-css-test-override {
+  border: 2px solid blue;
+  padding: 4px;
+  margin: 4px;
+}
+.region-container { 
+  border: 2px dashed #f1f1f1;
+  padding: 5px;
+}

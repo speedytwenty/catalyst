@@ -1,0 +1,33 @@
+{
+                            "blockplacements": [
+                                {
+                                    "region": "block_test_region",
+                                    "weight": "0",
+                                    "visibility": "0",
+                                    "pages": "",
+                                    "cache": "0",
+                                    "layout": "catalyst_test_1"
+                                }
+                            ],
+                            "internal": false,
+                            "label": "Block Region Test",
+                            "machine": "block_region_test",
+                            "media_files": [
+                                "block_shared_test",
+                                "block_local_test",
+                                "block_remote_test"
+                            ],
+                            "media_javascripts": [
+                                "block_shared_test",
+                                "block_local_test",
+                                "block_remote_test",
+                                "block_footer_test"
+                            ],
+                            "media_stylesheets": [
+                                "block_shared_test",
+                                "block_local_test",
+                                "block_remote_test"
+                            ],
+                            "package": "catalyst_test_1x",
+                            "type": "block"
+                        }

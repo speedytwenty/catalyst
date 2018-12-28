@@ -11,6 +11,51 @@ define('CATALYST_BLOCK_VISIBILITY_PHP', 3);
 include_once 'catalyst_block.features.inc';
 
 /**
+ * Implements hook_ctools_plugin_directory().
+ */
+function catalyst_block_ctools_plugin_directory($owner, $type) {
+  if ($owner == 'catalyst_core') {
+    return $type == 'plugin' ? 'plugins/catalyst' : 'plugins/' . $type;
+  }
+}
+
+function catalyst_load_blocks() {
+  $block_info = module_invoke_all('block_placements');
+  drupal_alter('block_placements', $block_info);
+
+  $blocks = array();
+  foreach ($block_info AS $placement) {
+    $placement = (object)$placement;
+    if ($block = entity_load_single('catalyst', $placement->block_id)) {
+      if ($accessphp = entity_valval($block->wrapper()->field__access)) {
+        if (!(boolean)catalyst_eval($accessphp, $variables)) continue;
+      }
+      $blocks[$placement->region][$block->machine] = array(
+        'content' => $block->display(TRUE),
+        '#weight' => $placement->weight,
+      );
+    }
+  }
+  return $blocks;
+}
+
+/**
+ *
+ */
+function catalyst_blocks_by_region($region) {
+  $blocks = &drupal_static(__FUNCTION__);
+
+  if (!isset($blocks)) {
+    $blocks = catalyst_load_blocks();
+  }
+  if (!isset($blocks[$region])) {
+    $blocks[$region] = array();
+  }
+
+  return $blocks[$region];
+}
+
+/**
  * Implements hook_inline_entity_form_entity_form_alter().
  */
 function catalyst_block_inline_entity_form_entity_form_alter(&$entity_form, &$form_state) {
@@ -36,74 +81,15 @@ function catalyst_block_inline_entity_form_entity_form_alter(&$entity_form, &$fo
 }
 
 /**
- * Implements hook_entity_view_alter().
- */
-function catalyst_block_entity_view_alter(&$build, $type) {
-  if (isset($build['field__body']) && isset($build['#entity'])
-    && $build['#entity_type'] == 'catalyst' && $build['#bundle'] == 'block') {
-    if ($build['field__body'][0]['#markup']) {
-      $build['field__body'][0]['#markup'] = theme('block_content', array(
-        'template' => new CatalystBlockTemplate($build['#entity']),
-        'block' => $build['#entity'],
-      ));
-    }
-  }
-
-  // Handle "layout field" block placements statically
-  if (!empty($build['#entity']->field__blockplacements__layfield)) {
-    $wrapper = entity_metadata_wrapper($build['#entity_type'], $build['#entity']);
-    foreach ($wrapper->field__blockplacements__layfield AS $placement) {
-      catalyst_block_add_static_placement($placement->value());
-    }
-  }
-}
-
-function template_preprocess_block_content(&$variables) {
-  $variables['title'] = $variables['block']->title;
-  if (isset($variables['block']->template_variables)) {
-    foreach ($variables['block']->template_variables AS $k => $v) {
-      $variables[$k] = $v;
-    }
-  }
-}
-
-/**
- * Preprocess block content.
- */
-function catalyst_block_preprocess_block_content(&$variables) {
-  $template = $variables['template'];
-  if ($preprocess_php = $template->getPreprocessPHP()) {
-    catalyst_eval($preprocess_php, $variables);
-  }
-}
-
-/**
- * Theme the block content to render the twig template.
- */
-function theme_block_content($variables) {
-  return $variables['template']->renderTemplate($variables);
-}
-
-/**
- * Implements hook_theme().
- */
-function catalyst_block_theme() {
-  return array(
-    'block_content' => array(
-      'variables' => array('template' => NULL),
-    ),
-  );
-}
-
-/**
  * Implements hook_page_build().
  */
 function catalyst_block_page_build(&$page) {
   if (catalyst_theme_active()) {
     $page['region'] = array();
     if ($regions = catalyst_layout_system_regions()) {
-      foreach ($regions AS $region) {
-        $page['region'][$region] = catalyst_blocks_by_region($region);
+      foreach ($regions AS $region_info) {
+        $region = $region_info['machine'];
+        $page['regions'][$region] = catalyst_blocks_by_region($region);
       }
     }
   }
@@ -115,9 +101,9 @@ function catalyst_block_page_build(&$page) {
 function catalyst_block_block_placements() {
   $layout = catalyst_get_layout();
   $placements = array();
-  if ($layout_id = $layout->getLayoutEntityID()) {
+  if (!empty($layout->id)) {
     $query = db_select('field_data_field__blockplacements__block', 't')
-      ->condition('field__blockplacements__block_layout_id', $layout_id, '=');
+      ->condition('field__blockplacements__block_layout_id', $layout->id, '=');
     $query->addField('t', 'entity_id', 'block_id');
     $query->addField('t', 'field__blockplacements__block_weight', 'weight');
     $query->addField('t', 'field__blockplacements__block_visibility', 'visibility');
@@ -127,7 +113,7 @@ function catalyst_block_block_placements() {
 
     $result = $query->execute();
     foreach ($result AS $item) {
-      $item->layout_id = $layout_id;
+      $item->layout_id = $layout->id;
       $placements[] = (array)$item;
     }
   }
@@ -180,9 +166,9 @@ function catalyst_block_block_placements_alter(&$placements) {
 }
 
 /**
- * Implements hook_catalyst_twig_render_alter().
+ * Implements hook_catalyst_twig_alter().
  */
-function catalyst_block_catalyst_twig_render_alter(&$twig, &$variables, $key = NULL) {
+function catalyst_block_catalyst_twig_alter(&$twig) {
   $twig->addFunction(new Twig_SimpleFunction('showblock', 'catalyst_block_showblock'));
 }
 
@@ -195,20 +181,15 @@ function catalyst_block_catalyst_twig_render_alter(&$twig, &$variables, $key = N
  *   Pass custom variables to the block.
  */
 function catalyst_block_showblock($machine_name, $variables = array()) {
-  if ($eid = catalyst_lookup_entity('block', $machine_name)) {
-    $block = entity_load_single('catalyst', $eid);
-    $block->template_variables = $variables;
-    $blocks = array($block);
-    $build = entity_view('catalyst', $blocks);
-    return render($build);
+  if ($block = catalyst_load_single('block', $machine_name)) {
+    $block = $block->entity;
+    if ($accessphp = entity_valval($block->wrapper()->field__access)) {
+      if (!(boolean)catalyst_eval($accessphp, $variables)) return;
+    }
+    $build = $block->display(FALSE);
+    return drupal_render($build);
   }
+  return;
   // Check permission and output dummy block warning of missing block
   //return  '<h3>Block content here</h3>';
-}
-
-/**
- * Load multiple blocks with or without conditions.
- */
-function catalyst_block_load($bids = FALSE, $conditions = array(), $reset = FALSE) {
-  return catalyst_load('block', $bids, $conditions, $reset);
 }

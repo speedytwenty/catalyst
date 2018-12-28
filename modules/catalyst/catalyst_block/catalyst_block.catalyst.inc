@@ -148,3 +148,91 @@ function catalyst_block_catalyst_export_alter(&$export, $original, $group, $expo
 function catalyst_block_catalyst_prepare_export($export, $group, $exports) {
   return (object) array();
 }
+
+/**
+ * Implements hook_catalyst_export_metadata().
+ */
+function catalyst_block_catalyst_export_metadata($component) {
+  $metadata = array();
+  if (!empty($component->blocks_related)) {
+    $metadata['blocks_related'] = $component->blocks_related;
+  }
+  if (!empty($component->blockplacements)) {
+    $metadata['blockplacements'] = $component->blockplacements;
+  }
+  return $metadata;
+}
+
+/**
+ * Implements hook_catalyst_import_alter().
+ */
+function catalyst_block_catalyst_import_alter(&$wrapper, $metadata, $path) {
+  if (!empty($metadata['blocks_related'])) {
+    catalyst_import_set_reference($wrapper, 'field__blocks_related', 'block', $metadata['blocks_related']);
+  }
+  if (!empty($metadata['blockplacements']) && $field_info = catalyst_resolve_field('blockplacements', $metadata['type'])) {
+    $wrapper->{$field_info['field_name']}->set(array());
+    foreach ($metadata['blockplacements']  AS $bp) {
+      $value = array(
+        'weight' => $bp['weight'],
+        'region' => $bp['region'],
+        'cache' => $bp['cache'],
+      );
+      switch (str_replace('field__blockplacements__', '', $field_info['field_name'])) {
+        case 'block':
+          $value['layout_id'] = catalyst_import_ensure_stub('layout', $bp['layout']);
+          $value['visibility'] = empty($bp['visiblity']) ? 0 : (int)$bp['visibility'];
+          $value['pages'] = empty($bp['pages']) ? '' : $bp['pages'];
+          break;
+        case 'layfield':
+          $value['block_id'] = catalyst_import_ensure_stub('block', $bp['block']);
+          break;
+        case 'layout':
+          $value['visibility'] = empty($bp['visiblity']) ? 0 : (int)$bp['visibility'];
+          $value['pages'] = empty($bp['pages']) ? '' : $bp['pages'];
+          $value['block_id'] = catalyst_import_ensure_stub('block', $bp['block']);
+          break;
+      }
+      $values[] = $value;
+    }
+    $wrapper->{$field_info['field_name']}->set($values);
+  }
+}
+
+/**
+ * Implements hook_catalyst_registry_alter().
+ */
+function catalyst_block_catalyst_registry_alter(&$registry) {
+  foreach ($registry AS $bundle => &$entries) {
+    if ($bp_field = catalyst_resolve_field('blockplacements', $bundle)) {
+      $fn = $bp_field['field_name'];
+      foreach ($entries AS $machine => &$entry) {
+        if (isset($entry->wrapper->{$fn}) && $data = $entry->wrapper->{$fn}->value()) {
+          $entry->blockplacements = array();
+          foreach ($data AS $bp) {
+            if (!empty($bp['block_id']) && $block = entity_load_single('catalyst', $bp['block_id'])) {
+              $bp['block'] = entity_metadata_wrapper('catalyst', $block)->field__machine->machine->value();
+              unset($bp['block_id']);
+            }
+            if (!empty($bp['layout_id']) && $layout = entity_load_single('catalyst', $bp['layout_id'])) {
+              $bp['layout'] = entity_metadata_wrapper('catalyst', $layout)->field__machine->machine->value();
+              unset($bp['layout_id']);
+            }
+            $entry->blockplacements[] = $bp;
+          }
+        }
+      }
+    }
+    if ($rb_field = catalyst_resolve_field('blocks_related', $bundle)) {
+      $fn = $rb_field['field_name'];
+      foreach ($entries AS $machine => &$entry) {
+        if (!empty($entry->wrapper->field__blocks_related) && $blocks_related = $entry->wrapper->field__blocks_related) {
+          $entry->blocks_related = array();
+          foreach ($blocks_related AS $br) {
+            $entry->blocks_related[] = $br->field__machine->machine->value();
+          }
+        }
+      }
+    }
+  }
+}

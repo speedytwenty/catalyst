@@ -1,0 +1,8 @@
+{
+    "internal": true,
+    "label": "Catalyst Test",
+    "machine": "catalyst_test_1x",
+    "module": "catalyst_test",
+    "subdir": "fixtures\/1x",
+    "type": "package"
+}

@@ -319,6 +319,7 @@ function catalyst_media_field_default_field_instances() {
         'label' => 'above',
         'module' => 'entityreference',
         'settings' => array(
+          'bypass_access' => FALSE,
           'link' => FALSE,
         ),
         'type' => 'entityreference_label',
@@ -762,6 +763,7 @@ function catalyst_media_field_default_field_instances() {
         'label' => 'above',
         'module' => 'entityreference',
         'settings' => array(
+          'bypass_access' => FALSE,
           'link' => FALSE,
         ),
         'type' => 'entityreference_label',
@@ -972,7 +974,7 @@ function catalyst_media_field_default_field_instances() {
         'active_updating' => 0,
         'file_name' => array(
           'options' => array(
-            'pathauto' => 1,
+            'pathauto' => FALSE,
             'slashes' => 0,
             'transliterate' => 1,
           ),
@@ -980,11 +982,11 @@ function catalyst_media_field_default_field_instances() {
         ),
         'file_path' => array(
           'options' => array(
-            'pathauto' => 1,
+            'pathauto' => FALSE,
             'slashes' => 0,
             'transliterate' => 1,
           ),
-          'value' => 'media/stylesheet/[catalyst:title]',
+          'value' => 'media/stylesheet/[catalyst:field--machine:machine]',
         ),
         'redirect' => FALSE,
         'retroactive_update' => 0,

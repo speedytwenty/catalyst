@@ -1,0 +1,1 @@
+var page_shared_js_var = 'defined';

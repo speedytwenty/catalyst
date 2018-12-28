@@ -1,0 +1,7 @@
+{
+                            "internal": false,
+                            "label": "Page Embedded Block Test",
+                            "machine": "page_embedded_block_test",
+                            "package": "catalyst_test_1x",
+                            "type": "block"
+                        }

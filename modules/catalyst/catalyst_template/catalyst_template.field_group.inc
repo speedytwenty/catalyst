@@ -21,7 +21,7 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = 'group_template_tabs';
   $field_group->data = array(
     'label' => 'Advanced',
-    'weight' => '13',
+    'weight' => '11',
     'children' => array(
       0 => 'field__debug',
       1 => 'field__html_head',
@@ -52,7 +52,7 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = 'group_template_tabs';
   $field_group->data = array(
     'label' => 'Blocks',
-    'weight' => '12',
+    'weight' => '10',
     'children' => array(
       0 => 'field__blockplacements__layfield',
       1 => 'field__blocks_related',
@@ -80,10 +80,16 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = 'group_template_tabs';
   $field_group->data = array(
     'label' => 'Template',
-    'weight' => '7',
+    'weight' => '5',
     'children' => array(
       0 => 'field__body',
       1 => 'field__layout',
+      2 => 'field__machine',
+      3 => 'field__template_bundle',
+      4 => 'field__template_entity_type',
+      5 => 'field__template_view_modes',
+      6 => 'field__data',
+      7 => 'title',
     ),
     'format_type' => 'tab',
     'format_settings' => array(
@@ -108,7 +114,7 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = 'group_template_tabs';
   $field_group->data = array(
     'label' => 'Stylesheets',
-    'weight' => '9',
+    'weight' => '7',
     'children' => array(
       0 => 'field__css__page',
       1 => 'field__media_stylesheets__page',
@@ -137,7 +143,7 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = 'group_template_tabs';
   $field_group->data = array(
     'label' => 'Media/Files',
-    'weight' => '11',
+    'weight' => '9',
     'children' => array(
       0 => 'field__files',
       1 => 'field__media_files',
@@ -165,7 +171,7 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = 'group_template_tabs';
   $field_group->data = array(
     'label' => 'Help',
-    'weight' => '14',
+    'weight' => '12',
     'children' => array(
       0 => 'field__admin_notes',
     ),
@@ -193,7 +199,7 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = 'group_template_tabs';
   $field_group->data = array(
     'label' => 'Javascript',
-    'weight' => '10',
+    'weight' => '8',
     'children' => array(
       0 => 'field__js__page',
       1 => 'field__media_javascripts__page',
@@ -222,7 +228,7 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = 'group_template_tabs';
   $field_group->data = array(
     'label' => 'Processing',
-    'weight' => '8',
+    'weight' => '6',
     'children' => array(
       0 => 'field__preprocess',
     ),
@@ -249,7 +255,7 @@ function catalyst_template_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Tabs',
-    'weight' => '4',
+    'weight' => '0',
     'children' => array(
       0 => 'group_template_advanced',
       1 => 'group_template_blocks',

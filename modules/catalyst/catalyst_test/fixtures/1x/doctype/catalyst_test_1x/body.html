@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <title>{{ head_title }}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.8.0.css" />
+    {{ head }}
+    {{ styles }}
+    {{ scripts }}
+    <style type="text/css">
+      #doctype-info div { margin: 2pt; padding; 2pt; }
+      #doctype-info label { margin-right: 4pt; }
+    </style>
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <!--<script src="//code.jquery.com/jquery-3.3.1.min.js"></script>-->
+    <script src="//cdn.jsdelivr.net/npm/jquery-once@2.2.0/jquery.once.min.js"></script>
+    <script src="https://code.jquery.com/qunit/qunit-2.8.0.js"></script>
+    <script>
+      QUnit.test("Doctype Tests", function (assert) {
+        assert.equal('{{ test_doctype_var }}', 'doctype var value', 'Doctype preprocessing is functioning properly.');
+        assert.ok(document.title, 'Test doctype head_title exists', 'Doctype head_title is set properly.');
+        assert.equal('{{ http_content_type }}', 'text/html', 'Document content type is set properly to {{ http_content_type }}.');
+        assert.equal('{{ http_charset }}', 'utf-8', 'Document charset is set properly to {{ http_charset }}.');
+        assert.ok($('#page-top').html(), 'The page_top variable has value as expected.');
+        assert.ok($('#page div').length, 'The page variable has value as expected.');
+        assert.equal($('#layout-test').length, 1, 'The test layout is embedded exactly once.')
+        assert.ok($('#page-bottom').html(), 'The page_bottom variable has value as expected.');
+        assert.ok($('#doctype-admin-notes div').html(), 'The doctype admin notes are set and output correctly.');
+        assert.equal('{{ doctype.package.machine }}', 'catalyst_test_1x', 'This doctype is apart of the catalyst_test_1x package.');
+        assert.equal('{{ doctype.internal }}', '1', 'This doctype is set to internal.');
+        assert.equal('{{ doctype.drupal_processing|default('0') }}', '0', 'Drupal processing is disabled for this doctype.');
+        var messages = $('#messages li').filter(function () {
+          return $(this).text() == 'Message from doctype preprocessing.';
+        });
+        assert.ok(messages.length, 'Messages from doctype preprocessing are output to the layout.');
+        {% for res in preprocessing_results %}
+        assert.pushResult({
+          result: {% if res.result %}true{% else %}false{% endif %},
+          actual: '{{ res.actual }}',
+          expected: '{{ res.expected }}',
+          message: '{{ res.message }}',
+        });
+        {% endfor %}
+      });
+    </script>
+    <hr />
+    <div id="doctype-info">
+      <h3>Doctype tests:</h3>
+      <div id="doctype-label"><label>Label:</label><span>{{ l(doctype.title, 'admin/catalyst/doctype/' ~ doctype.id, { query: drupal_get_destination() } ) }} ({{ doctype.id }})</span></div>
+      <div id="doctype-machine"><label>Machine:</label><span>{{ doctype.machine }}</span></div>
+      <div id="doctype-admin-notes"><label>Readme:</label><div>{{ doctype.admin_notes }}</div></div>
+    </div>
+    <hr />
+    <div id="page-top">{{ page_top }}</div>
+    <div id="page">{{ page }}</div>
+    <div id="page-bottom">{{ page_bottom }}</div>
+  </body>
+</html>

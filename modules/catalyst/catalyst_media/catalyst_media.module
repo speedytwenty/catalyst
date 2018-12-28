@@ -6,65 +6,22 @@
 
 include_once 'catalyst_media.features.inc';
 
-define('CATALYST_MEDIA_GROUP_LAYOUT', 101);
-define('CATALYST_MEDIA_GROUP_LIBRARY', 202);
-define('CATALYST_MEDIA_GROUP_PAGE', 303);
-define('CATALYST_MEDIA_GROUP_OTHER', 404);
-
 /**
- * Implements hook_entity_view_alter().
+ * Implements hook_ctools_plugin_directory().
  */
-function catalyst_media_entity_view_alter(&$build, $type) {
-  if (isset($build['field__body']) && isset($build['#entity'])
-    && $build['#entity_type'] == 'catalyst'
-    && in_array($build['#bundle'], array('stylesheet', 'javascript'))) {
-    if ($template = $build['field__body'][0]['#markup']) {
-      theme('media_content', array(
-        'template' => $template,
-      ));
-    }
+function catalyst_media_ctools_plugin_directory($owner, $type) {
+  if ($owner == 'catalyst_core') {
+    return $type == 'plugin' ? 'plugins/catalyst' : 'plugins/' . $type;
   }
 }
 
 /**
- * Implements hook_catalyst_twig_render_alter().
+ * Implements hook_catalyst_twig_alter().
  */
-function catalyst_media_catalyst_twig_render_alter(&$twig, &$extensions, &$variables, $key = NULL) {
-  $extensions['addFunction']['filepath'] = new Twig_SimpleFunction('filepath', 'catalyst_media_filepath');
-  $extensions['addFunction']['fileurl'] = new Twig_SimpleFunction('fileurl', 'catalyst_media_fileurl');
-  $extensions['addFunction']['fileuri'] = new Twig_SimpleFunction('fileuri', 'catalyst_media_fileuri');
-  $extensions['addFunction']['customfilepath'] = new Twig_SimpleFunction('customfilepath', 'catalyst_media_customfilepath');
-  $extensions['addFunction']['customfileurl'] = new Twig_SimpleFunction('customfileurl', 'catalyst_media_customfileurl');
-  $extensions['addFunction']['customfileuri'] = new Twig_SimpleFunction('customfileuri', 'catalyst_media_customfileuri');
-}
-
-function catalyst_media_customfilepath($basename, $format = 'path') {
-  $entity = drupal_static('twig_render_entity_wrapper', FALSE);
-  if ($entity && $entity->field__files) {
-    foreach ($entity->field__files->value() AS $file) {
-      if ($file['filename'] == $basename) {
-        if ($format == 'url') {
-          return $file['uri'];
-        }
-        elseif ($format == 'url') {
-          return file_create_url($file['uri']);
-        }
-        else
-        {
-          $url = parse_url(file_create_url($file['uri']));
-          return $url['path'];
-        }
-      }
-    }
-  }
-  // log error
-}
-function catalyst_media_customfileurl($basename) {
-  return catalyst_media_customfilepath($basename, 'url');
-}
-
-function catalyst_media_customfileuri($basename) {
-  return catalyst_media_customfilepath($basename, 'uri');
+function catalyst_media_catalyst_twig_alter(&$twig) {
+  $twig->addFunction(new Twig_SimpleFunction('filepath', 'catalyst_media_filepath'));
+  $twig->addFunction(new Twig_SimpleFunction('fileurl', 'catalyst_media_fileurl'));
+  $twig->addFunction(new Twig_SimpleFunction('fileuri', 'catalyst_media_fileuri'));
 }
 
 function catalyst_media_filepath($machine_name, $format = 'path') {
@@ -135,61 +92,4 @@ function catalyst_media_admin_form_after_build($form, &$form_state) {
     'type' => 'setting'
   );
   return $form;
-}
-
-/**
- * Implements hook_entity_view().
- */
-function catalyst_media_entity_view($entity, $type, $view_mode, $langcode) {
-  $collection = array(
-    'css' => array(
-      'field__media_stylesheets__layout' => CATALYST_CSS_LAYOUT,
-      'field__media_stylesheets__page' => CATALYST_CSS_PAGE,
-      'field__media_stylesheets' => CATALYST_CSS_OTHER,
-    ),
-    'js' => array(
-      'field__media_javascripts__layout' => CATALYST_JS_LAYOUT,
-      'field__media_javascripts__page' => CATALYST_JS_PAGE,
-      'field__media_javascripts' => CATALYST_JS_OTHER,
-    ),
-  );
-  $wrapper = entity_metadata_wrapper($type, $entity);
-  foreach ($collection AS $type => $fields) {
-    $callback = 'catalyst_add_' . $type;
-    foreach ($fields AS $field => $group) {
-      if (isset($entity->$field)) {
-        foreach ($wrapper->$field->value() AS $delta => $include) {
-          $include = entity_metadata_wrapper('catalyst', $include);
-          // Ensure the include exists before attempting to add it
-          if ($include->value()) {
-            $callback($include, $group, $delta);
-          }
-        }
-      }
-    }
-  }
-  // This needs to move to catalyst_core
-  // Process custom fields
-  $collection = array(
-    'css' => array(
-      'field__css__layout' => CATALYST_CSS_LAYOUT,
-      'field__css__page' => CATALYST_CSS_PAGE,
-      'field__css' => CATALYST_CSS_OTHER,
-    ),
-    'js' => array(
-      'field__js__layout' => CATALYST_JS_LAYOUT,
-      'field__js__page' => CATALYST_JS_PAGE,
-      'field__js' => CATALYST_JS_OTHER,
-    ),
-  );
-  foreach ($collection AS $type => $fields) {
-    $callback = 'catalyst_add_custom_' . $type;
-    foreach ($fields AS $field => $group) {
-      if (!empty($entity->$field)) {
-        foreach ($wrapper->$field->value() AS $data) {
-          $callback($data, $group, $field, $wrapper->getIdentifier());
-        }
-      }
-    }
-  }
 }

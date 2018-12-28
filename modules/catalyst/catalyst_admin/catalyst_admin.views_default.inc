@@ -2100,7 +2100,6 @@ print catalyst_admin_views_no_results($view, \'layout\', array(
           'layout::field__layout_drupal_js' => 'layout::field__layout_drupal_js',
           'layout::field__layout_drupal_css' => 'layout::field__layout_drupal_css',
           'layout::field__drupal_processing' => 'layout::field__drupal_processing',
-          'layout::field__debug' => 'layout::field__debug',
           'layout::field__layout_page_title_pattern' => 'layout::field__layout_page_title_pattern',
           'layout::field__layout_show_messages' => 'layout::field__layout_show_messages',
           'layout::field__doctype' => 'layout::field__doctype',
@@ -2527,8 +2526,7 @@ return catalyst_admin_eck_entity_link(\'page\', $row->id, filter_xss_admin($row-
   $handler->display->display_options['fields']['php_3']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['php_3']['use_php_setup'] = 0;
   $handler->display->display_options['fields']['php_3']['php_value'] = '$entity = entity_load_single(\'catalyst\', $row->id);
-$wrapper = entity_metadata_wrapper(\'catalyst\', $entity);
-$menu = entity_valval($wrapper->field__menu);
+$menu = entity_valval($entity->wrapper()->field__menu);
 return $menu[\'path\'];';
   $handler->display->display_options['fields']['php_3']['php_output'] = '<?php print preg_match("/\\@|\\%/", $value) ? url($value) : l(url($value), $value); ?>';
   $handler->display->display_options['fields']['php_3']['use_php_click_sortable'] = '0';

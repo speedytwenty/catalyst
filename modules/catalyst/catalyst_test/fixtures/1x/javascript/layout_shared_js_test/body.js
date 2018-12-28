@@ -1,0 +1,1 @@
+var layout_shared_js_var = 'defined';

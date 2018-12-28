@@ -1,0 +1,23 @@
+{
+    "internal": false,
+    "label": "Block Embed Test",
+    "machine": "block_embed_test",
+    "media_files": [
+        "block_embed_shared_test",
+        "block_embed_local_test",
+        "block_embed_remote_test"
+    ],
+    "media_javascripts": [
+        "block_embed_shared_test",
+        "block_embed_local_test",
+        "block_embed_remote_test",
+        "block_embed_footer_test"
+    ],
+    "media_stylesheets": [
+        "block_embed_shared_test",
+        "block_embed_local_test",
+        "block_embed_remote_test"
+    ],
+    "package": "catalyst_test_1x",
+    "type": "block"
+}

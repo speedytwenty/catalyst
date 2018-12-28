@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @file
+ * Tests for the files plugin.
+ */
+
+class CatalystPluginFilesTestCase extends CatalystWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Catalyst Plugin: Files Tests',
+      'description' => 'Basic tests for Catalyst Layouts',
+      'group' => 'Catalyst',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('catalyst_core', 'catalyst_test');
+    //$this->user = $this->drupalCreateUser(array('access catalyst tests'));
+  }
+
+  public function testImportExport() {
+    $data = array(
+      'test.txt' => 'VGhpcyBpcyBhIHRlc3Qu',
+      'test.png' =>'iVBORw0KGgoAAAANSUhEUgAAAZIAAABkBAMAAABeEKt5AAAAD1BMVEUpjLPpB+01Gg1uF+HU0z0i9zMEAAACMElEQVR4nO3UW27CQAxGYZCyASRWkLIDWMA0nf2vqZRymYtdQvUfpID9AoiH6NOxs1rRM+TTbOihHTmn1Wp9fFDOn0uW5Hz6WJ8etWUtLOT8uT4/bEtSQMdwgVwlxyxLlAzp+nV9ex5HeQaklHAUTFJAKsmGuhUKkssflYQ6ewgyVL8qyWa7JEl5JJ0EOhVGUkNaCXMqCGRofrcSZL8QSbojQaIQkDZJLyGiEJJ0V0JEASBdEkMCRAEkaYYEiKKH9EksiT6KXpJmSfRR5BAjiSmRRwmJO2mmRL5eaoiVxJaoo4TEmzRbol4vMcRM4kjEUULiTHpAIl6vkNhjL5cn0a5XSF5dkh6SaA8lJOY4y+VKpOsVkpAsRJIelEhPPiQhCclzJd6ry5coX14hCUlI3koy6mbn/fGxd+bg/fGPCUlIQhKSd5eM06OSr5CEJCTLlXgvL0+ifHWFJCRLkXgn70mUBx8SZ5z1ciTS5QrJy0ucQ3Ek0jMJiTf2etkS7XKFxJ1pvkS7XHKJGcWUiJOExJ9prkS8XHqJFcWSqJOE5I+Z5knUywVIjCiGRJ4EkBhRDIk8CSHpo/QSfRJC0kfpJfokiKSL0kmAJIiki9JJgCSMpI3SSogkjKSN0kqIJJBkV1MaSSYgkKTZr1qC7BYmGbMrOSC7xUmqU6kkEISTlKdSSpgjISUlpZBgEFAy7q63cpUcOAgpuZ39RUIdOy8Zcy4kh0xCYMmPZfqVZNax338DAijj63XJAh8AAAAASUVORK5CYII=',
+    );
+    $plugin = entity_get_controller('catalyst')->bundlePlugins('core_test', 'files:default');
+    $field_name = $plugin['settings']['field_name'];
+    $normal_name = $plugin['settings']['normal_name'];
+    $entity = entity_import('catalyst', array(
+      'type' => 'core_test',
+      'machine' => 'test',
+      $normal_name => $data,
+    ));
+    $files1 = $entity->wrapper()->{$field_name}->value();
+    $this->assertEqual($files1[0]['origname'], 'test.txt', 'Text file data populated.');
+    $this->assertTrue(file_exists(drupal_realpath($files1[0]['uri'])), 'Text file was created.');
+    $this->assertEqual($files1[1]['origname'], 'test.png', 'Image file data populated.');
+    $this->assertTrue(file_exists(drupal_realpath($files1[1]['uri'])), 'Image file was created.');
+    $entity->save();
+
+    entity_get_controller('catalyst')->resetCache();
+
+    $entity = entity_load_single('catalyst', $entity->id);
+    $this->assertEqual(count($entity->wrapper()->{$field_name}->value()), 2, 'Files data saved.');
+    $files2 = $entity->wrapper()->{$field_name}->value();
+    $this->assertEqual($files2[0]['filename'], 'test.txt', 'Text file data saved.');
+    $this->assertTrue(file_exists(drupal_realpath($files2[0]['uri'])), 'Text file exists.');
+    $this->assertNotEqual($files2[0]['uri'], $files1[0]['uri'], 'Text file was moved to a permanent location.');
+    $this->assertEqual($files2[1]['filename'], 'test.png', 'Image file data saved.');
+    $this->assertTrue(file_exists(drupal_realpath($files2[1]['uri'])), 'Image file exists.');
+    $this->assertNotEqual($files2[1]['uri'], $files1[1]['uri'], 'Image file was moved to a permanent location.');
+
+    $export = $entity->export();
+    $this->assertEqual(count($export['files_custom']), 2, 'Both files were exported.');
+    $this->assertEqual($export['files_custom']['test.txt'], $data['test.txt'], 'Text file exported.');
+    $this->assertEqual($export['files_custom']['test.png'], $data['test.png'], 'Text image exported.');
+  }
+}

@@ -1,0 +1,23 @@
+{
+    "internal": true,
+    "label": "Template Assignments",
+    "machine": "template_assignment",
+    "menu": {
+        "path": "admin\/catalyst\/template\/assign",
+        "menu": {
+            "type": "tab",
+            "title": "Assignments",
+            "description": "",
+            "name": "management",
+            "weight": "-10",
+            "parent": {
+                "type": "none",
+                "title": "",
+                "description": "",
+                "weight": 0
+            }
+        }
+    },
+    "package": "catalyst_admin_ui",
+    "type": "page"
+}

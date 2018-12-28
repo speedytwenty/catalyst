@@ -1,0 +1,6 @@
+name = Catalyst Layout Test
+description = For testing catalyst layouts
+core = 7.x
+dependencies[] = catalyst_layout
+dependencies[] = catalyst_test
+hidden = TRUE

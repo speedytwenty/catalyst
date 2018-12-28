@@ -52,9 +52,9 @@ function catalyst_page_field_group_info() {
     'label' => 'Blocks',
     'weight' => '6',
     'children' => array(
-      0 => 'field__blockplacements__layfield',
-      1 => 'field__blocks_related',
-      2 => 'field___block_placements_entity',
+      0 => 'field___block_placements_entity',
+      1 => 'field__blockplacements__layfield',
+      2 => 'field__blocks_related',
     ),
     'format_type' => 'tab',
     'format_settings' => array(
@@ -253,7 +253,7 @@ function catalyst_page_field_group_info() {
   $field_group->parent_name = '';
   $field_group->data = array(
     'label' => 'Tabs',
-    'weight' => '1',
+    'weight' => '0',
     'children' => array(
       0 => 'group_page_advanced',
       1 => 'group_page_blocks',

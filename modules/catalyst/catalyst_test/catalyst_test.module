@@ -3,3 +3,115 @@
 /**
  * @file
  */
+
+include_once 'catalyst_test.features.inc';
+
+/**
+ * Implements hook_menu().
+ */
+function catalyst_test_menu() {
+  return array(
+    'admin/catalyst/catalyst-test' => array(
+      'title' => 'Catalyst Tests',
+      'page callback' => 'catalyst_test_basic',
+      'type' => MENU_NORMAL_ITEM,
+      'menu_name' => 'management',
+      'access arguments' => array('access catalyst tests'),
+      'file' => 'catalyst_test.pages.inc',
+    ),
+    'admin/catalyst/catalyst-test/basic' => array(
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'title' => 'Basic',
+    ),
+    'admin/catalyst/catalyst-test/bundle' => array(
+      'title' => 'Bundle Tests',
+      'page callback' => 'system_admin_menu_block_page',
+      'access arguments' => array('access catalyst tests'),
+      'file path' => drupal_get_path('module', 'system'),
+      'file' => 'system.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+    ),
+    'admin/catalyst/catalyst-test/bundle/list' => array(
+      'title' => 'List',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => -10,
+    ),
+    'admin/catalyst/catalyst-test/bundle/package' => array(
+      'title' => 'Package Test',
+      'page callback' => 'package_test_page',
+      'access arguments' => array('access catalyst tests'),
+      'file' => 'catalyst_test.pages.inc',
+      'type' => MENU_LOCAL_TASK,
+    ),
+  );
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function catalyst_test_entity_info_alter(&$entity_info) {
+  $entity_info['user']['view modes']['catalyst_test'] = array(
+    'label' => 'Catalyst Test',
+    'custom settings' => TRUE,
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function catalyst_test_permission() {
+  return array(
+    'access catalyst tests' => array(
+      'title' => t('Access Catalyst Tests'),
+      'description' => t('Allows access to view catalyst test content.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function catalyst_test_ctools_plugin_directory($module, $plugin_type) {
+  if ($module == 'catalyst_core') {
+    return $plugin_type == 'plugin' ? 'plugins/catalyst' : 'plugins/' . $plugin_type;
+  }
+}
+
+/**
+ * Implements hook_catalyst_twig_alter().
+ */
+function catalyst_test_catalyst_twig_alter(&$twig) {
+  $twig->addFunction(new Twig_SimpleFunction('custom_twig_function', 'catalyst_test_custom_twig_function'));
+}
+
+function catalyst_test_custom_twig_function() {
+  return 'HOOK_catalyst_test_alter() is functioning properly.';
+}
+
+/**
+ * Load multiple test entities based on certain conditions.
+ *
+ * @param $pids
+ *   An array of entity IDs.
+ * @param $conditions
+ *   An array of conditions to match against the {entity} table.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   An array of test entity objects, indexed by pid.
+ *
+ * @see entity_test_load_multiple().
+ */
+function catalyst_test_load_multiple($pids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('catalyst', $pids, $conditions, $reset);
+}
+
+/**
+ * Delete multiple test entities.
+ *
+ * @param $pids
+ *   An array of test entity IDs.
+ */
+function catalyst_test_delete_multiple(array $pids) {
+  entity_get_controller('catalyst')->delete($pids);
+}

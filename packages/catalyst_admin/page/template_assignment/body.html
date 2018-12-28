@@ -1,0 +1,53 @@
+{% for entity_type, entity_info in entity_types %}
+<h2>{{ entity_info.label }} ({{ entity_type }})</h2>
+{{ form('catalyst_template_selection_reset_form', entity_type) }}
+<table class="entity-type-info entity-type--({{ loop.index }})">
+  <thead>
+    <tr>
+      <th colspan="3">Entity type</th>
+      <th>Template</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td colspan="3">{{ entity_info.label }} ({{ entity_type }})</td>
+      <td>{{ form('catalyst_template_selection_form', entity_type) }}</td>
+    </tr>
+  </tbody>
+  {% for bundle, bundle_info in entity_info.bundles %}
+  <thead>
+    <tr>
+      <th>&nbsp;</th>
+      <th>Bundle</th>
+      <th>&nbsp;</th>
+      <th>Template</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>&nbsp;</td>
+      <td colspan="2">{{ bundle_info.label }} ({{ bundle }})</td>
+      <td>{{ form('catalyst_template_selection_form', entity_type, bundle) }}</td>
+    </tr>
+  </tbody>
+    <thead>
+      <tr>
+        <th colspan="2">&nbsp;</th>
+        <th>View mode</th>
+        <th>Template</th>
+      </tr>
+    </thead>
+    {% for view_mode, vm_info in attribute(entity_info, 'view modes') %}
+    <tbody>
+      <tr>
+        <td colspan="2'">&nbsp;</td>
+        <td>{{ vm_info.label }} ({{ view_mode }})</td>
+        <td>{{ form('catalyst_template_selection_form', entity_type, bundle, view_mode) }}</td>
+      </tr>
+      </tbody>
+      {% endfor %}
+    {% endfor %}
+</table>
+{% endfor %}
+<hr />
+{{ form('catalyst_template_selection_reset_form') }}

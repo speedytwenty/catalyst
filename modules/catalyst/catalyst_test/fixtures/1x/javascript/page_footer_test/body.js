@@ -1,0 +1,1 @@
+var page_footer_js_var = 'defined';

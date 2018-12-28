@@ -10,6 +10,78 @@
 function catalyst_block_field_default_field_instances() {
   $field_instances = array();
 
+  // Exported field_instance: 'catalyst-block-field__access'.
+  $field_instances['catalyst-block-field__access'] = array(
+    'bundle' => 'block',
+    'default_value' => array(
+      0 => array(
+        'value' => 'return user_access(\'access content\');',
+        'format' => 'catalyst_php',
+      ),
+    ),
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 14,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__access',
+    'label' => 'Access',
+    'required' => 0,
+    'settings' => array(
+      'better_formats' => array(
+        'allowed_formats' => array(
+          'catalyst_css' => 0,
+          'catalyst_doc' => 0,
+          'catalyst_html' => 0,
+          'catalyst_js' => 0,
+          'catalyst_php' => 'catalyst_php',
+          'plain_text' => 0,
+        ),
+        'allowed_formats_toggle' => 1,
+        'default_order_toggle' => 0,
+        'default_order_wrapper' => array(
+          'formats' => array(
+            'catalyst_css' => array(
+              'weight' => 0,
+            ),
+            'catalyst_doc' => array(
+              'weight' => 0,
+            ),
+            'catalyst_html' => array(
+              'weight' => 0,
+            ),
+            'catalyst_js' => array(
+              'weight' => 0,
+            ),
+            'catalyst_php' => array(
+              'weight' => 0,
+            ),
+            'plain_text' => array(
+              'weight' => 10,
+            ),
+          ),
+        ),
+      ),
+      'text_processing' => 1,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 8,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 6,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-block-field__admin_notes'.
   $field_instances['catalyst-block-field__admin_notes'] = array(
     'bundle' => 'block',
@@ -21,7 +93,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 14,
+        'weight' => 13,
       ),
     ),
     'entity_type' => 'catalyst',
@@ -88,7 +160,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 4,
+        'weight' => 8,
       ),
       'template' => array(
         'label' => 'above',
@@ -125,7 +197,7 @@ function catalyst_block_field_default_field_instances() {
         'module' => 'text',
         'settings' => array(),
         'type' => 'text_default',
-        'weight' => 0,
+        'weight' => 5,
       ),
       'template' => array(
         'label' => 'above',
@@ -195,10 +267,11 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 8,
+        'type' => 'text_default',
+        'weight' => 2,
       ),
       'template' => array(
         'label' => 'above',
@@ -260,6 +333,38 @@ function catalyst_block_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'catalyst-block-field__data'.
+  $field_instances['catalyst-block-field__data'] = array(
+    'bundle' => 'block',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 15,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__data',
+    'label' => 'Data',
+    'required' => 0,
+    'settings' => array(
+      'namespace' => 1,
+      'serialization' => 'json_encode',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'serialized_field',
+      'settings' => array(),
+      'type' => 'serialized_hidden',
+      'weight' => 1,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-block-field__files'.
   $field_instances['catalyst-block-field__files'] = array(
     'bundle' => 'block',
@@ -270,7 +375,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 1,
+        'weight' => 6,
       ),
       'template' => array(
         'label' => 'above',
@@ -291,7 +396,7 @@ function catalyst_block_field_default_field_instances() {
         'active_updating' => 0,
         'file_name' => array(
           'options' => array(
-            'pathauto' => 1,
+            'pathauto' => FALSE,
             'slashes' => 0,
             'transliterate' => 1,
           ),
@@ -299,11 +404,11 @@ function catalyst_block_field_default_field_instances() {
         ),
         'file_path' => array(
           'options' => array(
-            'pathauto' => 0,
+            'pathauto' => FALSE,
             'slashes' => 0,
-            'transliterate' => 0,
+            'transliterate' => 1,
           ),
-          'value' => 'media/block/[field__machine]',
+          'value' => 'media/block/[catalyst:field--machine:machine]',
         ),
         'redirect' => FALSE,
         'retroactive_update' => 0,
@@ -323,6 +428,74 @@ function catalyst_block_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'catalyst-block-field__html_head'.
+  $field_instances['catalyst-block-field__html_head'] = array(
+    'bundle' => 'block',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 16,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__html_head',
+    'label' => 'Custom HTML Head',
+    'required' => 0,
+    'settings' => array(
+      'better_formats' => array(
+        'allowed_formats' => array(
+          'catalyst_css' => 0,
+          'catalyst_doc' => 0,
+          'catalyst_html' => 'catalyst_html',
+          'catalyst_js' => 0,
+          'catalyst_php' => 0,
+          'plain_text' => 0,
+        ),
+        'allowed_formats_toggle' => 1,
+        'default_order_toggle' => 0,
+        'default_order_wrapper' => array(
+          'formats' => array(
+            'catalyst_css' => array(
+              'weight' => 0,
+            ),
+            'catalyst_doc' => array(
+              'weight' => 0,
+            ),
+            'catalyst_html' => array(
+              'weight' => 0,
+            ),
+            'catalyst_js' => array(
+              'weight' => 0,
+            ),
+            'catalyst_php' => array(
+              'weight' => 0,
+            ),
+            'plain_text' => array(
+              'weight' => 10,
+            ),
+          ),
+        ),
+      ),
+      'text_processing' => 1,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 5,
+      ),
+      'type' => 'text_textarea',
+      'weight' => 5,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-block-field__internal'.
   $field_instances['catalyst-block-field__internal'] = array(
     'bundle' => 'block',
@@ -338,7 +511,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 13,
+        'weight' => 12,
       ),
       'template' => array(
         'label' => 'above',
@@ -373,10 +546,11 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 10,
+        'type' => 'text_default',
+        'weight' => 3,
       ),
       'template' => array(
         'label' => 'above',
@@ -448,7 +622,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 11,
+        'weight' => 10,
       ),
       'template' => array(
         'label' => 'above',
@@ -489,7 +663,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 2,
+        'weight' => 7,
       ),
       'template' => array(
         'label' => 'above',
@@ -533,10 +707,14 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 9,
+        'label' => 'hidden',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 0,
       ),
       'template' => array(
         'label' => 'above',
@@ -580,10 +758,14 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 7,
+        'label' => 'hidden',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 1,
       ),
       'template' => array(
         'label' => 'above',
@@ -630,7 +812,7 @@ function catalyst_block_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 12,
+        'weight' => 11,
       ),
       'template' => array(
         'label' => 'above',
@@ -673,10 +855,11 @@ function catalyst_block_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'hidden',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 6,
+        'type' => 'text_default',
+        'weight' => 4,
       ),
       'template' => array(
         'label' => 'above',
@@ -740,10 +923,13 @@ function catalyst_block_field_default_field_instances() {
 
   // Translatables
   // Included for use with string extractors like potx.
+  t('Access');
   t('Content');
   t('Custom CSS');
   t('Custom Files');
+  t('Custom HTML Head');
   t('Custom Javascript');
+  t('Data');
   t('Existing shared files can be used without adding them here but by adding them here, you\'ll track the usage of each file.');
   t('Help/Instructions');
   t('Internal');

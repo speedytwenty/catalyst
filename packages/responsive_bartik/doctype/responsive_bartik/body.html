@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="{{ language.language }}" dir="{{ language.dir }}"
+{{ rdf_namespaces }}>
+
+<head>
+  {{ head }}
+  <title>{{ head_title }}</title>
+  {{ styles }}
+  {{ scripts }}
+</head>
+<body class="{{ classes }}" {{ attributes }}>
+  <div id="skip-link">
+    <a href="#main-content" class="element-invisible element-focusable">{{ t('Skip to main content') }}</a>
+  </div>
+  {{ page_top }}
+  {{ page }}
+  {{ page_bottom }}
+  </body>
+</html>

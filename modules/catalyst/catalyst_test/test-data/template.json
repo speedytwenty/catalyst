@@ -12,7 +12,6 @@
         "title": "Catalyst Test (Node)",
         "content": "{{ content }}",
         "css_custom": null,
-        "debug": false,
         "html_head": null,
         "internal": false,
         "files_custom": [],

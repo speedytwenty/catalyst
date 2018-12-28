@@ -66,7 +66,7 @@ function catalyst_admin_module_implements_alter(&$implementations, $hook) {
 function catalyst_admin_theme_registry_alter(&$theme_registry) {
   $hook = 'field_multiple_value_form';
   if (isset($theme_registry[$hook])) {
-    $module_path = catalyst_get_path('admin');
+    $module_path = catalyst_get_path(NULL, 'admin');
     $theme_registry[$hook] = array_merge($theme_registry[$hook], array(
       'type' => 'module',
       'theme path' => $module_path,
@@ -104,7 +104,7 @@ function catalyst_admin_form_alter(&$form, &$form_state, $form_id) {
 
   // Alter views bulk operations forms
   if (strpos($form_id, 'views_form_catalyst_') === 0 && isset($form['output'])) {
-    $form['#attached']['css'][] = catalyst_get_path('admin') . '/css/views.css';
+    $form['#attached']['css'][] = catalyst_get_path('css/views.css', 'admin');
     // After build callback in catalyst_admin/includes/uncommon.inc
     catalyst_form_load_include($form_state, 'uncommon', 'admin');
     $form['#after_build'][] = 'catalyst_admin_views_form_after_build';
@@ -120,7 +120,9 @@ function catalyst_admin_form_alter(&$form, &$form_state, $form_id) {
  *
  * Adds a "Save & Edit" button to eck entity forms.
  */
-function catalyst_admin_form_eck__entity__form_alter(&$form, &$form_state) {
+function catalyst_admin_form_catalyst_entity_form_alter(&$form, &$form_state) {
+  catalyst_form_load_include($form_state, 'save_export', 'admin');
+  catalyst_admin_save_export_form_alter($form, $form_state);
   catalyst_form_load_include($form_state, 'save_edit', 'admin');
   catalyst_admin_save_edit_form_alter($form, $form_state);
 }

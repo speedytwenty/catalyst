@@ -93,7 +93,6 @@ function catalyst_core_catalyst_export_alter(&$export, $original, $group) {
       'field__css' => 'css_custom',
       'field__css__layout' => 'css_custom',
       'field__css__page' => 'css_custom',
-      'field__debug' => 'debug',
       'field__drupal_processing' => 'drupal_processing',
       'field__html_head' => 'html_head',
       'field__internal' => 'internal',

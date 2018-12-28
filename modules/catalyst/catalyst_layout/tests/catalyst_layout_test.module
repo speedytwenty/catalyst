@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * @file
+ * Module for testinging catalyst_layout.
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function catalyst_layout_test_menu() {
+  return array(
+    'admin/catalyst/catalyst-test/bundle/layout' => array(
+      'title' => 'Layout',
+      'page callback' => 'catalyst_layout_test_system_layout',
+      'access arguments' => array('access catalyst tests'),
+      'type' => MENU_LOCAL_TASK,
+    ),
+    'admin/catalyst/layout-test/bundle/layout/system' => array(
+      'title' => 'Test system layout',
+      'description' => 'Tests the fallback layout and doctype when catalyst_layout_is_active() but no layout is available.',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    ),
+    'catalyst-layout-test' => array(
+      'title' => 'Layout',
+      'page callback' => 'catalyst_layout_test_system_layout',
+      'access arguments' => array('access catalyst tests'),
+      'type' => MENU_CALLBACK,
+    ),
+  );
+}
+
+/**
+ */
+function catalyst_layout_test_system_layout() {
+  catalyst_set_layout(catalyst_layout_fallback());
+  return array('#markup' => 'This is page content.');
+}

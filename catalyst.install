@@ -86,23 +86,27 @@ function _catalyst_form_install_configure_form_alter(&$form, &$form_state) {
  * Enable requested Catalyst extensions.
  */
 function catalyst_extensions_enable($form_id, &$form_state) {
-  // Clear & rebuild Features key caches.
-  features_get_info(NULL, NULL, TRUE);
-  features_rebuild();
+  $module_enable = array();
+  $module_enable['catalyst_core'] = TRUE;
+  $module_enable['catalyst_media'] = TRUE;
+  $module_enable['catalyst_block'] = TRUE;
+  $module_enable['catalyst_layout'] = TRUE;
+  $module_enable['catalyst_page'] = TRUE;
+  $module_enable['catalyst_template'] = TRUE;
+  //$module_enable['catalyst_menu'] = TRUE;
+  $module_enable['catalyst_navbar'] = TRUE;
 
-  // Rebuild all Default Config (cleanup install).
-  //defaultconfig_rebuild_all();
+  foreach ($module_enable AS $module => $load_deps) {
+    module_enable(array($module), TRUE);
+  }
 
-  // Revert all Features (cleanup install).
-  features_revert();
-
-  module_enable(array('catalyst_admin'), TRUE);
-
+  //module_enable(array('catalyst_admin'), TRUE);
   if (isset($form_state['values']['extensions'])) {
     foreach ($form_state['values']['extensions'] as $module) {
       module_enable(array($module), TRUE);
     }
   }
+
 }
 
 /**

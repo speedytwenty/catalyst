@@ -19,10 +19,9 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
-        'module' => 'catalyst_field_api',
         'settings' => array(),
-        'type' => 'block_placement_entity_formatter',
-        'weight' => 20,
+        'type' => 'hidden',
+        'weight' => 17,
       ),
       'template' => array(
         'label' => 'above',
@@ -61,9 +60,10 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 17,
+        'type' => 'text_plain',
+        'weight' => 5,
       ),
       'template' => array(
         'label' => 'above',
@@ -134,9 +134,10 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 12,
+        'type' => 'text_default',
+        'weight' => 4,
       ),
       'template' => array(
         'label' => 'above',
@@ -209,7 +210,7 @@ function catalyst_page_field_default_field_instances() {
         'label' => 'above',
         'settings' => array(),
         'type' => 'hidden',
-        'weight' => 9,
+        'weight' => 18,
       ),
       'template' => array(
         'label' => 'above',
@@ -242,9 +243,13 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 10,
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => FALSE,
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 15,
       ),
       'template' => array(
         'label' => 'above',
@@ -292,8 +297,8 @@ function catalyst_page_field_default_field_instances() {
         'label' => 'above',
         'module' => 'text',
         'settings' => array(),
-        'type' => 'text_default',
-        'weight' => 1,
+        'type' => 'text_plain',
+        'weight' => 7,
       ),
       'template' => array(
         'label' => 'hidden',
@@ -365,9 +370,10 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 3,
+        'type' => 'text_plain',
+        'weight' => 10,
       ),
       'template' => array(
         'label' => 'above',
@@ -429,6 +435,38 @@ function catalyst_page_field_default_field_instances() {
     ),
   );
 
+  // Exported field_instance: 'catalyst-page-field__data'.
+  $field_instances['catalyst-page-field__data'] = array(
+    'bundle' => 'page',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'settings' => array(),
+        'type' => 'hidden',
+        'weight' => 20,
+      ),
+    ),
+    'entity_type' => 'catalyst',
+    'field_name' => 'field__data',
+    'label' => 'Data',
+    'required' => 0,
+    'settings' => array(
+      'namespace' => 1,
+      'serialization' => 'json_encode',
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 0,
+      'module' => 'serialized_field',
+      'settings' => array(),
+      'type' => 'serialized_hidden',
+      'weight' => 1,
+    ),
+  );
+
   // Exported field_instance: 'catalyst-page-field__files'.
   $field_instances['catalyst-page-field__files'] = array(
     'bundle' => 'page',
@@ -437,9 +475,10 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
+        'module' => 'file',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 7,
+        'type' => 'file_table',
+        'weight' => 8,
       ),
       'template' => array(
         'label' => 'above',
@@ -460,7 +499,7 @@ function catalyst_page_field_default_field_instances() {
         'active_updating' => 0,
         'file_name' => array(
           'options' => array(
-            'pathauto' => 1,
+            'pathauto' => FALSE,
             'slashes' => 0,
             'transliterate' => 1,
           ),
@@ -468,11 +507,11 @@ function catalyst_page_field_default_field_instances() {
         ),
         'file_path' => array(
           'options' => array(
-            'pathauto' => 1,
+            'pathauto' => FALSE,
             'slashes' => 0,
-            'transliterate' => 0,
+            'transliterate' => 1,
           ),
-          'value' => 'media/page/[catalyst:title]',
+          'value' => 'media/page/[catalyst:field--machine:machine]',
         ),
         'redirect' => FALSE,
         'retroactive_update' => 0,
@@ -501,9 +540,10 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 11,
+        'type' => 'text_plain',
+        'weight' => 14,
       ),
       'template' => array(
         'label' => 'above',
@@ -577,10 +617,11 @@ function catalyst_page_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'inline',
+        'module' => 'list',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 14,
+        'type' => 'list_key',
+        'weight' => 3,
       ),
       'template' => array(
         'label' => 'above',
@@ -616,9 +657,10 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 5,
+        'type' => 'text_plain',
+        'weight' => 12,
       ),
       'template' => array(
         'label' => 'above',
@@ -688,9 +730,13 @@ function catalyst_page_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
+        'label' => 'inline',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => 0,
+          'link' => 1,
+        ),
+        'type' => 'entityreference_label',
         'weight' => 2,
       ),
       'template' => array(
@@ -723,9 +769,10 @@ function catalyst_page_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
+        'label' => 'inline',
+        'module' => 'machine',
         'settings' => array(),
-        'type' => 'hidden',
+        'type' => 'machine_default',
         'weight' => 0,
       ),
       'template' => array(
@@ -765,9 +812,13 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 8,
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => 0,
+          'link' => 1,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 9,
       ),
       'template' => array(
         'label' => 'above',
@@ -812,9 +863,13 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 6,
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => 0,
+          'link' => 1,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 13,
       ),
       'template' => array(
         'label' => 'above',
@@ -859,9 +914,13 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 4,
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => 0,
+          'link' => 1,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 11,
       ),
       'template' => array(
         'label' => 'above',
@@ -944,10 +1003,14 @@ function catalyst_page_field_default_field_instances() {
     'description' => '',
     'display' => array(
       'default' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 13,
+        'label' => 'inline',
+        'module' => 'entityreference',
+        'settings' => array(
+          'bypass_access' => 0,
+          'link' => 1,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 1,
       ),
       'template' => array(
         'label' => 'above',
@@ -991,9 +1054,10 @@ function catalyst_page_field_default_field_instances() {
     'display' => array(
       'default' => array(
         'label' => 'above',
+        'module' => 'text',
         'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 18,
+        'type' => 'text_plain',
+        'weight' => 6,
       ),
       'template' => array(
         'label' => 'above',
@@ -1066,6 +1130,7 @@ function catalyst_page_field_default_field_instances() {
   t('Custom Files');
   t('Custom Head');
   t('Custom Javascript');
+  t('Data');
   t('Help/Instructions');
   t('Internal');
   t('Javascript Includes');

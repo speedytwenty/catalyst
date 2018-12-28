@@ -6,6 +6,16 @@
 
 include_once 'catalyst_template.features.inc';
 
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function catalyst_template_ctools_plugin_directory($owner, $type) {
+  if ($owner == 'catalyst_core') {
+    return $type == 'plugin' ? 'plugins/catalyst' : 'plugins/' . $type;
+  }
+}
+
+
 function catalyst_template_load($entity_type, $bundle, $load_default = TRUE) {
   $loaded = &drupal_static(__FUNCTION__);
   if (!isset($loaded[$entity_type][$bundle])) {
@@ -36,14 +46,83 @@ function _catalyst_template_load($entity_type, $bundle, $load_default = TRUE) {
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function catalyst_form_eck__entity__form_alter(&$form, &$form_state) {
-  if ($form['#entity_type'] == 'catalyst' && catalyst_entity_is_a('template', $form['#entity'])) {
-    catalyst_form_load_include($form_state, 'admin', 'template');
-    if (catalyst_entity_is_new($form['#entity'])) {
-      $form['#after_build'][] = 'catalyst_template_add_form_after_build';
+function catalyst_template_form_catalyst_entity_form_alter(&$form, &$form_state) {
+  if ($form['#entity_type'] == 'catalyst' && $form['#bundle'] == 'template') {
+    $entity_type = $form['#entity_type'];
+    $bundle = $form['#bundle'];
+    $lang = LANGUAGE_NONE;
+    $field_instance = field_info_instance($entity_type, 'field__data', $bundle);
+    if (isset($form_state['values']['field__data'][$lang][0]['value'])) {
+      $data = $form_state['values']['field__data'][$lang][0]['value'];
     }
     else {
-      $form['#after_build'][] = 'catalyst_template_form_after_build';
+      $wrapper = entity_metadata_wrapper($entity_type, $form_state[$entity_type]);
+      // Check that field__data isset here. For some reason inline entity forms
+      // on the template form throw an exception  when this check isn't here.
+      $data = isset($wrapper->field__data) ? (array)entity_valval($wrapper->field__data) : $val;
+      $data = $data + array(
+        'entity_type' => !empty($_GET['entity_type']) ? check_plain($_GET['entity_type']) : NULL,
+        'bundles' => !empty($_GET['bundle']) ? array(check_plain($_GET['bundle'])) : array(),
+        'view_modes' => !empty($_GET['view_mode']) ? array(check_plain($_GET['view_mode'])) : array(),
+        'weight' => 0,
+      );
+    }
+    $form['field__template_entity_type']['#access'] = FALSE;
+    $form['field__template_bundle']['#access'] = FALSE;
+    $html_id = drupal_html_id('template_options');
+    $ajax = array(
+      'callback' => 'catalyst_template_widget_ajax',
+      'wrapper' => $html_id,
+    );
+    $widget = array(
+      '#id' => $html_id,
+      '#tree' => TRUE,
+      '#type' => 'container',
+    );
+    $widget['entity_type'] = array(
+      '#type' => 'select',
+      '#title' => t('Entity type'),
+      '#options' => catalyst_template_entity_type_options(),
+      '#ajax' => $ajax,
+      '#required' => TRUE,
+      '#default_value' => $data['entity_type'],
+    );
+    if (!empty($data['entity_type'])) {
+      $widget['bundles'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('Bundles'),
+        '#options' => catalyst_template_bundle_options($data['entity_type']),
+        '#default_value' => $data['bundles'],
+      );
+      $widget['view_modes'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('View modes'),
+        '#options' => catalyst_template_view_mode_options($data['entity_type']),
+        '#default_value' => $data['view_modes'],
+      );
+    }
+    $options = range(-30, 30);
+    $widget['weight'] = array(
+      '#title' => t('Weight'),
+      '#type' => 'select',
+      '#options' => array_combine($options, $options),
+      '#default_value' => $data['weight'],
+      '#required' => TRUE,
+    );
+    $form['field__data'][$lang][0]['value'] = $widget;
+  }
+  $form['#validate'][] = 'catalyst_template_form_validate';
+}
+
+/**
+ *
+ */
+function catalyst_template_form_validate(&$form, &$form_state) {
+  // Filter false values from bundles and view modes
+  $field_data =& $form_state['values']['field__data'][LANGUAGE_NONE][0]['value'];
+  foreach (array('bundles', 'view_modes') AS $key) {
+    if (!empty($field_data[$key])) {
+      $field_data[$key] = array_filter($field_data[$key]);
     }
   }
 }
@@ -51,13 +130,185 @@ function catalyst_form_eck__entity__form_alter(&$form, &$form_state) {
 /**
  * Implements hook_entity_view_alter().
  */
-function catalyst_template_entity_view_alter(&$build, $type) {
-  if ($template = catalyst_template_load($type, $build['#bundle'])) {
-    $original_element = $build;
-    unset($original_element['#theme']);
-    $build['#element_original'] = $original_element;
-    $build['#template'] = new CatalystTemplateEntity($template);
-    $build['#theme_original'] = $build['#theme'];
-    $build['#theme'] = 'catalyst_template';
+function catalyst_template_entity_view_alter(&$build, $entity_type) {
+  if ($template = catalyst_template_default($entity_type, $build['#bundle'], $build['#view_mode'])) {
+    $build['#theme'] = NULL;
+    $build['#post_render'][] = 'catalyst_template_entity_post_render';
+    $build['#template'] = $template->entity;
   }
+}
+
+function catalyst_template_entity_post_render($content, $context) {
+  $template = $context['#template'];
+  $template->setVariable('content', $content);
+  $build = $template->display(TRUE);
+  return drupal_render($build);
+}
+
+/**
+ * Provides view mode options for a specific entity type.
+ */
+function catalyst_template_view_mode_options($entity_type) {
+  $info = entity_get_info($entity_type);
+  $options = array();
+  foreach ($info['view modes'] AS $v => $vm) {
+    $options[$v] = $vm['label'];
+  }
+  return $options;
+}
+
+function catalyst_template_entity_type_options() {
+  $types = entity_get_info();
+  $options = array();
+  foreach ($types AS $type => $info) {
+    $options[$type] = $info['label'];
+  }
+  return $options;
+}
+
+function catalyst_template_bundle_options($entity_type) {
+  $info = entity_get_info($entity_type);
+  $options = array();
+  foreach ($info['bundles'] AS $k => $v) {
+    $options[$k] = $v['label'];
+  }
+  return $options;
+}
+
+function catalyst_template_widget_ajax($form, &$form_state) {
+  return $form['field__data'][LANGUAGE_NONE][0]['value'];
+}
+
+
+function catalyst_template_candidates($entity_type, $bundle = NULL, $view_mode = NULL) {
+  static $templates;
+  $candidates = array();
+  $registry = catalyst_get_registry();
+  foreach ($registry['template'] AS $machine => $entry) {
+    if (empty($entry->template)) continue;
+    if ($entry->template['entity_type'] != $entity_type) continue;
+    $template = (object)$entry->template;
+    $view_modes = !empty($template->view_modes) ? array_filter($template->view_modes) : array();
+    $bundles = !empty($template->bundles) ? array_filter($template->bundles) : array();
+    // If the template specifies view modes and no view mode is passed or the view mode
+    // does not match the template view modes(s), then continue.
+    $args = func_get_args();
+    if ($view_modes && (!$view_mode || !in_array($view_mode, $view_modes))) continue;
+    if ($view_mode && $view_modes && !in_array($view_mode, $view_modes)) continue;
+    // If the template specifies bundle and no view mode is passed or the view mode
+    // does not match the template bundle(s), then continue.
+    if ($bundles && (!$bundle || !in_array($bundle, $bundles))) continue;
+    if ($bundle && $bundles && !in_array($bundle, $bundles)) continue;
+    $candidates[$machine] = $entry;
+  }
+  uasort($candidates, function ($a, $b) {
+    return $a->template['weight'] > $b->template['weight'] ? 1 : -1;
+  });
+  return $candidates;
+}
+
+function catalyst_template_setting_key($entity_type, $bundle = NULL, $view_mode = NULL) {
+  if ($view_mode && $bundle) {
+    return sprintf('catalyst_template_default__%s__%s__%s', $entity_type, $bundle, $view_mode);
+  }
+  else if ($view_mode) {
+    return sprintf('catalyst_template_default__%s__default__%s', $entity_type, $bundle, $view_mode);
+  }
+  else if ($bundle) {
+    return sprintf('catalyst_template_default__%s__%s', $entity_type, $bundle);
+  }
+  return sprintf('catalyst_template_default__%s', $entity_type, $bundle);
+}
+
+function catalyst_template_options($entity_type, $bundle = NULL, $view_mode = NULL, $candidates = NULL) {
+  if ($candidates === NULL) {
+    $candidates = catalyst_template_candidates($entity_type, $bundle, $view_mode);
+  }
+  $options = array();
+  foreach ($candidates AS $machine => $candidate) {
+    $options[$machine] = $candidate->label;
+  }
+  return $options;
+}
+
+/**
+ * Get a template settings.
+ *
+ * @param $entity_type
+ * @param $bundle
+ * @param $view_mode
+ * @param $default
+ */
+function catalyst_template_setting_get($entity_type, $bundle = NULL, $view_mode = NULL, $default = NULL) {
+  return variable_get(catalyst_template_setting_key($entity_type, $bundle, $view_mode), $default);
+}
+
+/**
+ * Set a template settings.
+ *
+ * @param $value
+ * @param $entity_type
+ * @param $bundle
+ * @param $view_mode
+ */
+function catalyst_template_setting_set($value, $entity_type, $bundle = NULL, $view_mode = NULL) {
+  return variable_set(catalyst_template_setting_key($entity_type, $bundle, $view_mode), $value);
+}
+
+/**
+ * Delete a template settings.
+ *
+ * @param $entity_type
+ * @param $bundle
+ * @param $view_mode
+ */
+function catalyst_template_setting_del($entity_type, $bundle = NULL, $view_mode = NULL) {
+  return variable_del(catalyst_template_setting_key($entity_type, $bundle, $view_mode));
+}
+
+/**
+ * Resolve the default template for entities.
+ *
+ * @param $entity_type
+ * @param $bundle
+ * @param $view_mode
+ * @param $conditions
+ */
+function catalyst_template_default($entity_type, $bundle = NULL, $view_mode = NULL, $candidates = NULL) {
+  if ($candidates === NULL) {
+    $candidates = catalyst_template_candidates($entity_type, $bundle, $view_mode);
+  }
+  $results = array();
+  $default_setting = catalyst_template_setting_get($entity_type, $bundle, $view_mode);
+  if ($default_setting && isset($candidates[$default_setting])) {
+    $results = array($default_setting => $candidates[$default_setting]);
+  }
+  else {
+    $seen = array('bundles' => FALSE, 'view_modes' => FALSE);
+    foreach ($candidates AS $key => $candidate) {
+      if (empty($candidate->template)) continue; // watchdog notice needed here
+      if (!empty($candidate->template['bundles']) && array_filter($candidate->template['bundles'])) $seen['bundles'] = TRUE;
+      if (!empty($candidate->template['view_modes']) && array_filter($candidate->template['view_modes'])) $seen['view_modes'] = TRUE;
+      $candidate->weight = isset($candidate->weight) ? (int)$candidate->weight : 0;
+    }
+    foreach ($candidates AS $key => $candidate) {
+      foreach (array_keys($seen) AS $s) {
+        if ($seen[$s] && empty($candidate->template[$s])) continue (2);
+      }
+      $results[$key] = $candidate;
+    }
+  }
+  if ($results) {
+    $result = array_shift($results);
+    return catalyst_load_single($result->type, $result->machine);
+  }
+  return;
+}
+
+function catalyst_template_get_entity_info() {
+  $entity_info = entity_get_info();
+  foreach ($entity_info AS $entity_type => $entity_type_info) {
+    if (empty($entity_type_info['view modes'])) unset($entity_info[$entity_type]);
+  }
+  return $entity_info;
 }

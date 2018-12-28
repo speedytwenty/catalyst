@@ -72,7 +72,6 @@ features[field_instance][] = catalyst-layout-field__blocks_related
 features[field_instance][] = catalyst-layout-field__body
 features[field_instance][] = catalyst-layout-field__css__layout
 features[field_instance][] = catalyst-layout-field__data
-features[field_instance][] = catalyst-layout-field__debug
 features[field_instance][] = catalyst-layout-field__doctype
 features[field_instance][] = catalyst-layout-field__drupal_processing
 features[field_instance][] = catalyst-layout-field__files

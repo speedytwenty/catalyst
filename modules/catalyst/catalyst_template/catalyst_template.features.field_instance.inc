@@ -375,54 +375,6 @@ function catalyst_template_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'catalyst-template-field__debug'.
-  $field_instances['catalyst-template-field__debug'] = array(
-    'bundle' => 'template',
-    'default_value' => array(
-      0 => array(
-        'value' => 0,
-      ),
-    ),
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 14,
-      ),
-      'teaser' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-      'template' => array(
-        'label' => 'above',
-        'settings' => array(),
-        'type' => 'hidden',
-        'weight' => 0,
-      ),
-    ),
-    'entity_type' => 'catalyst',
-    'field_name' => 'field__debug',
-    'label' => 'Enable debugging',
-    'required' => 0,
-    'settings' => array(
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 1,
-      'module' => 'options',
-      'settings' => array(
-        'display_label' => 1,
-      ),
-      'type' => 'options_onoff',
-      'weight' => 20,
-    ),
-  );
-
   // Exported field_instance: 'catalyst-template-field__files'.
   $field_instances['catalyst-template-field__files'] = array(
     'bundle' => 'template',
@@ -1155,7 +1107,6 @@ function catalyst_template_field_default_field_instances() {
   t('Custom HTML Head');
   t('Custom Javascript');
   t('Data');
-  t('Enable debugging');
   t('Entity type');
   t('Help/Instructions');
   t('Internal');

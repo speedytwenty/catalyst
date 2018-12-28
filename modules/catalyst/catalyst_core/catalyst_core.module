@@ -60,6 +60,7 @@ function catalyst_core_theme() {
  * Implements hook_action_info().
  */
 function catalyst_core_action_info() {
+  // Action callbacks have to be inside the module AFAIK
   return array(
     'catalyst_update_package_action' => array(
       'type' => 'catalyst',
@@ -93,8 +94,8 @@ function catalyst_core_entity_info_alter(&$entity_info) {
   unset($entity_info['catalyst']['translation']);
 
   if (!isset($entity_info['catalyst']['bundles']['package'])) return;
-  catalyst_include('bundles');
-  $bundles = catalyst_get_bundles();
+  catalyst_include('plugins');
+  $bundles = catalyst_get_plugins('bundle');
   foreach ($bundles AS $bundle => $bundle_plugin) {
     if (strpos($bundle, ':')) list($parent, $bundle) = explode(':', $bundle);
     if (empty($entity_info['catalyst']['bundles'][$bundle])) continue;
@@ -103,6 +104,8 @@ function catalyst_core_entity_info_alter(&$entity_info) {
       $bundle_plugin
     );
   }
+  catalyst_invoke_alter_all('catalyst entity info alter', $entity_info['catalyst']);
+  catalyst_invoke_alter_all('hook entity info alter', $entity_info);
 }
 
 /**
@@ -167,12 +170,14 @@ function catalyst_core_menu_alter(&$menu_items) {
       'file' => 'fields.inc',
     ));
   }
+  $entity_info = entity_get_info('catalyst');
+  if (empty($entity_info['bundles'])) return;
+
   catalyst_include('eck');
   catalyst_eck__entity_menu_alter($menu_items);
   catalyst_eck__bundle_menu_alter($menu_items);
   catalyst_eck__entity_type_menu_alter($menu_items);
 
-  $entity_info = entity_get_info('catalyst');
   foreach ($entity_info['bundles'] AS $bundle => $bundle_info) {
     if (!empty($bundle_info['crud']['add']['path'])) {
       $path = $bundle_info['crud']['add']['path'];
@@ -353,7 +358,6 @@ function catalyst_entity_form($form, &$form_state, $entity) {
   if ($func = ctools_plugin_get_function($handler, 'entity form')) {
     $func($form, $form_state, $entity, $handler);
   }
-
   foreach ($handler['plugins'] AS $plugin_name => $plugin) {
     if ($func = ctools_plugin_get_function($plugin, 'entity form')) {
       $func($form, $form_state, $entity, $plugin, $handler);
@@ -404,10 +408,8 @@ function catalyst_core_form_alter(&$form, &$form_state, $form_id) {
       $form_state['build_info']['files']['catalyst_preprocess'] = $path;
     }
   }
-  if (isset($form['field__data']) && $form['#bundle'] == 'package') {
-    catalyst_form_load_include($form_state, 'package_form_alter');
-    catalyst_package_form_alter($form, $form_state);
-  }
+  //catalyst_include('plugins');
+  //catalyst_invoke_alter_all('hook form alter', $form, $form_state, $form_id);
 }
 
 function catalyst_form($form, $bundle, $machine, $vars = array()) {
@@ -733,29 +735,38 @@ function catalyst_load_single($a0) {
  * Implements hook_entity_update().
  */
 function catalyst_core_entity_update($entity, $entity_type) {
+  catalyst_include('plugins');
   if ($entity instanceof CatalystEntity) {
     catalyst_registry_needs_rebuild();
+    //catalyst_invoke_all('catalyst entity update', $entity, $entity_type);
   }
+  //catalyst_invoke_all('hook entity update', $entity, $entity_type);
 }
 
 /**
  * Implements hook_entity_delete().
  */
 function catalyst_core_entity_delete($entity, $entity_type) {
+  catalyst_include('plugins');
   if ($entity instanceof CatalystEntity) {
     catalyst_registry_needs_rebuild();
+    //catalyst_invoke_all('catalyst entity delete', $entity, $entity_type);
     catalyst_include('code');
     catalyst_code_entity_delete($entity);
   }
+  //catalyst_invoke_all('hook entity delete', $entity, $entity_type);
 }
 
 /**
  * Implements hook_entity_insert().
  */
 function catalyst_core_entity_insert($entity, $entity_type) {
+  catalyst_include('plugins');
   if ($entity instanceof CatalystEntity) {
     catalyst_registry_needs_rebuild();
+    catalyst_invoke_all('catalyst entity insert', $entity, $entity_type);
   }
+  catalyst_invoke_all('hook entity insert', $entity, $entity_type);
 }
 
 /**

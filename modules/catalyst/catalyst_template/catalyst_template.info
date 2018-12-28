@@ -44,7 +44,6 @@ features[field_instance][] = catalyst-template-field__blocks_related
 features[field_instance][] = catalyst-template-field__body
 features[field_instance][] = catalyst-template-field__css__page
 features[field_instance][] = catalyst-template-field__data
-features[field_instance][] = catalyst-template-field__debug
 features[field_instance][] = catalyst-template-field__files
 features[field_instance][] = catalyst-template-field__html_head
 features[field_instance][] = catalyst-template-field__internal

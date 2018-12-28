@@ -32,7 +32,6 @@ features[field_base][] = field__css
 features[field_base][] = field__css__layout
 features[field_base][] = field__css__page
 features[field_base][] = field__data
-features[field_base][] = field__debug
 features[field_base][] = field__drupal_processing
 features[field_base][] = field__files
 features[field_base][] = field__html_head

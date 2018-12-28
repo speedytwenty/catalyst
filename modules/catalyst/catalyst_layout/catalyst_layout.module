@@ -227,7 +227,7 @@ function catalyst_layout_entity_export_alter(&$vars, $entity, $entity_type) {
     );
   }
   else if (!empty($vars['field__layout'])) {
-    $vars['layout'] = $entity->wrapper()->field__layout->value()->normalize();
+    $vars['layout'] = $entity->wrapper()->field__layout->value()->export();
     unset($vars['field__layout']);
   }
 }

@@ -11,10 +11,8 @@ $plugin = array(
   'entity import' => 'catalyst_files_plugin_entity_import',
   'get child' => 'catalyst_files_plugin_get_child',
   'get children' => 'catalyst_files_plugin_get_children',
-  'entity create' => 'catalyst_files_plugin_entity_create',
-  'entity save' => 'catalyst_files_plugin_entity_save',
-  'entity normalize' => 'catalyst_files_plugin_entity_normalize',
-  'entity export' => 'catalyst_files_plugin_entity_normalize',
+  'entity import' => 'catalyst_files_plugin_entity_import',
+  'entity export' => 'catalyst_files_plugin_entity_export',
   'entity revert' => 'catalyst_files_plugin_entity_revert',
   'default settings' => array(
     'field_name' => 'field__files',
@@ -34,14 +32,14 @@ function catalyst_files_plugin_get_children($plugin, $parent) {
   return $plugins;
 }
 
-function catalyst_files_plugin_entity_create($entity_type, CatalystEntity $entity, array $values, $plugin) {
+function catalyst_files_plugin_entity_import($entity_type, CatalystEntity $entity, array $export, $plugin) {
   $settings = $plugin['settings'];
-  if (empty($values[$settings['normal_name']])) return;
+  if (empty($export[$settings['normal_name']])) return;
 
   $dir_uri = variable_get('filefield_paths_temp_location', 'public://filefield_paths');
   $dir = file_prepare_directory($dir_uri, FILE_CREATE_DIRECTORY);
   $files = array();
-  foreach ($values[$settings['normal_name']] AS $fn => $fi) {
+  foreach ($export[$settings['normal_name']] AS $fn => $fi) {
     $path = sprintf('%s/%s--%s', $dir_uri, md5(microtime()), $fn);
     if ($file = file_save_data(base64_decode($fi), $path, FILE_EXISTS_REPLACE)) {
       $file->display = 0;
@@ -60,12 +58,14 @@ function catalyst_files_plugin_entity_create($entity_type, CatalystEntity $entit
   }
 }
 
-function catalyst_files_plugin_entity_normalize($entity_type, CatalystEntity $entity, stdClass $normal, $plugin) {
-  if (!empty($entity->field__files)) {
+function catalyst_files_plugin_entity_export(CatalystEntity $entity, array &$export, $prefix, $plugin) {
+  $settings = $plugin['settings'];
+  if (!empty($entity->{$settings['field_name']})) {
     $files = array();
-    foreach ($entity->wrapper()->field__files->value() AS $fi) {
+    foreach ($entity->wrapper()->{$settings['field_name']}->value() AS $fi) {
       $files[$fi['origname']] = base64_encode(file_get_contents(drupal_realpath($fi['uri'])));
     }
-    $normal->files_custom = $files;
+    $export[$settings['normal_name']] = $files;
   }
+  return $export;
 }

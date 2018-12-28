@@ -137,73 +137,20 @@ class CatalystExportImportTestCase extends CatalystWebTestCase {
     parent::setUp('catalyst_core', 'catalyst_test');
   }
 
-  public function testNormalizeDenormalize() {
-    $menu_options = array(
-      'path' => 'testpath',
-      'menu' => array(
-        'type' => 'default tab',
-      ),
-    );
-    $entity = entity_create('catalyst', array(
+  public function testImportExport() {
+    $entity = entity_import('catalyst', array(
       'type' => 'core_test',
       'title' => 'test1',
       'internal' => TRUE,
       'machine' => 'test',
-      'debug' => TRUE,
-      'files_custom' => array(
-        'test.png' => array(
-        ),
-      ),
-      'html_head' => '<meta id="html-head" />',
-      'package' => 'test_package',
-      'drupal_processing' => TRUE,
-
-      'content_html' => '<content_html>',
-      'access_php' => 'return FALSE;',
-      'admin_notes' => 'Notes here.',
-      'preprocess_php' => '// hello',
-      'css_custom' => '.css-custom { color: clear; }',
-      'css_page' => '.css-page { color: clear; }',
-      'css_layout' => '.css-layout { color: clear; }',
-      'js_custom' => 'var x = 1;',
-      'js_page' => 'var x = 1;',
-      'js_layout' => 'var x = 1;',
     ));
-    $this->assertEqual($entity->wrapper()->label(), 'test1', 'Label denormalized.');
-    $this->assertEqual($entity->wrapper()->field__machine->machine->value(), 'test', 'Machine field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__internal->value(), TRUE, 'Internal field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__debug->value(), TRUE, 'Debug field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__package->value()->machine, 'test_package', 'Package field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__drupal_processing->value(), TRUE, 'Drupal processing field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__menu->value(), $menu_options, 'Menu field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__body->value->value(), '<content_html>', 'Body field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__body->format->value(), 'catalyst_html', 'Body field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__html_head->value->value(), '<content_html>', 'HTML head field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__html_head->format->value(), 'catalyst_html', 'HTML head field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__access->value->value(), '<content_html>', 'Access field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__access->format->value(), 'catalyst_php', 'Access field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__admin_notes->value->value(), '<content_html>', 'Admin notes field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__admin_notes->format->value(), 'catalyst_doc', 'Admin notes field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__preprocess->value->value(), '<content_html>', 'Preprocess field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__preprocess->format->value(), 'catalyst_php', 'Preprocess field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__css->value->value(), '<content_html>', 'CSS custom field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__css->format->value(), 'catalyst_css', 'CSS custom field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__css__page->value->value(), '<content_html>', 'CSS page field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__css__page->format->value(), 'catalyst_css', 'CSS page field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__css__layout->value->value(), '<content_html>', 'CSS layout field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__css__layout->format->value(), 'catalyst_css', 'CSS layout field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__js->value->value(), '<content_html>', 'JS custom field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__js->format->value(), 'catalyst_js', 'JS custom field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__js__page->value->value(), '<content_html>', 'JS page field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__js__page->format->value(), 'catalyst_js', 'JS page field format denormalized.');
-    $this->assertEqual($entity->wrapper()->field__js__layout->value->value(), '<content_html>', 'JS layout field denormalized.');
-    $this->assertEqual($entity->wrapper()->field__js__layout->format->value(), 'catalyst_js', 'JS layout field format denormalized.');
-    $field__files_expected_value = array(array(
-    ));
-    $this->assertEqual($entity->wrapper()->field__files->value(), $field__files_expected_value, 'Files field denormalized.');
+    $this->assertEqual($entity->wrapper()->label(), 'test1', 'Title imported.');
+    $this->assertEqual($entity->wrapper()->field__machine->machine->value(), 'test', 'Machine field imported.');
+    $this->assertEqual($entity->wrapper()->field__internal->value(), TRUE, 'Internal field imported.');
 
-    $normal = $entity->normalize();
-    $this->assertEqual($normal->title, 'test1', 'Label normalized.');
-    $this->assertEqual($normal->machine, 'test', 'Machine field normalized.');
+    $export = $entity->export('pre');
+    $this->assertEqual($export['title'], 'test1', 'Title exported.');
+    $this->assertEqual($export['machine'], 'pretest', 'Machine field exported.');
+    $this->assertTrue($export['internal'], 'Internal field exported.');
   }
 }

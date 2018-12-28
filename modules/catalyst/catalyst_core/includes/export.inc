@@ -477,9 +477,6 @@ function catalyst_export_metadata($component) {
       $metadata['subdir'] = $component->subdir;
     }
   }
-  if (isset($component->wrapper->field__debug)) {
-    $metadata['debug'] = (bool)$component->wrapper->field__debug->value();
-  }
   if (isset($component->wrapper->field__drupal_processing)) {
     $metadata['drupal_processing'] = (bool)$component->wrapper->field__drupal_processing->value();
   }

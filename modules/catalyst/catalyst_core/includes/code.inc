@@ -338,7 +338,9 @@ function catalyst_code_entity_delete(CatalystEntity $entity) {
 function catalyst_code_entity_file_is_fresh(CatalystEntity $entity, $field_name, $value) {
   if ($file_info = catalyst_code_entity_file_info($entity, $field_name)) {
     if (file_exists($file_info['filepath'])) {
-      if (filemtime($file_info['filepath']) >= $entity->changed) {
+      if (isset($entity->is_new)) return $file_info;
+      $changed = isset($entity->changed) ? $entity->changed : $entity->created;
+      if (filemtime($file_info['filepath']) >= $changed) {
         return $file_info;
       }
     }

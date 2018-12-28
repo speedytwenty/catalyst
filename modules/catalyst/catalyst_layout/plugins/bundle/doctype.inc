@@ -41,7 +41,7 @@ function catalyst_doctype_display($entity_type, CatalystEntity $entity, $page, $
 }
 
 function catalyst_doctype_preprocess($doctype, $layout) {
-  $doctype->setVariable('layout', $layout->normalize());
+  $doctype->setVariable('layout', $layout->export());
   if (empty($content_type)) $content_type = 'text/html';
   if (empty($charset)) $charset = 'utf-8';
   $doctype->setVariable('http_content_type', $content_type);

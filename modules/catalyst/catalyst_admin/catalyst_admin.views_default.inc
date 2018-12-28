@@ -2100,7 +2100,6 @@ print catalyst_admin_views_no_results($view, \'layout\', array(
           'layout::field__layout_drupal_js' => 'layout::field__layout_drupal_js',
           'layout::field__layout_drupal_css' => 'layout::field__layout_drupal_css',
           'layout::field__drupal_processing' => 'layout::field__drupal_processing',
-          'layout::field__debug' => 'layout::field__debug',
           'layout::field__layout_page_title_pattern' => 'layout::field__layout_page_title_pattern',
           'layout::field__layout_show_messages' => 'layout::field__layout_show_messages',
           'layout::field__doctype' => 'layout::field__doctype',

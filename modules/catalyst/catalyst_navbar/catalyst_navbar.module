@@ -4,8 +4,6 @@
  * Code for the Catalyst Navbar feature.
  */
 
-include_once 'catalyst_navbar.features.inc';
-
 /**
  * @file
  * Integrates the navbar and responsive_preview modules with Catalyst.

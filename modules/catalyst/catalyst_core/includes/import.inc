@@ -177,7 +177,7 @@ function catalyst_import_entity($metadata, $status = CATALYST_IMPORT_STATUS_TEMP
       }
     }
   }
-  foreach (array('debug', 'drupal_processing', 'internal') AS $suf) {
+  foreach (array('drupal_processing', 'internal') AS $suf) {
     $fn = 'field__'.$suf;
     if (isset($metadata[$suf])) {
       $wrapper->{$fn}->set($metadata[$suf]);

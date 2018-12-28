@@ -47,10 +47,6 @@ class CatalystEntity extends Entity {
     return isset($this->variables[$key]) ? $this->variables[$key] : NULL;
   }
 
-  public function normalize() {
-    return entity_get_controller($this->entityType)->normalize($this);
-  }
-
   public function getDataValue($key) {
     $data = entity_valval($this->wrapper()->field__data);
     return isset($data[$key]) ? $data[$key] : NULL;

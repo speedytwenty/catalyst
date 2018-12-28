@@ -27,7 +27,6 @@ $plugin = array(
 
 function catalyst_layout_plugin_prepare_display($entity_type, CatalystEntity $entity, $page = NULL, $plugin) {
   $entity->setVariable('show_messages', $entity->wrapper()->field__layout_show_messages->value());
-  $entity->setVariable('debug', $entity->wrapper()->field__debug->value());
   $entity->setVariable('drupal_processing', $entity->wrapper()->field__drupal_processing->value());
   if ($entity->getVariable('drupal_processing')) {
     catalyst_layout_plugin_preprocess_drupal($entity);

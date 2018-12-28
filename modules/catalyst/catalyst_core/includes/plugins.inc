@@ -92,7 +92,13 @@ function catalyst_process_bundle_plugin(&$plugin, $info) {
          $plugin_name = $settings;
          $settings = array();
       }
-      $child_plugin = catalyst_get_plugins('plugin', $plugin_name);
+      if (!$child_plugin = catalyst_get_plugins('plugin', $plugin_name)) {
+        throw new Exception(t('Missing @parent_name bundle plugin: @child_name.', array(
+          '@child_name' => $plugin_name,
+          '@parent_name' => $plugin['name'],
+        )));
+      }
+      $child_plugin += array('weight' => 0);
       if (!empty($child_plugin['settings'])) {
         $settings += $child_plugin['settings'];
       }
@@ -105,12 +111,8 @@ function catalyst_process_bundle_plugin(&$plugin, $info) {
     $plugin['plugins'] = $processed_plugins;
   }
   else $plugin['plugins'] = array();
-  return;
-  if (empty($plugin['settings'])) {
-    $plugin['settings'] = array();
-    if (!empty($plugin['default settings'])) {
-      $plugin['settings'] = $plugin['default settings'];
-    }
-  }
-  $plugin['settings'] = $settings;
+}
+
+function catalyst_plugins_sort($a, $b) {
+  return $a['weight'] - $b ['weight'];
 }

@@ -13,7 +13,6 @@
                             "block_embed_test",
                             "layout_embedded_block_test"
                         ],
-                        "debug": true,
                         "doctype": "catalyst_test_1x",
                         "drupal_processing": false,
                         "internal": true,

@@ -58,6 +58,4 @@ features[field_instance][] = catalyst-page-field__menu
 features[field_instance][] = catalyst-page-field__package
 features[field_instance][] = catalyst-page-field__preprocess
 features[variable][] = field_bundle_settings_catalyst__page
-features_exclude[field_base][field__data] = field__data
-features_exclude[field_base][field___block_placements_entity] = field___block_placements_entity
 project path = profiles/catalyst/modules/catalyst

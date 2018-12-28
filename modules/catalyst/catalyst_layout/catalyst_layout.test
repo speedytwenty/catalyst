@@ -13,7 +13,7 @@ class CatalystLayoutTestCase extends CatalystLayoutWebTestCase {
     return array(
       'name' => 'Catalyst Layout Tests',
       'description' => 'Basic tests for Catalyst Layouts',
-      'group' => 'Catalyst Layout',
+      'group' => 'Catalyst',
     );
   }
 
